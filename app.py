@@ -823,36 +823,27 @@ def main():
         with mr_col1:
             st.markdown(f"""
             <div style="background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 12px; padding: 14px; min-height: 220px;">
-                <div style="font-weight: 800; font-size: 0.95rem; color: #166534; margin-bottom: 6px;">🌦️ Live Weather & Causal ML</div>
+                <div style="font-weight: 800; font-size: 0.95rem; color: #166534; margin-bottom: 6px;">{t('mr_card1_title', lang)}</div>
                 <div style="font-size: 0.82rem; color: #1e293b; line-height: 1.45;">
-                    • <strong>Live Telemetry:</strong> OpenWeatherMap API + Leaflet.js live Doppler rain radar.<br>
-                    • <strong>Spray Safety:</strong> Wind &lt; 15 km/h (optimal), Rain risk &lt; 30% in 24h.<br>
-                    • <strong>Calibrated ML:</strong> XGBoost (R²=0.91, MAE=1.42 q/ha) trained on ICAR trial plots.<br>
-                    • <strong>Counterfactual:</strong> Proves yield boost is caused by biologicals, not weather luck.
+                    {t('mr_card1_body', lang)}
                 </div>
             </div>
             """, unsafe_allow_html=True)
         with mr_col2:
             st.markdown(f"""
             <div style="background: #eff6ff; border: 1.5px solid #93c5fd; border-radius: 12px; padding: 14px; min-height: 220px;">
-                <div style="font-weight: 800; font-size: 0.95rem; color: #1e40af; margin-bottom: 6px;">🧪 SoilGrids & LeafVision AI</div>
+                <div style="font-weight: 800; font-size: 0.95rem; color: #1e40af; margin-bottom: 6px;">{t('mr_card2_title', lang)}</div>
                 <div style="font-size: 0.82rem; color: #1e293b; line-height: 1.45;">
-                    • <strong>Soil Health Card:</strong> 12 DAC&FW parameters (N, P, K, Zn, Fe, Cu, Mn, B, pH, EC, OC, S).<br>
-                    • <strong>Testing Standards:</strong> Walkley-Black (SOC), Olsen (P), Subbiah-Asija (N).<br>
-                    • <strong>LeafVision Vision Model:</strong> LABA-SNU MobileNetV3 (540,013 leaf pre-training).<br>
-                    • <strong>Edge Latency:</strong> &lt; 60ms locally on edge hardware with 0 cloud cost.
+                    {t('mr_card2_body', lang)}
                 </div>
             </div>
             """, unsafe_allow_html=True)
         with mr_col3:
             st.markdown(f"""
             <div style="background: #fefce8; border: 1.5px solid #fde047; border-radius: 12px; padding: 14px; min-height: 220px;">
-                <div style="font-weight: 800; font-size: 0.95rem; color: #854d0e; margin-bottom: 6px;">📈 Agmarknet & Kisan AI</div>
+                <div style="font-weight: 800; font-size: 0.95rem; color: #854d0e; margin-bottom: 6px;">{t('mr_card3_title', lang)}</div>
                 <div style="font-size: 0.82rem; color: #1e293b; line-height: 1.45;">
-                    • <strong>Agmarknet 2.0:</strong> Live APMC mandi wholesale rates across 24 commodities.<br>
-                    • <strong>CACP MSP Benchmark:</strong> Statutory floor price policy (A2+FL × 1.5 formula).<br>
-                    • <strong>Supabase Ledger:</strong> Institutional credit proof for KCC loans and PMFBY insurance.<br>
-                    • <strong>Gemini 2.5 Flash:</strong> Multimodal AI agronomist with 9-language voice playback.
+                    {t('mr_card3_body', lang)}
                 </div>
             </div>
             """, unsafe_allow_html=True)
@@ -875,11 +866,11 @@ def main():
     if 'selected_crop' not in st.session_state:
         st.session_state.selected_crop = "Soybean"
     if 'farm_location_name' not in st.session_state:
-        st.session_state.farm_location_name = "Kopargaon"
+        st.session_state.farm_location_name = "Pune"
     if 'farm_lat' not in st.session_state:
-        st.session_state.farm_lat = 19.8833
+        st.session_state.farm_lat = 18.5204
     if 'farm_lon' not in st.session_state:
-        st.session_state.farm_lon = 74.4833
+        st.session_state.farm_lon = 73.8567
         
     region_crop_options = list(REGIONAL_CROP_SHARES.get(st.session_state.selected_region, {}).keys())
     if 'selected_crop' not in st.session_state or not st.session_state.selected_crop:
@@ -917,7 +908,7 @@ def main():
 
     # LOCATION & GPS INTELLIGENCE LAYER
     localized_reg = t_region(st.session_state.selected_region, lang)
-    farm_disp_name = st.session_state.get('farm_location_name', 'Kopargaon')
+    farm_disp_name = st.session_state.get('farm_location_name', 'Pune')
     with st.container(border=True):
         col_loc1, col_loc2, col_loc3 = st.columns([2, 1, 1])
         with col_loc1:
@@ -933,30 +924,90 @@ def main():
             """, unsafe_allow_html=True)
         with col_loc2:
             if st.button(t("loc_detect_btn", lang), use_container_width=True, help=t("help_gps_detect", lang)):
-                st.session_state.selected_region = "Maharashtra & Vidarbha (Deccan)"
-                st.session_state.selected_crop = "Soybean"
-                st.session_state.farm_location_name = "Kopargaon"
-                st.session_state.farm_lat = 19.8833
-                st.session_state.farm_lon = 74.4833
-                st.success(t("loc_verified", lang, region=t_region("Maharashtra & Vidarbha (Deccan)", lang)))
+                detected_city = None
+                detected_lat = None
+                detected_lon = None
+                
+                try:
+                    r_ip = requests.get("http://ip-api.com/json/", timeout=3)
+                    if r_ip.status_code == 200:
+                        ip_d = r_ip.json()
+                        if ip_d.get("status") == "success":
+                            detected_city = ip_d.get("city")
+                            detected_lat = float(ip_d.get("lat"))
+                            detected_lon = float(ip_d.get("lon"))
+                except Exception:
+                    pass
+                    
+                if not detected_city or not detected_lat:
+                    try:
+                        r_ip2 = requests.get("https://ipapi.co/json/", timeout=3)
+                        if r_ip2.status_code == 200:
+                            ip_d2 = r_ip2.json()
+                            detected_city = ip_d2.get("city")
+                            detected_lat = float(ip_d2.get("latitude"))
+                            detected_lon = float(ip_d2.get("longitude"))
+                    except Exception:
+                        pass
+                
+                if detected_city and detected_lat and detected_lon:
+                    st.session_state.farm_location_name = detected_city
+                    st.session_state.farm_lat = detected_lat
+                    st.session_state.farm_lon = detected_lon
+                    new_reg = get_closest_region(detected_lat, detected_lon)
+                    st.session_state.selected_region = new_reg
+                    avail_crops = list(REGIONAL_CROP_SHARES.get(new_reg, {}).keys())
+                    if st.session_state.selected_crop not in avail_crops:
+                        st.session_state.selected_crop = avail_crops[0]
+                    st.success(t("loc_verified", lang, region=f"{detected_city} ({t_region(new_reg, lang)})"))
+                else:
+                    st.info(f"Retaining verified GPS: {st.session_state.farm_location_name} ({st.session_state.farm_lat:.4f}°N, {st.session_state.farm_lon:.4f}°E)")
                 st.rerun()
         with col_loc3:
-            with st.popover("⚙️ Manual GPS"):
-                new_lat = st.number_input("Latitude (°N)", value=float(st.session_state.farm_lat), format="%.4f", help=t("help_lat", lang))
-                new_lon = st.number_input("Longitude (°E)", value=float(st.session_state.farm_lon), format="%.4f", help=t("help_lon", lang))
-                if st.button("Set Coordinates", use_container_width=True):
+            with st.popover(t("manual_gps_btn", lang)):
+                v_search = st.text_input(t("search_village_label", lang), key="search_village_input")
+                if st.button(t("search_teleport_btn", lang), use_container_width=True, key="btn_village_search"):
+                    if v_search.strip():
+                        res_loc = resolve_farm_location(v_search.strip())
+                        if res_loc:
+                            st.session_state.farm_location_name = res_loc["name"]
+                            st.session_state.farm_lat = res_loc["lat"]
+                            st.session_state.farm_lon = res_loc["lon"]
+                            new_reg = get_closest_region(res_loc["lat"], res_loc["lon"])
+                            st.session_state.selected_region = new_reg
+                            avail_crops = list(REGIONAL_CROP_SHARES.get(new_reg, {}).keys())
+                            if st.session_state.selected_crop not in avail_crops:
+                                st.session_state.selected_crop = avail_crops[0]
+                            st.toast(t("loc_search_success", lang, city=res_loc['name'], lat=res_loc['lat'], lon=res_loc['lon']), icon="📍")
+                            st.rerun()
+                        else:
+                            st.error(t("loc_search_not_found", lang, query=v_search.strip()))
+                
+                st.markdown("<hr style='margin: 8px 0;'>", unsafe_allow_html=True)
+                new_lat = st.number_input(t("lat_label", lang), value=float(st.session_state.farm_lat), format="%.4f", help=t("help_lat", lang))
+                new_lon = st.number_input(t("lon_label", lang), value=float(st.session_state.farm_lon), format="%.4f", help=t("help_lon", lang))
+                if st.button(t("set_coords_btn", lang), use_container_width=True):
                     st.session_state.farm_lat = new_lat
                     st.session_state.farm_lon = new_lon
-                    st.session_state.farm_location_name = f"{new_lat:.2f}N, {new_lon:.2f}E"
-                    st.session_state.selected_region = get_closest_region(new_lat, new_lon)
+                    st.session_state.farm_location_name = f"{new_lat:.2f}°N, {new_lon:.2f}°E"
+                    new_reg = get_closest_region(new_lat, new_lon)
+                    st.session_state.selected_region = new_reg
+                    avail_crops = list(REGIONAL_CROP_SHARES.get(new_reg, {}).keys())
+                    if st.session_state.selected_crop not in avail_crops:
+                        st.session_state.selected_crop = avail_crops[0]
                     st.rerun()
-
-
 
     # Quick Region Switcher Pills
     st.markdown(f"<div style='font-size: 0.8rem; font-weight: 600; color: #64748b; margin-top: 10px; margin-bottom: 6px;'>{t('loc_change_belt', lang)}</div>", unsafe_allow_html=True)
     belt_keys = ["belt_punjab", "belt_vidarbha", "belt_andhra", "belt_up", "belt_karnataka"]
     p_cols = st.columns(5)
+    reg_city_map = {
+        "Punjab & Western UP": "Ludhiana",
+        "Maharashtra & Vidarbha (Deccan)": "Pune",
+        "Andhra & Telangana": "Hyderabad",
+        "Eastern UP & Bihar": "Varanasi",
+        "Karnataka & Tamil Nadu": "Bengaluru"
+    }
     for p_idx, reg_name in enumerate(REGION_COORDS.keys()):
         short_label = t(belt_keys[p_idx], lang)
         is_active = (reg_name == st.session_state.selected_region)
@@ -967,7 +1018,7 @@ def main():
                 st.session_state.selected_crop = list(REGIONAL_CROP_SHARES[reg_name].keys())[0]
                 st.session_state.farm_lat = REGION_COORDS[reg_name]["lat"]
                 st.session_state.farm_lon = REGION_COORDS[reg_name]["lon"]
-                st.session_state.farm_location_name = reg_name.split()[0]
+                st.session_state.farm_location_name = reg_city_map.get(reg_name, reg_name.split()[0])
                 st.rerun()
 
     # Real-Time OpenWeather Telemetry for Map & Farm (SYNCHRONIZED WITH EXACT FARM GPS)
@@ -1007,13 +1058,23 @@ def main():
         # Ingest live Agmarknet 2.0 data for each card
         c_mandi = agmarknet_engine.get_mandi_intelligence_for_crop(c_name, True)
         c_price = c_mandi.get("latest_price", 0)
+        c_msp = c_mandi.get("msp", 0)
         c_delta = c_mandi.get("price_vs_msp_delta", 0)
-        if c_delta >= 0:
-            mandi_tag_color = "#047857"
-            mandi_tag_text = f"🟢 +₹{c_delta:,.0f} > MSP"
+        if c_msp > 0:
+            if c_delta >= 0:
+                mandi_tag_color = "#047857"
+                mandi_tag_text = f"+₹{c_delta:,.0f} {t('agmark_card_vs_msp', lang)}"
+            else:
+                mandi_tag_color = "#b91c1c"
+                mandi_tag_text = f"-₹{abs(c_delta):,.0f} {t('agmark_card_vs_msp', lang)}"
         else:
-            mandi_tag_color = "#b91c1c"
-            mandi_tag_text = f"🔴 -₹{abs(c_delta):,.0f} < MSP"
+            p_chg = c_mandi.get("price_change_3d", 0)
+            if p_chg >= 0:
+                mandi_tag_color = "#047857"
+                mandi_tag_text = f"{t('agmark_card_72h', lang)} +₹{p_chg:,.0f}/q"
+            else:
+                mandi_tag_color = "#b91c1c"
+                mandi_tag_text = f"{t('agmark_card_72h', lang)} -₹{abs(p_chg):,.0f}/q"
             
         border_style = "2.5px solid #059669; background: #ecfdf5; box-shadow: 0 4px 14px rgba(5, 150, 105, 0.2);" if is_selected else "1px solid #e2e8f0; background: #ffffff;"
         badge_html = f"<span style='background:#059669; color:white; font-size:0.82rem; font-weight:800; padding:3px 10px; border-radius:12px;'>★ {t('active_field_badge', lang)}</span>" if is_selected else f"<span style='background:#f1f5f9; color:#1e293b; font-size:0.82rem; font-weight:700; padding:3px 10px; border-radius:12px;'>{localized_season}</span>"
@@ -1031,7 +1092,7 @@ def main():
                 f'<div style="background: #059669; height: 100%; width: {c_info["share"]}%;"></div>'
                 f'</div>'
                 f'<div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 8px 6px; margin: 6px 0;">'
-                f'<div style="font-size: 0.80rem; color: #475569; font-weight: 800; text-transform: uppercase;">Agmarknet 2.0 Mandi</div>'
+                f'<div style="font-size: 0.80rem; color: #475569; font-weight: 800; text-transform: uppercase;">{t("mandi_badge", lang)}</div>'
                 f'<div style="font-size: 1.30rem; font-weight: 900; color: #047857;">₹{c_price:,.0f} <span style="font-size: 0.82rem; font-weight: 600; color: #475569;">/q</span></div>'
                 f'<div style="font-size: 0.85rem; font-weight: 800; color: {mandi_tag_color};">{mandi_tag_text}</div>'
                 f'</div>'
@@ -1538,44 +1599,24 @@ def main():
 
         st.markdown("<br>", unsafe_allow_html=True)
         # Direct WhatsApp Executive Agronomic & Weather Briefing
-        farm_name = st.session_state.get('farm_location_name', 'Kopargaon')
-        spray_status = "OPTIMAL APPLICATION WINDOW OPEN" if (ow_5day[0]['rain_prob'] < 30 and float(ow_live.get('wind_speed_kmh', 10)) < 20) else "DELAY APPLICATION (High Drift / Wash-Off Risk)"
-        
-        fc_lines = []
-        for d in ow_5day[:4]:
-            fc_lines.append(f"  * {d['date']}: Max {d['temp_max']}°C (Min {d['temp_min']}°C) - Rain {d['rain_prob']}% - Wind {d['wind_kmh']} km/h ({d['desc']})")
-        fc_summary = "\n".join(fc_lines)
-
-        weather_wa_text = (
-            f"*SYNGENTA FIELD INTELLIGENCE & AGRONOMIC ADVISORY*\n"
-            f"*AgriAttribute AI - Precision Crop & Market Analytics*\n"
-            f"--------------------------------------------------\n\n"
-            f"*[1] FIELD & FARM PROFILE*\n"
-            f"* Farm Location: {farm_name} ({localized_reg})\n"
-            f"* GPS Coordinates: {st.session_state.farm_lat:.4f}°N, {st.session_state.farm_lon:.4f}°E\n"
-            f"* Target Crop: {localized_active_crop}\n"
-            f"* Advisory Timestamp: {datetime.now().strftime('%d %b %Y, %I:%M %p IST')}\n\n"
-            f"*[2] REAL-TIME ATMOSPHERIC TELEMETRY*\n"
-            f"* Ambient Temperature: {ow_live['temp_c']}°C (Feels like {ow_live['feels_like_c']}°C)\n"
-            f"* Relative Humidity: {ow_live['humidity_pct']}% RH (Optimal Stomatal Absorption)\n"
-            f"* Wind Velocity: {ow_live['wind_speed_kmh']} km/h (Low Droplet Drift)\n"
-            f"* Cloud Absorption Index: {ow_live.get('cloud_cover_pct', 15)}% Diffused Light\n"
-            f"* 24-Hour Rain Wash-Off Risk: {ow_5day[0]['rain_prob']}%\n\n"
-            f"*[3] FOLIAR SPRAY SAFETY WINDOW*\n"
-            f"* Window Status: {spray_status}\n"
-            f"* Prescribed Biostimulant: {bio_product} @ {dosage:.1f} L/ha\n"
-            f"* Application Readiness Score: {readiness_score}/100\n\n"
-            f"*[4] PREDICTED ECONOMIC BENEFIT (XGBoost Causal Engine)*\n"
-            f"* Projected Yield Gain: +{yield_delta:.2f} Quintals/ha vs Untreated Control\n"
-            f"* Realizable Mandi Spot Price: Rs {crop_price:,.2f} / Quintal (Agmarknet 2.0)\n"
-            f"* Net Expected Farmer Return: +Rs {net_profit:,.0f} / ha\n"
-            f"* Return on Investment: +{roi_pct:.0f}% ROI\n\n"
-            f"*[5] 4-DAY MICRO-WEATHER OUTLOOK*\n"
-            f"{fc_summary}\n\n"
-            f"--------------------------------------------------\n"
-            f"*Scientific Verification:* Agmarknet 2.0 • CACP MSP • IMD Mausam • Nature MI SHAP\n"
-            f"*Portal Access:* https://48138ad3cbccbe.lhr.life\n"
-            f"*AgriAttribute AI - Syngenta Biologicals & ANNAM.AI 2026*"
+        farm_name = st.session_state.get('farm_location_name', 'Pune')
+        weather_wa_text = localization.generate_whatsapp_briefing(
+            lang=lang,
+            farm_name=farm_name,
+            region_name=st.session_state.selected_region,
+            lat=st.session_state.farm_lat,
+            lon=st.session_state.farm_lon,
+            crop_name=st.session_state.selected_crop,
+            timestamp=datetime.now().strftime('%d %b %Y, %I:%M %p IST'),
+            ow_live=ow_live,
+            ow_5day=ow_5day,
+            bio_product=bio_product,
+            dosage=dosage,
+            readiness_score=readiness_score,
+            yield_delta=yield_delta,
+            crop_price=crop_price,
+            net_profit=net_profit,
+            roi_pct=roi_pct
         )
         encoded_w_wa = urllib.parse.quote(weather_wa_text.encode('utf-8'))
         st.markdown(f'<a href="https://wa.me/?text={encoded_w_wa}" target="_blank" class="wa-button" style="width: 100%;">{t("share_weather_wa_btn", lang)}</a>', unsafe_allow_html=True)
@@ -1592,15 +1633,15 @@ def main():
             st.markdown(f"""<div style="background:#eff6ff; border-left:4px solid #2563eb; padding:10px 14px; border-radius:6px; font-size:0.86rem; color:#0f172a; line-height:1.5;">{t("tab2_recall_text", lang)}</div>""", unsafe_allow_html=True)
         
         # Real-time Synchronized Field Parameters Ribbon
-        farm_name = st.session_state.get('farm_location_name', 'Kopargaon')
+        farm_name = st.session_state.get('farm_location_name', 'Pune')
         st.markdown(f"""
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 16px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
             <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="background: #059669; color: white; border-radius: 6px; padding: 2px 8px; font-size: 0.72rem; font-weight: 800;">LIVE FIELD SYNC</span>
+                <span style="background: #059669; color: white; border-radius: 6px; padding: 2px 8px; font-size: 0.72rem; font-weight: 800;">{t('live_field_sync', lang)}</span>
                 <span style="font-size: 0.85rem; font-weight: 700; color: #0f172a;">📍 {farm_name} • {localized_reg} ({st.session_state.farm_lat:.4f}°N, {st.session_state.farm_lon:.4f}°E)</span>
             </div>
             <div style="font-size: 0.8rem; color: #475569;">
-                📊 Agmarknet Spot: <strong style="color: #047857;">₹{crop_price:,.2f}/q</strong> | 🌡️ Live Temp: <strong>{ow_live['temp_c']}°C</strong> | 🧪 SOC: <strong>{soc}%</strong>
+                📊 {t('mandi_badge', lang)}: <strong style="color: #047857;">₹{crop_price:,.2f}/q</strong> | 🌡️ {t('temp_c', lang)}: <strong>{ow_live['temp_c']}°C</strong> | 🧪 {t('soc', lang).split()[0]}: <strong>{soc}%</strong>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -1622,29 +1663,29 @@ def main():
             help=t("help_growth_stage", lang)
         )
 
-        stage_key = selected_growth_stage.split()[1].lower()
-        if "flowering" in stage_key:
-            stage_impact = f"Extreme thermal spikes (>38°C) during flowering accelerate respiration over photosynthesis, desiccate pollen grains, and trigger premature flower and boll drop. Field risks losing 12-18% harvest volume without physiological shielding."
-            stage_action = f"Apply {bio_product} @ {dosage:.1f} L/ha before 10 AM. Free amino acids, betaines, and osmoprotectants preserve floral cellular turgor and anchor reproductive bolls."
-            risk_level = "⚠️ CAUTION: Thermal Stress Window"
+        stage_key = selected_growth_stage.split()[1].lower() if len(selected_growth_stage.split()) > 1 else "flowering"
+        if "flower" in stage_key or "फूल" in stage_key or "फुल" in stage_key:
+            stage_impact = t("stage_impact_flowering", lang)
+            stage_action = t("stage_action_flowering", lang, product=bio_product, dosage=dosage)
+            risk_level = t("risk_caution_thermal", lang)
             risk_color = "#b45309"
             risk_bg = "#fffbeb"
-        elif "grain" in stage_key:
-            stage_impact = f"Midday heat shock shortens the critical grain filling duration, causing shriveled grains, reduced 1,000-grain test weight, and forced premature senescence."
-            stage_action = f"Apply foliar biostimulant spray to extend flag leaf stay-green photosynthesis, ensuring dense starch and lipid translocation into grains."
-            risk_level = "⚠️ MODERATE RISK: Terminal Heat"
+        elif "grain" in stage_key or "दाना" in stage_key or "दाणे" in stage_key:
+            stage_impact = t("stage_impact_grain", lang)
+            stage_action = t("stage_action_grain", lang)
+            risk_level = t("risk_mod_heat", lang)
             risk_color = "#b45309"
             risk_bg = "#fffbeb"
-        elif "vegetative" in stage_key:
-            stage_impact = f"Atmospheric dryness causes excessive evapotranspiration, slowing vegetative branching, canopy development, and root nodule nitrogen fixation."
-            stage_action = f"Maintain light root zone moisture and apply {bio_product} to stimulate root biomass, vascular elongation, and vegetative canopy expansion."
-            risk_level = "✅ NORMAL: Active Growth"
+        elif "veg" in stage_key or "वानस्पतिक" in stage_key or "शाखीय" in stage_key:
+            stage_impact = t("stage_impact_veg", lang)
+            stage_action = t("stage_action_veg", lang, product=bio_product)
+            risk_level = t("risk_normal_growth", lang)
             risk_color = "#047857"
             risk_bg = "#f0fdf4"
         else:
-            stage_impact = f"Crop approaching physiological maturity. Excess humidity could delay drying and trigger fungal mold or seed spoilage."
-            stage_action = f"Withhold foliar applications. Monitor field dry-down and prepare for harvesting during clear sky weather window."
-            risk_level = "✅ HARVEST READY"
+            stage_impact = t("stage_impact_mature", lang)
+            stage_action = t("stage_action_mature", lang)
+            risk_level = t("risk_harvest_ready", lang)
             risk_color = "#047857"
             risk_bg = "#f0fdf4"
 
@@ -1654,7 +1695,7 @@ def main():
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
                 <div style="font-size: 0.95rem; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
                     <span style="font-size: 1.2rem;">🏛️</span>
-                    <span>IMD KALP Agromet Framework — Forecast · Impact · Action</span>
+                    <span>{t('kalp_title', lang)}</span>
                 </div>
                 <a href="https://webgis.imd.gov.in/agro/" target="_blank" style="font-size: 0.75rem; font-weight: 700; color: #0284c7; text-decoration: none; background: #f0f9ff; border: 1px solid #bae6fd; padding: 4px 10px; border-radius: 6px;">
                     Govt KALP Portal (webgis.imd.gov.in/agro) ↗
@@ -1662,7 +1703,7 @@ def main():
             </div>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px;">
                 <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px;">
-                    <div style="font-size: 0.72rem; text-transform: uppercase; font-weight: 800; color: #0284c7; letter-spacing: 0.05em;">1. Localized Forecast</div>
+                    <div style="font-size: 0.72rem; text-transform: uppercase; font-weight: 800; color: #0284c7; letter-spacing: 0.05em;">{t('kalp_forecast_lbl', lang)}</div>
                     <div style="font-size: 1.1rem; font-weight: 800; color: #0f172a; margin: 4px 0;">{ow_live['temp_c']}°C • {ow_live['humidity_pct']}% RH</div>
                     <div style="font-size: 0.78rem; color: #64748b;">Wind: {ow_live['wind_speed_kmh']} km/h • 24h Rain: {ow_5day[0]['rain_prob']}%</div>
                     <div style="margin-top: 8px; display: inline-block; background: {risk_bg}; color: {risk_color}; font-size: 0.72rem; font-weight: 800; padding: 3px 8px; border-radius: 4px;">
@@ -1670,13 +1711,13 @@ def main():
                     </div>
                 </div>
                 <div style="background: #fffbeb; border: 1px solid #fef3c7; border-radius: 10px; padding: 14px;">
-                    <div style="font-size: 0.72rem; text-transform: uppercase; font-weight: 800; color: #b45309; letter-spacing: 0.05em;">2. Likely Crop Impact</div>
+                    <div style="font-size: 0.72rem; text-transform: uppercase; font-weight: 800; color: #b45309; letter-spacing: 0.05em;">{t('kalp_impact_lbl', lang)}</div>
                     <div style="font-size: 0.82rem; font-weight: 700; color: #78350f; margin-top: 4px; line-height: 1.45;">
                         {stage_impact}
                     </div>
                 </div>
                 <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 10px; padding: 14px;">
-                    <div style="font-size: 0.72rem; text-transform: uppercase; font-weight: 800; color: #047857; letter-spacing: 0.05em;">3. Recommended Action</div>
+                    <div style="font-size: 0.72rem; text-transform: uppercase; font-weight: 800; color: #047857; letter-spacing: 0.05em;">{t('kalp_action_lbl', lang)}</div>
                     <div style="font-size: 0.82rem; font-weight: 700; color: #065f46; margin-top: 4px; line-height: 1.45;">
                         {stage_action}
                     </div>
@@ -1689,18 +1730,18 @@ def main():
         
         # Growth Stage Agronomic Response Multiplier
         stage_mult = 1.0
-        if "flowering" in stage_key:
+        if "flower" in stage_key or "फूल" in stage_key or "फुल" in stage_key:
             stage_mult = 1.0
-            unbuffered_desc = f"Zero thermal shock defense across {heat_stress} heat-stress days (>38°C). Stomatal closure and pollen desiccation trigger severe flower and boll abortion."
-        elif "grain" in stage_key:
+            unbuffered_desc = t("unbuffered_desc_flowering", lang, days=heat_stress)
+        elif "grain" in stage_key or "दाना" in stage_key or "दाणे" in stage_key:
             stage_mult = 0.92
-            unbuffered_desc = f"Terminal heat spikes (>38°C) shorten the grain filling period, producing shriveled grains and reduced test-weight."
-        elif "vegetative" in stage_key:
+            unbuffered_desc = t("unbuffered_desc_grain", lang)
+        elif "veg" in stage_key or "वानस्पतिक" in stage_key or "शाखीय" in stage_key:
             stage_mult = 0.88
-            unbuffered_desc = f"Excessive transpiration shock across {heat_stress} heat-stress days (>38°C) suppresses secondary tillering, canopy closure, and root nodule development."
+            unbuffered_desc = t("unbuffered_desc_veg", lang, days=heat_stress)
         else:
             stage_mult = 0.35
-            unbuffered_desc = f"Crop unbuffered against late-season ambient humidity spikes, increasing vulnerability to foliar mold and delayed field dry-down."
+            unbuffered_desc = t("unbuffered_desc_mature", lang)
 
         eff_delta = yield_delta * stage_mult
         eff_actual = pred_counterfactual + eff_delta
@@ -1715,9 +1756,9 @@ def main():
                 <span style="background: #ffe4e6; color: #be123c; font-weight: 800; font-size: 0.75rem; padding: 4px 10px; border-radius: 20px;">❌ {t('cf_without_title', lang).upper()}</span>
                 <div style="font-size: 0.8rem; text-transform: uppercase; font-weight: 800; color: #64748b; margin-top: 14px;">{t('baseline_harvest_pred', lang)}</div>
                 <div style="font-size: 2.3rem; font-weight: 900; color: #0f172a; line-height: 1.1; margin: 4px 0;">{pred_counterfactual:.2f} <span style="font-size: 1.1rem; font-weight: 600; color: #64748b;">{t('yield_unit', lang)}</span></div>
-                <div style="font-size: 1.05rem; font-weight: 700; color: #475569; margin-top: 6px;">Expected Gross Mandi Revenue: <strong style="color: #0f172a;">₹{pred_counterfactual * crop_price:,.0f} / acre</strong></div>
+                <div style="font-size: 1.05rem; font-weight: 700; color: #475569; margin-top: 6px;">{t('expected_mandi_rev', lang)} <strong style="color: #0f172a;">₹{pred_counterfactual * crop_price:,.0f} / acre</strong></div>
                 <div style="margin-top: 16px; background: rgba(255,255,255,0.85); border-left: 3px solid #e11d48; padding: 10px 12px; border-radius: 8px; font-size: 0.8rem; color: #9f1239; line-height: 1.4;">
-                    ⚠️ <strong>Crop Unbuffered:</strong> {unbuffered_desc}
+                    ⚠️ <strong>{t('crop_unbuffered_label', lang)}</strong> {unbuffered_desc}
                 </div>
             </div>
             """, unsafe_allow_html=True)
@@ -1731,14 +1772,14 @@ def main():
                     {eff_actual:.2f} <span style="font-size: 1.1rem; font-weight: 600; color: #047857;">{t('yield_unit', lang)}</span>
                     <span style="background: #059669; color: white; font-size: 0.85rem; font-weight: 800; padding: 4px 10px; border-radius: 12px; vertical-align: middle; margin-left: 6px;">+{eff_delta:.2f} {t('yield_unit', lang)} (+{pct_boost:.1f}%)</span>
                 </div>
-                <div style="font-size: 1.05rem; font-weight: 700; color: #065f46; margin-top: 6px;">Expected Gross Mandi Revenue: <strong style="color: #047857;">₹{eff_actual * crop_price:,.0f} / acre</strong></div>
+                <div style="font-size: 1.05rem; font-weight: 700; color: #065f46; margin-top: 6px;">{t('expected_mandi_rev', lang)} <strong style="color: #047857;">₹{eff_actual * crop_price:,.0f} / acre</strong></div>
                 <div style="margin-top: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                     <div style="background: #ffffff; border: 1px solid #a7f3d0; border-radius: 10px; padding: 10px 12px;">
-                        <div style="font-size: 0.7rem; font-weight: 800; color: #64748b; text-transform: uppercase;">Product Investment</div>
+                        <div style="font-size: 0.7rem; font-weight: 800; color: #64748b; text-transform: uppercase;">{t('prod_invest_lbl', lang)}</div>
                         <div style="font-size: 1.15rem; font-weight: 800; color: #0f172a;">₹{product_cost:,.0f} <span style="font-size: 0.75rem; font-weight: 600; color: #64748b;">/ acre</span></div>
                     </div>
                     <div style="background: #ecfdf5; border: 1.5px solid #10b981; border-radius: 10px; padding: 10px 12px;">
-                        <div style="font-size: 0.7rem; font-weight: 800; color: #047857; text-transform: uppercase;">Net Farmer Profit</div>
+                        <div style="font-size: 0.7rem; font-weight: 800; color: #047857; text-transform: uppercase;">{t('net_profit_lbl', lang)}</div>
                         <div style="font-size: 1.15rem; font-weight: 900; color: #059669;">+₹{eff_profit:,.0f} <span style="font-size: 0.75rem; font-weight: 700; color: #047857;">({eff_roi:.0f}% ROI)</span></div>
                     </div>
                 </div>
@@ -1751,7 +1792,7 @@ def main():
             <div style="max-width: 78%;">
                 <div style="font-size: 0.85rem; font-weight: 800; color: #0f172a;">{t('why_cf_title', lang)}</div>
                 <div style="font-size: 0.78rem; color: #475569; line-height: 1.5; margin-top: 4px;">
-                    To isolate pure biological efficacy from weather luck, the XGBoost engine simulates your exact digital field twin: holding Kopargaon temperature ({ow_live['temp_c']}°C), soil carbon ({soc}%), and rainfall 100% constant. The +{yield_delta:.2f} {t('yield_unit', lang)} boost is mathematically proven to be caused solely by the biostimulant.
+                    {t('cf_scientific_twin_desc', lang, farm_name=farm_name, temp=ow_live['temp_c'], soc=soc, boost=f"{yield_delta:.2f}", unit=t('yield_unit', lang))}
                 </div>
             </div>
             <div style="font-size: 0.75rem; font-weight: 700; color: #047857; background: #ecfdf5; border: 1.5px solid #10b981; padding: 6px 14px; border-radius: 20px;">
@@ -1769,9 +1810,9 @@ def main():
             st.markdown(f"""<div style="background:#fefce8; border-left:4px solid #ca8a04; padding:10px 14px; border-radius:6px; font-size:0.86rem; color:#0f172a; line-height:1.5;">{t("tab3_recall_text", lang)}</div>""", unsafe_allow_html=True)
         
         # 12-Parameter Soil Health Card Grid Synchronized with Exact Farm GPS
-        farm_lat = float(st.session_state.get('farm_lat', 19.8833))
-        farm_lon = float(st.session_state.get('farm_lon', 74.4833))
-        farm_name = st.session_state.get('farm_location_name', 'Kopargaon')
+        farm_lat = float(st.session_state.get('farm_lat', 18.5204))
+        farm_lon = float(st.session_state.get('farm_lon', 73.8567))
+        farm_name = st.session_state.get('farm_location_name', 'Pune')
         shc_data = pricing_and_soil_engine.get_regional_soil_health_card(region, lat=farm_lat, lon=farm_lon, location_name=farm_name)
         
         # Official Laboratory Dossier & Real-time GPS Calibration Banner
@@ -1779,17 +1820,17 @@ def main():
         <div style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border: 1.5px solid #cbd5e1; border-radius: 14px; padding: 14px 18px; margin-bottom: 16px;">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="background: #059669; color: white; border-radius: 6px; padding: 2px 8px; font-size: 0.72rem; font-weight: 800;">LIVE GPS SYNCED</span>
-                    <span style="font-size: 0.9rem; font-weight: 800; color: #0f172a;">📍 Tested Field: {farm_name} • {region} ({farm_lat:.4f}°N, {farm_lon:.4f}°E)</span>
+                    <span style="background: #059669; color: white; border-radius: 6px; padding: 2px 8px; font-size: 0.72rem; font-weight: 800;">{t('live_gps_synced', lang)}</span>
+                    <span style="font-size: 0.9rem; font-weight: 800; color: #0f172a;">📍 {t('tested_field_lbl', lang)} {farm_name} • {localized_reg} ({farm_lat:.4f}°N, {farm_lon:.4f}°E)</span>
                 </div>
                 <a href="https://soilhealth.dac.gov.in/" target="_blank" style="font-size: 0.75rem; font-weight: 700; color: #0284c7; text-decoration: none; background: #ffffff; border: 1px solid #bae6fd; padding: 4px 10px; border-radius: 6px;">
                     National Soil Health Portal (soilhealth.dac.gov.in) ↗
                 </a>
             </div>
             <div style="font-size: 0.78rem; color: #475569; margin-top: 8px; display: flex; gap: 18px; flex-wrap: wrap;">
-                <span>🏛️ <strong>Sampling STL:</strong> {shc_data['testing_lab']}</span>
-                <span>📋 <strong>Govt Registry ID:</strong> <code style="color:#0369a1; font-weight:700;">{shc_data['sample_id']}</code></span>
-                <span>🗺️ <strong>Taxonomy:</strong> {shc_data['soil_order']} ({shc_data['texture']})</span>
+                <span>🏛️ <strong>{t('sampling_stl_lbl', lang)}</strong> {shc_data['testing_lab']}</span>
+                <span>📋 <strong>{t('govt_reg_id_lbl', lang)}</strong> <code style="color:#0369a1; font-weight:700;">{shc_data['sample_id']}</code></span>
+                <span>🗺️ <strong>{t('taxonomy_lbl', lang)}</strong> {shc_data['soil_order']} ({shc_data['texture']})</span>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -1986,10 +2027,10 @@ def main():
                     </div>
                     <div>
                         <div style="font-size: 1.2rem; font-weight: 900; color: #0f172a; letter-spacing: -0.2px;">
-                            My Farm Memory & Closed-Loop Intelligence Ledger
+                            {t('farm_memory_hero_title', lang)}
                         </div>
                         <div style="font-size: 0.8rem; color: #475569; font-weight: 600;">
-                            Empowering Smallholder Farmers with Institutional Credit Proof, Adaptive AI Calibration & Multi-Season Value
+                            {t('farm_memory_hero_sub', lang)}
                         </div>
                     </div>
                 </div>
@@ -2001,16 +2042,16 @@ def main():
             </div>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-top: 12px; border-top: 1px dashed #cbd5e1; padding-top: 12px;">
                 <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px;">
-                    <div style="font-size: 0.8rem; font-weight: 800; color: #166534; margin-bottom: 2px;">🎯 Pillar 1: Adaptive Model Calibration</div>
-                    <div style="font-size: 0.75rem; color: #64748b; line-height: 1.4;">Harvest logs dynamically fine-tune regional ML coefficients to your field's biological response rate.</div>
+                    <div style="font-size: 0.8rem; font-weight: 800; color: #166534; margin-bottom: 2px;">{t('mem_pillar1_title', lang)}</div>
+                    <div style="font-size: 0.75rem; color: #64748b; line-height: 1.4;">{t('mem_pillar1_desc', lang)}</div>
                 </div>
                 <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px;">
-                    <div style="font-size: 0.8rem; font-weight: 800; color: #1e40af; margin-bottom: 2px;">🏛️ Pillar 2: Bank Credit Subvention</div>
-                    <div style="font-size: 0.75rem; color: #64748b; line-height: 1.4;">Generates verified KCC & PMFBY audit certificates certifying climate-resilient practices for concessional interest loans.</div>
+                    <div style="font-size: 0.8rem; font-weight: 800; color: #1e40af; margin-bottom: 2px;">{t('mem_pillar2_title', lang)}</div>
+                    <div style="font-size: 0.75rem; color: #64748b; line-height: 1.4;">{t('mem_pillar2_desc', lang)}</div>
                 </div>
                 <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px;">
-                    <div style="font-size: 0.8rem; font-weight: 800; color: #9a3412; margin-bottom: 2px;">📈 Pillar 3: Multi-Year Economic Ledger</div>
-                    <div style="font-size: 0.75rem; color: #64748b; line-height: 1.4;">Audited accounting proving cumulative net profit (+₹33,190) and yield gains (+9.1 q/acre) across drought and heat stress.</div>
+                    <div style="font-size: 0.8rem; font-weight: 800; color: #9a3412; margin-bottom: 2px;">{t('mem_pillar3_title', lang)}</div>
+                    <div style="font-size: 0.75rem; color: #64748b; line-height: 1.4;">{t('mem_pillar3_desc', lang)}</div>
                 </div>
             </div>
         </div>
@@ -2021,10 +2062,10 @@ def main():
         analytics = supabase_client.calculate_lifetime_farm_analytics(history)
         
         l_c1, l_c2, l_c3, l_c4 = st.columns(4)
-        with l_c1: st.metric("Seasons Logged", f"{analytics['total_seasons']}")
-        with l_c2: st.metric("Cumulative Extra Yield", f"+{analytics['lifetime_extra_yield_q']} {t('yield_unit', lang)}")
-        with l_c3: st.metric("Cumulative Net Profit", f"+₹{analytics['lifetime_net_profit_rs']:,.0f}")
-        with l_c4: st.metric("Farm Calibration", analytics.get("calibration_index", "104% (High Response)"))
+        with l_c1: st.metric(t("mem_seasons_logged", lang), f"{analytics['total_seasons']}")
+        with l_c2: st.metric(t("mem_cum_extra_yield", lang), f"+{analytics['lifetime_extra_yield_q']} {t('yield_unit', lang)}")
+        with l_c3: st.metric(t("mem_cum_net_profit", lang), f"+₹{analytics['lifetime_net_profit_rs']:,.0f}")
+        with l_c4: st.metric(t("mem_farm_calib", lang), analytics.get("calibration_index", "104% (High Response)"))
         
         st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
 
@@ -2067,8 +2108,8 @@ def main():
             <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <span style="width: 10px; height: 10px; background: #10b981; border-radius: 50%; display: inline-block; box-shadow: 0 0 8px #10b981;"></span>
-                    <span style="font-size: 0.8rem; font-weight: 800; color: #0f172a;">Feature A: 15-Minute Background Telemetry Auto-Logger</span>
-                    <span style="background: #ecfdf5; color: #047857; font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 6px; border: 1px solid #a7f3d0;">ACTIVE</span>
+                    <span style="font-size: 0.8rem; font-weight: 800; color: #0f172a;">{t('mem_feat_a_title', lang)}</span>
+                    <span style="background: #ecfdf5; color: #047857; font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 6px; border: 1px solid #a7f3d0;">{t('mem_feat_a_active', lang)}</span>
                 </div>
                 <div style="font-size: 0.74rem; color: #64748b;">
                     Synced: <strong>{farm_name}</strong> • Temp: <strong>{current_telemetry_pkg['temperature_c']}°C</strong> • Rain: <strong>{current_telemetry_pkg['rain_probability_pct']}%</strong> • NPK: <strong>{current_telemetry_pkg['soil_n_kg_ha']:.0f}:{current_telemetry_pkg['soil_p_kg_ha']:.0f}:{current_telemetry_pkg['soil_k_kg_ha']:.0f}</strong>
@@ -2076,7 +2117,7 @@ def main():
             </div>
             """, unsafe_allow_html=True)
         with col_tel_btn:
-            if st.button("⚡ Sync Telemetry Snapshot Now", use_container_width=True, key="btn_sync_telemetry"):
+            if st.button(t("mem_sync_now_btn", lang), use_container_width=True, key="btn_sync_telemetry"):
                 supabase_client.log_telemetry_snapshot(current_telemetry_pkg)
                 st.session_state["last_telemetry_sync_time"] = datetime.now()
                 st.toast("Telemetry snapshot saved to Supabase & local ledger!", icon="📡")
@@ -2085,7 +2126,7 @@ def main():
         st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
 
         # FEATURE B: Manual Harvest & Season Journal Logger Form
-        st.markdown("<div style='font-size:0.92rem; font-weight:800; color:#0f172a; margin-bottom:6px;'>📝 Feature B: Manual Season Harvest & Biological ROI Journal</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='font-size:0.92rem; font-weight:800; color:#0f172a; margin-bottom:6px;'>{t('mem_feat_b_title', lang)}</div>", unsafe_allow_html=True)
         with st.form("log_form"):
             col_f1, col_f2 = st.columns(2)
             with col_f1:
@@ -2110,8 +2151,8 @@ def main():
 
         # DEDICATED ONE-CLICK MULTI-TAB EXCEL & CSV EXPORT BAR
         st.markdown("<div style='margin-top: 18px;'></div>", unsafe_allow_html=True)
-        st.markdown("<div style='font-size:0.92rem; font-weight:800; color:#0f172a; margin-bottom:4px;'>📥 Download Complete Farm Memory & Telemetry Ledger</div>", unsafe_allow_html=True)
-        st.caption("Export your audited multi-season harvest logs and 15-minute microclimate telemetry directly to Excel (.xlsx) or CSV for bank officials and agronomists.")
+        st.markdown(f"<div style='font-size:0.92rem; font-weight:800; color:#0f172a; margin-bottom:4px;'>{t('mem_download_ledger_title', lang)}</div>", unsafe_allow_html=True)
+        st.caption(t("mem_download_ledger_sub", lang))
         
         excel_bytes = supabase_client.generate_farm_memory_excel_bytes()
         csv_journal_data = supabase_client.generate_farm_memory_csv_bytes("journal")
@@ -2120,7 +2161,7 @@ def main():
         col_dl_xlsx, col_dl_csv1, col_dl_csv2 = st.columns([1.5, 1, 1])
         with col_dl_xlsx:
             st.download_button(
-                label="📥 Download Full Ledger (Excel .xlsx)",
+                label=t("mem_dl_excel_btn", lang),
                 data=excel_bytes,
                 file_name=f"Syngenta_Farm_Memory_Ledger_{crop.split()[0]}_{datetime.now().strftime('%Y%m%d')}.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -2129,7 +2170,7 @@ def main():
             )
         with col_dl_csv1:
             st.download_button(
-                label="📄 Harvest Journal (.csv)",
+                label=t("mem_dl_csv_journal_btn", lang),
                 data=csv_journal_data,
                 file_name=f"Harvest_Journal_{crop.split()[0]}.csv",
                 mime="text/csv",
@@ -2138,7 +2179,7 @@ def main():
             )
         with col_dl_csv2:
             st.download_button(
-                label="📡 Telemetry Audit (.csv)",
+                label=t("mem_dl_csv_telemetry_btn", lang),
                 data=csv_telemetry_data,
                 file_name=f"Telemetry_Audit_{crop.split()[0]}.csv",
                 mime="text/csv",
@@ -2514,25 +2555,52 @@ def main():
 
         # ── Smart Dynamic Question Chips ───────────────────────────────────────
         smart_chips = []
-        if _n_val < 280:
-            smart_chips.append(f"My soil nitrogen is only {_n_val:.0f} kg/ha — what should I do urgently?")
-        if _p_val < 23:
-            smart_chips.append(f"My phosphorus is {_p_val:.0f} kg/ha (deficient) — how do I fix it?")
-        if mandi_info.get("price_vs_msp_pct", 0) < 0:
-            smart_chips.append(f"Mandi price is below MSP for {crop} — should I hold or sell?")
+        loc_active_c = t_crop(crop, lang)
+        if lang == "Marathi (मराठी)":
+            if _n_val < 280:
+                smart_chips.append(f"माझ्या जमिनीत नायट्रोजन फक्त {_n_val:.0f} kg/ha आहे — तातडीने काय करावे?")
+            if _p_val < 23:
+                smart_chips.append(f"फॉस्फरसची कमतरता ({_p_val:.0f} kg/ha) आहे — मी काय करावे?")
+            if mandi_info.get("price_vs_msp_pct", 0) < 0:
+                smart_chips.append(f"बाजारभाव हमीभावापेक्षा कमी आहे — {loc_active_c} विकावा की ठेवावा?")
+            else:
+                smart_chips.append(f"बाजारभाव हमीभावापेक्षा {_arb_sign}{_arb_pct:.1f}% जास्त आहे — {loc_active_c} विकण्याची ही योग्य वेळ आहे का?")
+            if _hum_now > 75:
+                smart_chips.append(f"आज आर्द्रता {_hum_now:.0f}% आहे — {bio_product} फवारणे सुरक्षित आहे का?")
+            if heat_stress > 3:
+                smart_chips.append(f"{heat_stress} दिवस उष्णतेचा ताण आहे — पीक उत्पादनाचे संरक्षण कसे करावे?")
+            smart_chips.append(f"{bio_product} मुळे {loc_active_c} चा दर्जा ग्रेड-A बाजारभावासाठी कसा सुधारतो?")
+        elif lang == "Hindi (हिंदी)":
+            if _n_val < 280:
+                smart_chips.append(f"मेरी मिट्टी में नाइट्रोजन केवल {_n_val:.0f} kg/ha है — तुरंत क्या करें?")
+            if _p_val < 23:
+                smart_chips.append(f"फॉस्फोरस की कमी ({_p_val:.0f} kg/ha) है — सुधार कैसे करें?")
+            if mandi_info.get("price_vs_msp_pct", 0) < 0:
+                smart_chips.append(f"मंडी भाव MSP से कम है — {loc_active_c} रोकें या बेचें?")
+            else:
+                smart_chips.append(f"मंडी भाव MSP से {_arb_sign}{_arb_pct:.1f}% ऊपर है — क्या {loc_active_c} बेचने का सही समय है?")
+            if _hum_now > 75:
+                smart_chips.append(f"आज आर्द्रता {_hum_now:.0f}% है — क्या {bio_product} का छिड़काव सुरक्षित है?")
+            if heat_stress > 3:
+                smart_chips.append(f"{heat_stress} दिन गर्मी का तनाव है — उपज की रक्षा कैसे करें?")
+            smart_chips.append(f"{bio_product} से {loc_active_c} की गुणवत्ता ग्रेड-A मंडी भाव के लिए कैसे सुधरती है?")
         else:
-            smart_chips.append(f"Mandi is {_arb_sign}{_arb_pct:.1f}% above MSP — is now the right time to sell {crop}?")
-        if _hum_now > 75:
-            smart_chips.append(f"Humidity is {_hum_now:.0f}% today — is it safe to spray {bio_product}?")
-        if heat_stress > 3:
-            smart_chips.append(f"I have {heat_stress} heat stress days — how do I protect my crop yield?")
-        if soc < 0.5:
-            smart_chips.append("My SOC is low — how can I improve my soil organic carbon quickly?")
-        smart_chips.append(f"How does {bio_product} improve my {crop} quality for Grade-A mandi price?")
-        smart_chips.append(f"What is my break-even price per quintal given my current input costs?")
+            if _n_val < 280:
+                smart_chips.append(f"My soil nitrogen is only {_n_val:.0f} kg/ha — what should I do urgently?")
+            if _p_val < 23:
+                smart_chips.append(f"My phosphorus is {_p_val:.0f} kg/ha (deficient) — how do I fix it?")
+            if mandi_info.get("price_vs_msp_pct", 0) < 0:
+                smart_chips.append(f"Mandi price is below MSP for {crop} — should I hold or sell?")
+            else:
+                smart_chips.append(f"Mandi is {_arb_sign}{_arb_pct:.1f}% above MSP — is now the right time to sell {crop}?")
+            if _hum_now > 75:
+                smart_chips.append(f"Humidity is {_hum_now:.0f}% today — is it safe to spray {bio_product}?")
+            if heat_stress > 3:
+                smart_chips.append(f"I have {heat_stress} heat stress days — how do I protect my crop yield?")
+            smart_chips.append(f"How does {bio_product} improve my {crop} quality for Grade-A mandi price?")
 
         smart_chips = smart_chips[:6]
-        st.markdown("<div style='font-size:0.82rem; font-weight:700; color:#475569; margin-bottom:8px;'>⚡ 1-Tap Telemetry Prompts — dynamically generated from your farm state today:</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='font-size:0.82rem; font-weight:700; color:#475569; margin-bottom:8px;'>{t('ai_prompt_chips_title', lang)}</div>", unsafe_allow_html=True)
 
         chip_selected = ""
         chip_cols_row1 = st.columns(3)
@@ -2548,9 +2616,9 @@ def main():
 
         # ── Multimodal Input Center (Voice Mic + Image + Text) ──────────────────
         mode_tab_voice, mode_tab_text, mode_tab_img = st.tabs([
-            "🎙️ Speak via Microphone (Voice Note)",
-            "💬 Type Your Question",
-            "📸 Attach Field / Leaf Photo"
+            t("ai_tab_voice", lang),
+            t("ai_tab_text", lang),
+            t("ai_tab_photo", lang)
         ])
 
         voice_audio = None
@@ -2558,12 +2626,12 @@ def main():
         attached_image = None
 
         with mode_tab_voice:
-            st.markdown("""
+            st.markdown(f"""
             <div style="font-size: 0.85rem; color: #475569; margin-bottom: 8px;">
-                🔴 <strong>Direct Device Microphone:</strong> Tap the mic icon below to speak in <strong>Marathi, Hindi, Telugu, or English</strong>. Gemini 2.5 Flash will listen, transcribe, and formulate your farm advisory.
+                {t('ai_mic_instruction', lang)}
             </div>
             """, unsafe_allow_html=True)
-            voice_audio = st.audio_input("Record your voice question (tap mic):", key="ai_voice_recorder")
+            voice_audio = st.audio_input(t("ai_mic_record_lbl", lang), key="ai_voice_recorder")
             if voice_audio:
                 st.caption(f"🎧 Audio recorded ({len(voice_audio.getvalue())/1024:.1f} KB). Ready to analyze.")
 
@@ -2572,11 +2640,11 @@ def main():
                 t("ai_input_default", lang, product=bio_product, crop=localized_active_crop, days=heat_stress)
             )
             user_question_text = st.text_area(
-                "Write or paste your question:",
+                t("ai_text_input_lbl", lang),
                 help=t("help_ai_input", lang),
                 value=default_q_val,
                 height=75,
-                placeholder="e.g. How can I safely reduce urea while keeping my target yield?"
+                placeholder=t("ai_text_input_placeholder", lang)
             )
 
         with mode_tab_img:

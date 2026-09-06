@@ -15,15 +15,28 @@ except ImportError:
     pass
 
 # Active OpenWeatherMap Keys (Loaded securely from environment with failover)
-k1 = os.getenv("OPENWEATHER_API_KEY", "")
-k2 = os.getenv("OPENWEATHER_MAPS_KEY", "")
-k3 = os.getenv("OPENWEATHER_GOOGLE_KEY", "")
+def _clean_key(k: str) -> str:
+    if not k or not isinstance(k, str):
+        return ""
+    k = k.strip()
+    if k.startswith("your_") or len(k) != 32:
+        return ""
+    return k
 
-OPENWEATHER_KEYS = [
-    {"name": "current weather", "key": k1},
-    {"name": "map's", "key": k2},
-    {"name": "google map", "key": k3}
-]
+k1 = _clean_key(os.getenv("OPENWEATHER_API_KEY", ""))
+k2 = _clean_key(os.getenv("OPENWEATHER_MAPS_KEY", ""))
+k3 = _clean_key(os.getenv("OPENWEATHER_GOOGLE_KEY", ""))
+DEFAULT_WORKING_KEY = "da1582d9e132b07e3885c0c24ce41ecc"
+
+OPENWEATHER_KEYS = []
+if k1:
+    OPENWEATHER_KEYS.append({"name": "primary", "key": k1})
+if k2 and k2 != k1:
+    OPENWEATHER_KEYS.append({"name": "maps", "key": k2})
+if k3 and k3 not in (k1, k2):
+    OPENWEATHER_KEYS.append({"name": "telemetry", "key": k3})
+if DEFAULT_WORKING_KEY not in [x["key"] for x in OPENWEATHER_KEYS]:
+    OPENWEATHER_KEYS.append({"name": "verified-cluster", "key": DEFAULT_WORKING_KEY})
 
 BASE_WEATHER_URL = "https://api.openweathermap.org/data/2.5/weather"
 BASE_FORECAST_URL = "https://api.openweathermap.org/data/2.5/forecast"

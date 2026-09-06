@@ -29,9 +29,18 @@ try:
 except ImportError:
     pass
 
-SUPABASE_URL = os.getenv("SUPABASE_URL", "https://wnujxbnjqrwybllvbahm.supabase.co")
-SUPABASE_PUB_KEY = os.getenv("SUPABASE_PUB_KEY", "")
-SUPABASE_SECRET_KEY = os.getenv("SUPABASE_SECRET_KEY", "")
+def _clean_supa_val(v: str) -> str:
+    if not v or not isinstance(v, str):
+        return ""
+    v = v.strip()
+    if "your-" in v or "your_" in v or len(v) < 8:
+        return ""
+    return v
+
+_raw_url = _clean_supa_val(os.getenv("SUPABASE_URL", ""))
+SUPABASE_URL = _raw_url if _raw_url else "https://wnujxbnjqrwybllvbahm.supabase.co"
+SUPABASE_PUB_KEY = _clean_supa_val(os.getenv("SUPABASE_PUB_KEY", ""))
+SUPABASE_SECRET_KEY = _clean_supa_val(os.getenv("SUPABASE_SECRET_KEY", ""))
 ACTIVE_KEY = SUPABASE_SECRET_KEY if SUPABASE_SECRET_KEY else SUPABASE_PUB_KEY
 
 # Persistent local fallback paths (guarantees zero data loss)

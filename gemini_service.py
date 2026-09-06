@@ -23,7 +23,15 @@ try:
 except ImportError:
     pass
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+def _clean_gemini_key(k: str) -> str:
+    if not k or not isinstance(k, str):
+        return ""
+    k = k.strip()
+    if k.startswith("your_") or len(k) < 20:
+        return ""
+    return k
+
+GEMINI_API_KEY = _clean_gemini_key(os.getenv("GEMINI_API_KEY", ""))
 GEMINI_ENDPOINT = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
 
 # ─── System Prompt ────────────────────────────────────────────────────────────
@@ -252,21 +260,22 @@ def ask_gemini_multimodal(
     }
     headers = {"Content-Type": "application/json"}
 
-    try:
-        res = requests.post(GEMINI_ENDPOINT, json=payload, headers=headers, timeout=18)
-        if res.status_code == 200:
-            data = res.json()
-            reply = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
-            if reply and len(reply.strip()) > 10:
-                return {
-                    "status": "live",
-                    "response": reply.strip(),
-                    "language": language,
-                    "has_audio": has_audio,
-                    "has_image": has_image
-                }
-    except Exception:
-        pass
+    if GEMINI_API_KEY:
+        try:
+            res = requests.post(GEMINI_ENDPOINT, json=payload, headers=headers, timeout=10)
+            if res.status_code == 200:
+                data = res.json()
+                reply = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+                if reply and len(reply.strip()) > 10:
+                    return {
+                        "status": "live",
+                        "response": reply.strip(),
+                        "language": language,
+                        "has_audio": has_audio,
+                        "has_image": has_image
+                    }
+        except Exception:
+            pass
 
     # Graceful fallback
     fallback_text = generate_domain_expert_fallback(query_text or "General field advice", language, context_info)
