@@ -36,12 +36,16 @@ def generate_interactive_weather_map_html(
     Generates a full interactive HTML Leaflet widget with live dynamic Doppler radar,
     high-contrast satellite clouds, wind streamlines, and instant on-map telemetry recalculation.
     """
-    api_key = (
+    raw_key = (
         os.getenv("OPENWEATHER_MAPS_KEY") 
         or os.getenv("OPENWEATHER_API_KEY") 
         or os.getenv("OPENWEATHER_MAP_KEY") 
-        or "da1582d9e132b07e3885c0c24ce41ecc"
-    )
+        or ""
+    ).strip()
+    if not raw_key or raw_key.startswith("your_") or len(raw_key) != 32:
+        api_key = "da1582d9e132b07e3885c0c24ce41ecc"
+    else:
+        api_key = raw_key
 
     w = weather_info or {}
     temp = w.get("temp_c", 28.5)
@@ -56,7 +60,7 @@ def generate_interactive_weather_map_html(
         "en": {
             "clouds": "☁️ Clouds", "radar": "🌧️ Rain Radar", "wind": "💨 Wind Stream", "satellite": "🛰️ Satellite",
             "search_ph": "🔍 Search Village / Taluka (e.g. Pune, Akola, Baramati, Ludhiana)...",
-            "search_btn": "Search", "gps_btn": "🎯 My GPS",
+            "search_btn": "Search", "gps_btn": "🎯 Live Location",
             "banner_sub": "🌀 IMD Cyclone Alert: NORMAL (Safe for Application)",
             "live_field": "LIVE FIELD", "cloud_lbl": "Cloud Cover:", "wind_lbl": "Wind Speed:", "rh_lbl": "Humidity:",
             "set_farm": "📍 Set as My Farm in Decision Engine ↗"
@@ -64,7 +68,7 @@ def generate_interactive_weather_map_html(
         "hi": {
             "clouds": "☁️ बादल", "radar": "🌧️ वर्षा रडार", "wind": "💨 हवा का बहाव", "satellite": "🛰️ उपग्रह",
             "search_ph": "🔍 गांव या तहसील खोजें (उदा. पुणे, अकोला, लुधियाना)...",
-            "search_btn": "खोजें", "gps_btn": "🎯 मेरा GPS",
+            "search_btn": "खोजें", "gps_btn": "🎯 लाइव लोकेशन",
             "banner_sub": "🌀 IMD चक्रवात चेतावनी: सामान्य (छिड़काव सुरक्षित)",
             "live_field": "सक्रिय प्रक्षेत्र", "cloud_lbl": "बादल आवरण:", "wind_lbl": "हवा गति:", "rh_lbl": "नमी:",
             "set_farm": "📍 निर्णय इंजन में इसे मेरा खेत बनाएं ↗"
@@ -72,7 +76,7 @@ def generate_interactive_weather_map_html(
         "mr": {
             "clouds": "☁️ ढग", "radar": "🌧️ पाऊस रडार", "wind": "💨 वाऱ्याचा वेग", "satellite": "🛰️ उपग्रह",
             "search_ph": "🔍 गाव किंवा तालुका शोधा (उदा. पुणे, अकोला, बारामती)...",
-            "search_btn": "शोधा", "gps_btn": "🎯 माझे GPS",
+            "search_btn": "शोधा", "gps_btn": "🎯 थेट स्थान (Live GPS)",
             "banner_sub": "🌀 हवामान विभाग इशारा: सामान्य (फवारणीसाठी सुरक्षित)",
             "live_field": "थेट शेत", "cloud_lbl": "ढगाळ वातावरण:", "wind_lbl": "वाऱ्याचा वेग:", "rh_lbl": "आर्द्रता:",
             "set_farm": "📍 हे माझे शेत म्हणून निवडा ↗"
@@ -80,15 +84,15 @@ def generate_interactive_weather_map_html(
         "pa": {
             "clouds": "☁️ ਬੱਦਲ", "radar": "🌧️ ਮੀਂਹ ਰਾਡਾਰ", "wind": "💨 ਹਵਾ ਦਾ ਵਹਾਅ", "satellite": "🛰️ ਸੈਟੇਲਾਈਟ",
             "search_ph": "🔍 ਪਿੰਡ ਜਾਂ ਤਹਿਸੀਲ ਲੱਭੋ (ਜਿਵੇਂ ਲੁਧਿਆਣਾ, ਬਠਿੰਡਾ)...",
-            "search_btn": "ਖੋਜੋ", "gps_btn": "🎯 ਮੇਰਾ GPS",
+            "search_btn": "ਖੋਜੋ", "gps_btn": "🎯 ਲਾਈਵ ਲੋਕੇਸ਼ਨ",
             "banner_sub": "🌀 ਮੌਸਮ ਚੇਤਾਵਨੀ: ਆਮ (ਸਪਰੇਅ ਲਈ ਸੁਰੱਖਿਅਤ)",
             "live_field": "ਲਾਈਵ ਖੇਤ", "cloud_lbl": "ਬੱਦਲ ਛਾਏ:", "wind_lbl": "ਹਵਾ ਗਤੀ:", "rh_lbl": "ਨਮੀ:",
             "set_farm": "📍 ਇਸ ਨੂੰ ਮੇਰਾ ਖੇਤ ਚੁਣੋ ↗"
         },
         "te": {
-            "clouds": "☁️ మేఘాలు", "radar": "🌧️ వర్షపు రాడార్", "wind": "💨 గాలి వేగం", "satellite": "🛰️ శాటిలైట్",
+            "clouds": "☁️ మేఘాలు", "radar": "🌧️ వర్షపు రాডার", "wind": "💨 గాలి వేగం", "satellite": "🛰️ శాటిలైట్",
             "search_ph": "🔍 గ్రామం లేదా మండలాన్ని శోధించండి...",
-            "search_btn": "వెతకండి", "gps_btn": "🎯 నా GPS",
+            "search_btn": "వెతకండి", "gps_btn": "🎯 లైవ్ లొకేషన్",
             "banner_sub": "🌀 వాతావరణ హెచ్చరిక: సాధారణం (స్ప్రేకి అనుకూలం)",
             "live_field": "ప్రత్యక్ష క్షేత్రం", "cloud_lbl": "మేఘాల కవరేజ్:", "wind_lbl": "గాలి వేగం:", "rh_lbl": "తేమ:",
             "set_farm": "📍 దీనిని నా పొలంగా ఎంచుకోండి ↗"
@@ -96,7 +100,7 @@ def generate_interactive_weather_map_html(
         "gu": {
             "clouds": "☁️ વાદળો", "radar": "🌧️ વરસાદ રડાર", "wind": "💨 પવનની ગતિ", "satellite": "🛰️ સેટેલાઇટ",
             "search_ph": "🔍 ગામ અથવા તાલુકો શોધો...",
-            "search_btn": "શોધો", "gps_btn": "🎯 મારું GPS",
+            "search_btn": "શોધો", "gps_btn": "🎯 લાઈવ લોકેશન",
             "banner_sub": "🌀 હવામાન ચેતવણી: સામાન્ય (છંટકાવ માટે અનુકૂળ)",
             "live_field": "જીવંત ખેતર", "cloud_lbl": "વાદળ આવરણ:", "wind_lbl": "પવન ગતિ:", "rh_lbl": "ભેજ:",
             "set_farm": "📍 આને મારું ખેતર સેટ કરો ↗"
@@ -104,7 +108,7 @@ def generate_interactive_weather_map_html(
         "kn": {
             "clouds": "☁️ ಮೋಡಗಳು", "radar": "🌧️ ಮಳೆ ರೇಡಾರ್", "wind": "💨 ಗಾಳಿಯ ವೇಗ", "satellite": "🛰️ ಉಪಗ್ರಹ",
             "search_ph": "🔍 ಗ್ರಾಮ ಅಥವಾ ತಾಲೂಕು ಹುಡುಕಿ...",
-            "search_btn": "ಹುಡುಕಿ", "gps_btn": "🎯 ನನ್ನ GPS",
+            "search_btn": "ಹುಡುಕಿ", "gps_btn": "🎯 ಲೈವ್ ಸ್ಥಳ",
             "banner_sub": "🌀 ಹವಾಮಾನ ಎಚ್ಚರಿಕೆ: ಸಾಮಾನ್ಯ (ಸಿಂಪಡಣೆಗೆ ಸೂಕ್ತ)",
             "live_field": "ನೇರ ಕ್ಷೇತ್ರ", "cloud_lbl": "ಮೋಡ ವ್ಯಾಪ್ತಿ:", "wind_lbl": "ಗಾಳಿಯ ವೇಗ:", "rh_lbl": "ತೇವಾಂಶ:",
             "set_farm": "📍 ಇದನ್ನು ನನ್ನ ಹೊಲವಾಗಿ ಆಯ್ಕೆಮಾಡಿ ↗"
@@ -112,7 +116,7 @@ def generate_interactive_weather_map_html(
         "ta": {
             "clouds": "☁️ மேகங்கள்", "radar": "🌧️ மழை ரேடார்", "wind": "💨 காற்றின் வேகம்", "satellite": "🛰️ செயற்கைக்கோள்",
             "search_ph": "🔍 கிராமம் அல்லது வட்டாரத்தை தேடவும்...",
-            "search_btn": "தேடு", "gps_btn": "🎯 எனது GPS",
+            "search_btn": "தேடு", "gps_btn": "🎯 நேரலை இடம்",
             "banner_sub": "🌀 வானிலை எச்சரிக்கை: இயல்பு (தெளிப்புக்கு உகந்தது)",
             "live_field": "நேரலை புலம்", "cloud_lbl": "மேக மூட்டம்:", "wind_lbl": "காற்றின் வேகம்:", "rh_lbl": "ஈரப்பதம்:",
             "set_farm": "📍 இதை எனது பண்ணையாக அமைக்கவும் ↗"
@@ -120,7 +124,7 @@ def generate_interactive_weather_map_html(
         "bn": {
             "clouds": "☁️ মেঘ", "radar": "🌧️ বৃষ্টি রাডার", "wind": "💨 বাতাসের গতি", "satellite": "🛰️ স্যাটেলাইট",
             "search_ph": "🔍 গ্রাম বা ব্লক অনুসন্ধান করুন...",
-            "search_btn": "অনুসন্ধান", "gps_btn": "🎯 আমার GPS",
+            "search_btn": "অনুসন্ধান", "gps_btn": "🎯 লাইভ অবস্থান",
             "banner_sub": "🌀 আবহাওয়া সতর্কতা: স্বাভাবিক (স্প্রে করার উপযোগী)",
             "live_field": "সরাসরি মাঠ", "cloud_lbl": "মেঘের পরিমাণ:", "wind_lbl": "বাতাসের গতি:", "rh_lbl": "আর্দ্রতা:",
             "set_farm": "📍 এটিকে আমার খামার হিসেবে নির্বাচন করুন ↗"
@@ -284,15 +288,15 @@ def generate_interactive_weather_map_html(
             z-index: 1001;
             background: rgba(255, 255, 255, 0.98);
             backdrop-filter: blur(8px);
-            padding: 6px 14px;
+            padding: 6px 12px;
             border-radius: 30px;
             border: 1.5px solid rgba(0,0,0,0.18);
             box-shadow: 0 8px 24px rgba(0,0,0,0.35);
             display: flex;
             align-items: center;
             gap: 8px;
-            width: 90%;
-            max-width: 520px;
+            width: 92%;
+            max-width: 580px;
             pointer-events: auto;
         }}
         .search-input {{
@@ -303,6 +307,7 @@ def generate_interactive_weather_map_html(
             width: 100%;
             background: transparent;
             font-weight: 500;
+            min-width: 120px;
         }}
         .gps-btn {{
             background: #059669;
@@ -314,9 +319,17 @@ def generate_interactive_weather_map_html(
             font-weight: 700;
             cursor: pointer;
             white-space: nowrap;
-            transition: background 0.2s ease;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
         }}
-        .gps-btn:hover {{ background: #047857; }}
+        .gps-btn:hover {{
+            opacity: 0.92;
+            transform: translateY(-1px);
+        }}
+        .gps-btn:active {{
+            transform: translateY(1px);
+        }}
     </style>
 </head>
 <body>
@@ -352,24 +365,24 @@ def generate_interactive_weather_map_html(
         </div>
 
         <!-- Direct One-Tap Layer Control Toolbar -->
-        <div class="layer-toolbar" id="layerToolbar">
-            <button id="btnClouds" class="layer-pill" onclick="handleLayerClick('clouds', event)">{t_ui['clouds']}</button>
-            <button id="btnRadar" class="layer-pill active" onclick="handleLayerClick('radar', event)">{t_ui['radar']}</button>
-            <button id="btnWind" class="layer-pill" onclick="handleLayerClick('wind', event)">{t_ui['wind']}</button>
-            <button id="btnSatellite" class="layer-pill" onclick="handleSatelliteClick(event)">{t_ui['satellite']}</button>
+        <div class="layer-toolbar">
+            <button id="btnClouds" class="layer-pill active" onclick="toggleLayer('clouds')">{t_ui['clouds']}</button>
+            <button id="btnRadar" class="layer-pill active" onclick="toggleLayer('radar')">{t_ui['radar']}</button>
+            <button id="btnWind" class="layer-pill active" onclick="toggleLayer('wind')">{t_ui['wind']}</button>
+            <button id="btnSatellite" class="layer-pill" onclick="toggleSatellite()">{t_ui['satellite']}</button>
         </div>
 
         <!-- Floating Legend & Active Layer Status -->
         <div class="layer-legend" id="layerLegend">
             <div style="color:#6ee7b7; font-weight:800; margin-bottom:3px;">📡 ACTIVE LAYERS:</div>
-            <div id="legendStatus">🌧️ <b>Rain Radar:</b> Live Doppler Precipitation Active</div>
+            <div id="legendStatus">🌧️ <b>Rain Radar:</b> Live Doppler Active<br>☁️ <b>Clouds:</b> Real-time Satellite<br>💨 <b>Wind:</b> Flow Streamlines</div>
         </div>
 
-        <!-- Interactive Search & GPS Locate Bar -->
+        <!-- Interactive Search Bar with Live Geolocation Teleport -->
         <div class="search-container" id="searchContainer">
             <input type="text" id="locSearch" class="search-input" placeholder="{t_ui['search_ph']}" />
-            <button onclick="handleSearchClick(event)" class="gps-btn" style="background:#0284c7;">{t_ui['search_btn']}</button>
-            <button onclick="handleGpsClick(event)" class="gps-btn">{t_ui['gps_btn']}</button>
+            <button onclick="searchLocation()" class="gps-btn" style="background:#0284c7;">{t_ui['search_btn']}</button>
+            <button id="gpsLocBtn" onclick="locateUserGPS()" class="gps-btn" style="background:#059669;" title="Teleport directly to my live location">{t_ui['gps_btn']}</button>
         </div>
     </div>
 
@@ -381,132 +394,141 @@ def generate_interactive_weather_map_html(
             zoomControl: true
         }});
 
+        // Dedicated panes for clean layer stacking
+        map.createPane('baseMapPane');
+        map.getPane('baseMapPane').style.zIndex = 200;
+
+        map.createPane('weatherOverlayPane');
+        map.getPane('weatherOverlayPane').style.zIndex = 400;
+
         // 1. OpenStreetMap Base Layer
         var osmLayer = L.tileLayer('https://tile.openstreetmap.org/{{z}}/{{x}}/{{y}}.png', {{
             maxZoom: 19,
+            pane: 'baseMapPane',
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         }}).addTo(map);
 
         // 2. High-Resolution Farm Satellite View (Esri World Imagery)
         var satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{{z}}/{{y}}/{{x}}', {{
             maxZoom: 19,
+            pane: 'baseMapPane',
             attribution: 'Tiles &copy; Esri High-Res Satellite'
         }});
 
-        // 3. OpenWeatherMap Live Satellite Clouds (Opacity 0.85)
+        // 3. OpenWeatherMap Live Satellite Clouds (Visible by default)
         var cloudsLayer = L.tileLayer('https://tile.openweathermap.org/map/clouds_new/{{z}}/{{x}}/{{y}}.png?appid=' + apiKey, {{
             maxZoom: 18,
             opacity: 0.85,
+            pane: 'weatherOverlayPane',
             attribution: 'Clouds &copy; OpenWeatherMap'
-        }});
-
-        // 4. OpenWeatherMap Direct Precipitation Radar (100% Reliable, Zero Connection Errors)
-        var radarLayer = L.tileLayer('https://tile.openweathermap.org/map/precipitation_new/{{z}}/{{x}}/{{y}}.png?appid=' + apiKey, {{
-            maxZoom: 18,
-            opacity: 0.85,
-            attribution: 'Precipitation Radar &copy; OpenWeatherMap'
         }}).addTo(map);
 
-        // 5. OpenWeatherMap Wind Streamlines Layer (Opacity 0.80)
+        // 4. OpenWeatherMap Wind Streamlines Layer (Visible by default)
         var windLayer = L.tileLayer('https://tile.openweathermap.org/map/wind_new/{{z}}/{{x}}/{{y}}.png?appid=' + apiKey, {{
             maxZoom: 18,
             opacity: 0.80,
+            pane: 'weatherOverlayPane',
             attribution: 'Wind &copy; OpenWeatherMap'
-        }});
+        }}).addTo(map);
 
-        // =========================================================================
-        // STRICT CLICK PROPAGATION SHIELD: Prevents any control click from shifting map
-        // =========================================================================
-        function shieldElement(id) {{
-            var el = document.getElementById(id);
-            if (el) {{
-                L.DomEvent.disableClickPropagation(el);
-                L.DomEvent.disableScrollPropagation(el);
-                ['click', 'dblclick', 'mousedown', 'mouseup', 'touchstart', 'touchend'].forEach(function(evName) {{
-                    el.addEventListener(evName, function(e) {{
-                        e.stopPropagation();
-                    }}, true);
-                }});
-            }}
-        }}
-        shieldElement('layerToolbar');
-        shieldElement('weatherHud');
-        shieldElement('searchContainer');
-        shieldElement('layerLegend');
+        // 5. Dynamic RainViewer Doppler Radar Layer + OpenWeather Fallback
+        var radarLayer = null;
+        fetch('https://api.rainviewer.com/public/weather-maps.json')
+            .then(function(res) {{ return res.json(); }})
+            .then(function(data) {{
+                if (data && data.radar && data.radar.past && data.radar.past.length > 0) {{
+                    var latestPath = data.radar.past[data.radar.past.length - 1].path;
+                    var radarTileUrl = data.host + latestPath + '/256/{{z}}/{{x}}/{{y}}/2/1_1.png';
+                    radarLayer = L.tileLayer(radarTileUrl, {{
+                        maxZoom: 18,
+                        opacity: 0.85,
+                        pane: 'weatherOverlayPane',
+                        attribution: 'Live Doppler Radar &copy; RainViewer'
+                    }}).addTo(map);
+                }} else {{
+                    radarLayer = L.tileLayer('https://tile.openweathermap.org/map/precipitation_new/{{z}}/{{x}}/{{y}}.png?appid=' + apiKey, {{
+                        maxZoom: 18, opacity: 0.85, pane: 'weatherOverlayPane'
+                    }}).addTo(map);
+                }}
+            }})
+            .catch(function(err) {{
+                radarLayer = L.tileLayer('https://tile.openweathermap.org/map/precipitation_new/{{z}}/{{x}}/{{y}}.png?appid=' + apiKey, {{
+                    maxZoom: 18, opacity: 0.85, pane: 'weatherOverlayPane'
+                }}).addTo(map);
+            }});
+
+        // Ensure Leaflet recalculates tile geometry properly
+        setTimeout(function() {{ map.invalidateSize(); }}, 200);
+        setTimeout(function() {{ map.invalidateSize(); }}, 600);
 
         // Update Legend Status Box
         function updateLegend() {{
             var activeItems = [];
-            if (map.hasLayer(radarLayer)) {{
-                activeItems.push("🌧️ <b>Rain Radar:</b> Doppler Precipitation (Light → Heavy)");
+            if (radarLayer && map.hasLayer(radarLayer)) {{
+                activeItems.push("🌧️ <b>Rain Radar:</b> Live Doppler Active");
             }}
             if (map.hasLayer(cloudsLayer)) {{
-                activeItems.push("☁️ <b>Satellite Clouds:</b> Real-time Cloud Cover");
+                activeItems.push("☁️ <b>Clouds:</b> Real-time Satellite");
             }}
             if (map.hasLayer(windLayer)) {{
-                activeItems.push("💨 <b>Wind Stream:</b> Surface Airflow Velocity");
+                activeItems.push("💨 <b>Wind:</b> Flow Streamlines");
             }}
             if (map.hasLayer(satelliteLayer)) {{
-                activeItems.push("🛰️ <b>Satellite:</b> Esri High-Resolution Farm Imagery");
+                activeItems.push("🛰️ <b>Satellite:</b> Esri High-Resolution");
             }}
             if (activeItems.length === 0) {{
-                activeItems.push("🗺️ <b>Base Cartography:</b> OpenStreetMap Terrain");
+                activeItems.push("🗺️ <b>Base:</b> OpenStreetMap");
             }}
-            document.getElementById('legendStatus').innerHTML = activeItems.join("<br>");
+            var legEl = document.getElementById('legendStatus');
+            if (legEl) legEl.innerHTML = activeItems.join("<br>");
         }}
 
-        // Button Click Handlers with Explicit StopPropagation
+        // Layer Toggle Handlers (Direct, Instantaneous, No Event Interception)
         var isSatellite = false;
-        function handleSatelliteClick(e) {{
-            if (e) {{
-                e.stopPropagation();
-                e.preventDefault();
-            }}
+        function toggleSatellite() {{
             isSatellite = !isSatellite;
             var btn = document.getElementById('btnSatellite');
             if (isSatellite) {{
                 map.removeLayer(osmLayer);
                 map.addLayer(satelliteLayer);
-                btn.classList.add('active');
+                if (btn) btn.classList.add('active');
             }} else {{
                 map.removeLayer(satelliteLayer);
                 map.addLayer(osmLayer);
-                btn.classList.remove('active');
+                if (btn) btn.classList.remove('active');
             }}
             updateLegend();
         }}
 
-        function handleLayerClick(layerName, e) {{
-            if (e) {{
-                e.stopPropagation();
-                e.preventDefault();
-            }}
+        function toggleLayer(layerName) {{
             if (layerName === 'clouds') {{
                 var btn = document.getElementById('btnClouds');
                 if (map.hasLayer(cloudsLayer)) {{
                     map.removeLayer(cloudsLayer);
-                    btn.classList.remove('active');
+                    if (btn) btn.classList.remove('active');
                 }} else {{
                     map.addLayer(cloudsLayer);
-                    btn.classList.add('active');
+                    if (btn) btn.classList.add('active');
                 }}
             }} else if (layerName === 'radar') {{
                 var btn = document.getElementById('btnRadar');
-                if (map.hasLayer(radarLayer)) {{
-                    map.removeLayer(radarLayer);
-                    btn.classList.remove('active');
-                }} else {{
-                    map.addLayer(radarLayer);
-                    btn.classList.add('active');
+                if (radarLayer) {{
+                    if (map.hasLayer(radarLayer)) {{
+                        map.removeLayer(radarLayer);
+                        if (btn) btn.classList.remove('active');
+                    }} else {{
+                        map.addLayer(radarLayer);
+                        if (btn) btn.classList.add('active');
+                    }}
                 }}
             }} else if (layerName === 'wind') {{
                 var btn = document.getElementById('btnWind');
                 if (map.hasLayer(windLayer)) {{
                     map.removeLayer(windLayer);
-                    btn.classList.remove('active');
+                    if (btn) btn.classList.remove('active');
                 }} else {{
                     map.addLayer(windLayer);
-                    btn.classList.add('active');
+                    if (btn) btn.classList.add('active');
                 }}
             }}
             updateLegend();
@@ -587,9 +609,13 @@ def generate_interactive_weather_map_html(
         map.on('click', function(e) {{
             if (e.originalEvent) {{
                 var t = e.originalEvent.target;
-                if (t.closest('#layerToolbar') || 
+                if (t.closest('.layer-toolbar') || 
+                    t.closest('#layerToolbar') || 
+                    t.closest('.weather-hud') || 
                     t.closest('#weatherHud') || 
+                    t.closest('.search-container') || 
                     t.closest('#searchContainer') || 
+                    t.closest('.layer-legend') || 
                     t.closest('#layerLegend') || 
                     t.closest('.leaflet-control') ||
                     t.closest('.map-banner')) {{
@@ -600,33 +626,34 @@ def generate_interactive_weather_map_html(
             updateFieldWeather(e.latlng.lat, e.latlng.lng, "Selected Field");
         }});
 
-        // Real Browser Geolocation Trigger
-        function handleGpsClick(e) {{
-            if (e) {{
-                e.stopPropagation();
-                e.preventDefault();
-            }}
+        // Real Browser Geolocation Trigger (Direct Teleport to Live Field)
+        function locateUserGPS() {{
             if (navigator.geolocation) {{
+                var btn = document.getElementById('gpsLocBtn');
+                var origText = btn ? btn.innerText : "{t_ui['gps_btn']}";
+                if (btn) btn.innerText = "⏳ Detecting...";
                 navigator.geolocation.getCurrentPosition(function(position) {{
                     var userLat = position.coords.latitude;
                     var userLon = position.coords.longitude;
-                    map.setView([userLat, userLon], 12);
+                    map.setView([userLat, userLon], 13);
                     marker.setLatLng([userLat, userLon]);
-                    updateFieldWeather(userLat, userLon, "Exact GPS Field");
+                    if (btn) btn.innerText = origText;
+                    updateFieldWeather(userLat, userLon, "Live Farm GPS");
                 }}, function(error) {{
-                    alert("Unable to retrieve GPS location: " + error.message);
-                }}, {{ enableHighAccuracy: true, timeout: 8000 }});
+                    if (btn) btn.innerText = origText;
+                    var msg = "Unable to retrieve GPS location: " + error.message;
+                    if (error.code === 1) {{
+                        msg = "Location permission denied. Please allow location access in your browser to teleport directly to your live field.";
+                    }}
+                    alert(msg);
+                }}, {{ enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }});
             }} else {{
                 alert("Geolocation is not supported by your browser.");
             }}
         }}
 
         // OpenStreetMap Nominatim Geocoding Search
-        function handleSearchClick(e) {{
-            if (e) {{
-                e.stopPropagation();
-                e.preventDefault();
-            }}
+        function searchLocation() {{
             var query = document.getElementById('locSearch').value;
             if (!query) return;
             fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(query + ', India'))
@@ -652,8 +679,7 @@ def generate_interactive_weather_map_html(
         // Allow pressing Enter in search box
         document.getElementById('locSearch').addEventListener('keypress', function(e) {{
             if (e.key === 'Enter') {{
-                e.stopPropagation();
-                handleSearchClick(e);
+                searchLocation();
             }}
         }});
     </script>
