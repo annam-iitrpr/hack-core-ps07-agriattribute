@@ -5,7 +5,14 @@
 > **Team 15:** Soham Prabhakar Kadu (Lead), Singireddy Prabhumitrareddy, Bhakti Ajay Kadam  
 > **Mentors / Advisors:** Dr. Shahbaz, Hana Hafer
 
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/deploy?repository=soham0777/hack-core-ps07-agriattribute&branch=main&mainModule=app.py)
+
 ---
+
+### 🚀 Zero-Setup Live Cloud Access
+The platform is 100% cloud-ready. You do not need to install Python, configure environments, or run local servers:
+- **1-Click Streamlit Cloud Launch:** [Launch AgriAttribute on Streamlit Cloud](https://share.streamlit.io/deploy?repository=soham0777/hack-core-ps07-agriattribute&branch=main&mainModule=app.py)
+- **Live Interactive Demo:** Anyone can access the full interactive suite in real-time. All AI attribution, disease diagnosis, Agmarknet 2.0 telemetry, and live weather run instantly in the browser.
 
 ## The Problem We Wanted to Solve
 

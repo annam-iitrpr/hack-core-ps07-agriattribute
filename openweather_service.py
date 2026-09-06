@@ -41,7 +41,15 @@ if DEFAULT_WORKING_KEY not in [x["key"] for x in OPENWEATHER_KEYS]:
 BASE_WEATHER_URL = "https://api.openweathermap.org/data/2.5/weather"
 BASE_FORECAST_URL = "https://api.openweathermap.org/data/2.5/forecast"
 
+try:
+    import streamlit as st
+    cache_weather = st.cache_data(ttl=300, show_spinner=False)
+except Exception:
+    def cache_weather(f):
+        return f
 
+
+@cache_weather
 def fetch_live_current_weather(lat: float = 30.9010, lon: float = 75.8573) -> dict:
     """
     Fetches real-time current weather with automatic API key rotation.
@@ -116,6 +124,7 @@ def fetch_live_current_weather(lat: float = 30.9010, lon: float = 75.8573) -> di
     }
 
 
+@cache_weather
 def fetch_live_5day_forecast(lat: float = 30.9010, lon: float = 75.8573) -> list:
     """
     Fetches 5-day / 3-hour forecast telemetry from OpenWeatherMap.

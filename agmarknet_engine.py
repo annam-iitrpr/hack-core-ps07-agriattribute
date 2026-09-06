@@ -75,6 +75,15 @@ CROP_TO_AGMARKNET = {
     "Tomato": "Tomato"
 }
 
+try:
+    import streamlit as st
+    cache_agmark = st.cache_data(ttl=600, show_spinner=False)
+except Exception:
+    def cache_agmark(f):
+        return f
+
+
+@cache_agmark
 def load_agmarknet_data() -> pd.DataFrame:
     """Loads the Agmarknet 2.0 official daily price & arrival report."""
     if os.path.exists(DATA_PATH):
