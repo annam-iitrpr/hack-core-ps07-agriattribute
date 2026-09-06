@@ -66,7 +66,107 @@ st.markdown("""
         color: #1e293b;
         font-family: 'Inter', system-ui, -apple-system, sans-serif;
     }
-    h1, h2, h3, h4, p, span, div { color: #1e293b !important; }
+    .stMarkdown, .stText, p { color: #1e293b; }
+
+    /* ─── BASEWEB SELECTBOX & DROPDOWN MENU ENHANCEMENT (Image 1 Fix) ─── */
+    div[data-baseweb="select"] {
+        background-color: #ffffff !important;
+        border-radius: 10px !important;
+    }
+    div[data-baseweb="select"] > div {
+        background-color: #ffffff !important;
+        border: 2px solid #cbd5e1 !important;
+        border-radius: 10px !important;
+        min-height: 48px !important;
+    }
+    div[data-baseweb="select"] > div:hover,
+    div[data-baseweb="select"] > div:focus-within {
+        border-color: #059669 !important;
+        box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.2) !important;
+    }
+    div[data-baseweb="select"] * {
+        color: #0f172a !important;
+        font-weight: 700 !important;
+        font-size: 1.02rem !important;
+    }
+
+    /* Dropdown Options Popup List */
+    div[data-baseweb="popover"],
+    div[data-baseweb="menu"],
+    ul[data-baseweb="menu"],
+    div[role="listbox"],
+    ul[role="listbox"] {
+        background-color: #ffffff !important;
+        border: 1.5px solid #cbd5e1 !important;
+        border-radius: 12px !important;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18) !important;
+        padding: 6px !important;
+    }
+    li[data-baseweb="menu-item"],
+    li[role="option"],
+    div[role="option"] {
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+        padding: 11px 16px !important;
+        font-weight: 600 !important;
+        font-size: 1.02rem !important;
+        border-radius: 8px !important;
+        cursor: pointer !important;
+        transition: all 0.15s ease !important;
+    }
+    li[data-baseweb="menu-item"]:hover,
+    li[role="option"]:hover,
+    li[aria-selected="true"] {
+        background-color: #ecfdf5 !important;
+        color: #047857 !important;
+        font-weight: 800 !important;
+    }
+    li[data-baseweb="menu-item"] *,
+    li[role="option"] * {
+        color: #0f172a !important;
+        font-weight: 600 !important;
+    }
+    li[data-baseweb="menu-item"]:hover *,
+    li[role="option"]:hover *,
+    li[aria-selected="true"] * {
+        color: #047857 !important;
+        font-weight: 800 !important;
+    }
+
+    /* ─── POPOVER & BUTTON ENHANCEMENT (Image 2 Fix) ─── */
+    div[data-testid="stPopover"] > button {
+        background-color: #ffffff !important;
+        border: 2px solid #cbd5e1 !important;
+        border-radius: 10px !important;
+        color: #0f172a !important;
+        font-weight: 750 !important;
+        font-size: 0.98rem !important;
+        min-height: 48px !important;
+        padding: 10px 18px !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
+        transition: all 0.18s ease-in-out !important;
+    }
+    div[data-testid="stPopover"] > button * {
+        color: #0f172a !important;
+        font-weight: 750 !important;
+    }
+    div[data-testid="stPopover"] > button:hover {
+        border-color: #059669 !important;
+        background-color: #f0fdf4 !important;
+    }
+    div[data-testid="stPopover"] > button:hover * {
+        color: #047857 !important;
+    }
+    div[data-testid="stPopoverBody"] {
+        background-color: #ffffff !important;
+        border: 1.5px solid #cbd5e1 !important;
+        border-radius: 14px !important;
+        padding: 16px !important;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.12) !important;
+    }
+    div[data-testid="stPopoverBody"] * {
+        color: #0f172a !important;
+    }
     
     .hero-decision-card {
         background: linear-gradient(135deg, #ecfdf5, #f0fdf4);
@@ -673,11 +773,48 @@ def main():
                 </div>
                 """, unsafe_allow_html=True)
                 
-                btn_label = f"✅ {feat['title']}" if is_active else f"👉 {t('nav_open_btn', lang)}"
-                if st.button(btn_label, key=f"nav_card_btn_{f_idx}", use_container_width=True):
+                btn_label = feat['title']
+                btn_type = "primary" if is_active else "secondary"
+                if st.button(btn_label, key=f"nav_card_btn_{f_idx}", type=btn_type, use_container_width=True, help=f"Navigate directly to {feat['title']}"):
                     st.session_state.active_tab_idx = f_idx
                     st.session_state.tab_selector = tab_labels[f_idx]
+                    st.session_state.tab_nav_version = st.session_state.get('tab_nav_version', 0) + 1
+                    st.session_state.scroll_to_tabs = True
                     st.rerun()
+
+        # Instant Client-Side Smooth Scroll Trigger to Main Tabs Section
+        if st.session_state.get("scroll_to_tabs"):
+            import streamlit.components.v1 as _comp
+            target_tab_idx = st.session_state.get("active_tab_idx", 0)
+            _comp.html(
+                f"""
+                <script>
+                    (function() {{
+                        function jumpToTabs() {{
+                            try {{
+                                var doc = window.parent.document;
+                                if (!doc) return;
+                                var target = doc.getElementById('platform_main_tabs') || doc.querySelector('div[data-testid="stTabs"]');
+                                if (target) {{
+                                    target.scrollIntoView({{ behavior: 'smooth', block: 'start' }});
+                                }}
+                                var tabButtons = doc.querySelectorAll('div[data-testid="stTabs"] button[role="tab"]');
+                                if (tabButtons && tabButtons.length > {target_tab_idx}) {{
+                                    tabButtons[{target_tab_idx}].click();
+                                }}
+                            }} catch(e) {{
+                                console.warn('Nav scroll error:', e);
+                            }}
+                        }}
+                        setTimeout(jumpToTabs, 60);
+                        setTimeout(jumpToTabs, 260);
+                        setTimeout(jumpToTabs, 600);
+                    }})();
+                </script>
+                """,
+                height=0,
+                width=0,
+            )
 
     
     # 📖 MASTER EVALUATOR & QUICK RECALL EXPANDER (Demo / Viva Cheat-Sheet)
@@ -822,11 +959,10 @@ def main():
     p_cols = st.columns(5)
     for p_idx, reg_name in enumerate(REGION_COORDS.keys()):
         short_label = t(belt_keys[p_idx], lang)
+        is_active = (reg_name == st.session_state.selected_region)
         with p_cols[p_idx]:
-            btn_label = f"📍 {short_label}"
-            if reg_name == st.session_state.selected_region:
-                btn_label = f"✅ {short_label}"
-            if st.button(btn_label, key=f"reg_pill_{p_idx}", use_container_width=True, help=t("help_belt", lang)):
+            btn_label = f"✅ {short_label}" if is_active else f"📍 {short_label}"
+            if st.button(btn_label, key=f"reg_pill_{p_idx}", type="primary" if is_active else "secondary", use_container_width=True, help=t("help_belt", lang)):
                 st.session_state.selected_region = reg_name
                 st.session_state.selected_crop = list(REGIONAL_CROP_SHARES[reg_name].keys())[0]
                 st.session_state.farm_lat = REGION_COORDS[reg_name]["lat"]
@@ -848,7 +984,8 @@ def main():
             lon=st.session_state.farm_lon,
             region_name=localized_reg,
             active_crop=t_crop(st.session_state.selected_crop, lang),
-            weather_info=ow_live
+            weather_info=ow_live,
+            lang=lang
         )
         components.html(map_html, height=570)
 
@@ -970,8 +1107,8 @@ def main():
                         f'<div>'
                         f'<div style="font-weight: 800; font-size: 0.95rem; color: #0f172a; line-height: 1.2; margin-bottom: 4px;" title="{c_name_raw}">{c_name_display}</div>'
                         f'<div style="font-size: 1.25rem; font-weight: 900; color: #059669; margin: 3px 0;">₹{p_01:,.0f} <span style="font-size: 0.72rem; font-weight: normal; color: #64748b;">/q</span></div>'
-                        f'<div style="font-size: 0.72rem; color: #475569;">{lbl_msp} <strong>{"₹" + f"{msp_val:,.0f}" if msp_val > 0 else lbl_perish}</strong></div>'
-                        f'<div style="font-size: 0.72rem; color: {"#047857" if delta >= 0 else "#b91c1c"}; font-weight: 700;">{"🟢 +" if delta >= 0 else "🔴 -"}{abs(delta):,.0f} {lbl_vs_msp}</div>'
+                        f'<div style="font-size: 0.72rem; color: #475569;">{lbl_msp} <strong>{"₹" + f"{msp_val:,.0f}" if msp_val > 0 else f"{lbl_perish} (Free Trade)"}</strong></div>'
+                        f'<div style="font-size: 0.72rem; color: {"#047857" if (delta >= 0 if msp_val > 0 else trend_delta >= 0) else "#b91c1c"}; font-weight: 700;">{("🟢 +" if delta >= 0 else "🔴 -") + f"{abs(delta):,.0f} " + lbl_vs_msp if msp_val > 0 else f"📈 72h: {trend_sym} /q"}</div>'
                         f'</div>'
                         f'<div style="font-size: 0.70rem; color: #64748b; border-top: 1px dashed #cbd5e1; padding-top: 4px; margin-top: 4px;">{lbl_arrival} <strong>{arr_01:,.1f} MT</strong> | {lbl_72h} <strong>{trend_sym}</strong></div>'
                         f'</div>'
@@ -1271,22 +1408,54 @@ def main():
     tab_keys = ["tab_decision", "tab_counter", "tab_disease", "tab_memory", "tab_prove", "tab_ai"]
     tab_labels = [t(k, lang) for k in tab_keys]
 
-    if 'active_tab_idx' not in st.session_state:
-        st.session_state.active_tab_idx = 0
-    if not (0 <= st.session_state.active_tab_idx < len(tab_labels)):
+    curr_tab_idx = st.session_state.get('active_tab_idx', 0)
+    if not (0 <= curr_tab_idx < len(tab_labels)):
+        curr_tab_idx = 0
         st.session_state.active_tab_idx = 0
 
-    if 'tab_selector' not in st.session_state or st.session_state.tab_selector not in tab_labels:
-        st.session_state.tab_selector = tab_labels[st.session_state.active_tab_idx]
+    default_tab = tab_labels[curr_tab_idx]
+    tab_nav_ver = st.session_state.get('tab_nav_version', 0)
 
     st.markdown('<div id="platform_main_tabs"></div>', unsafe_allow_html=True)
     tab_decision, tab_counter, tab_disease, tab_memory, tab_prove, tab_ai = st.tabs(
         tab_labels,
-        key="tab_selector",
+        default=default_tab,
+        key=f"main_tab_strip_{tab_nav_ver}",
         on_change="rerun"
     )
-    if st.session_state.tab_selector in tab_labels:
-        st.session_state.active_tab_idx = tab_labels.index(st.session_state.tab_selector)
+
+    # Sync selection when user clicks a tab directly
+    tab_current_val = st.session_state.get(f"main_tab_strip_{tab_nav_ver}")
+    if tab_current_val in tab_labels:
+        st.session_state.active_tab_idx = tab_labels.index(tab_current_val)
+        st.session_state.tab_selector = tab_current_val
+
+    # Secondary scroll guarantee to position user at the opened tab
+    if st.session_state.get("scroll_to_tabs"):
+        st.session_state.scroll_to_tabs = False
+        import streamlit.components.v1 as _comp
+        _comp.html(
+            f"""
+            <script>
+                (function() {{
+                    function scrollToMainTabs() {{
+                        try {{
+                            var doc = window.parent.document;
+                            if (!doc) return;
+                            var el = doc.getElementById('platform_main_tabs') || doc.querySelector('div[data-testid="stTabs"]');
+                            if (el) {{
+                                el.scrollIntoView({{ behavior: 'smooth', block: 'start' }});
+                            }}
+                        }} catch(e) {{}}
+                    }}
+                    setTimeout(scrollToMainTabs, 80);
+                    setTimeout(scrollToMainTabs, 320);
+                }})();
+            </script>
+            """,
+            height=0,
+            width=0,
+        )
 
     # TAB 1: TODAY'S DECISION & WEATHER + WHATSAPP SHARE
     with tab_decision:
@@ -2031,8 +2200,9 @@ def main():
                 
         with tab_tbl_schema:
             st.caption("Copy and execute this schema in the Supabase Cloud SQL Editor to mirror the PostgreSQL table structure.")
+            schema_path = "docs/supabase_schema.sql" if os.path.exists("docs/supabase_schema.sql") else "scratch/supabase_schema.sql"
             try:
-                with open("scratch/supabase_schema.sql", "r", encoding="utf-8") as f_sql:
+                with open(schema_path, "r", encoding="utf-8") as f_sql:
                     st.code(f_sql.read(), language="sql")
             except Exception as e:
                 st.info(f"Schema file note: {e}")
