@@ -701,155 +701,6 @@ def main():
             </div>
             """, unsafe_allow_html=True)
 
-    # 🌟 CORE ACCESSIBILITY FEATURE NAVIGATION DECK (Direct Click-to-Tab)
-    tab_keys = ["tab_decision", "tab_annam", "tab_disease", "tab_memory", "tab_prove", "tab_ai", "tab_counter"]
-    tab_labels = [t(k, lang) for k in tab_keys]
-
-    if 'active_tab_idx' not in st.session_state:
-        st.session_state.active_tab_idx = 0
-    if not (0 <= st.session_state.active_tab_idx < len(tab_labels)):
-        st.session_state.active_tab_idx = 0
-
-    if 'tab_selector' not in st.session_state or st.session_state.tab_selector not in tab_labels:
-        st.session_state.tab_selector = tab_labels[st.session_state.active_tab_idx]
-
-    feature_meta = [
-        {
-            "img": "assets/features/feature_1_decision.jpg",
-            "title": t("feat1_title", lang),
-            "sub": t("feat1_sub", lang),
-            "icon": "🌦️",
-            "badge": t("feat1_badge", lang)
-        },
-        {
-            "img": "assets/features/feature_7_annam.jpg",
-            "title": "ANNAM.AI",
-            "sub": "Live MCII Weather Station Network",
-            "icon": "🌐",
-            "badge": "ANNAM MCII"
-        },
-        {
-            "img": "assets/features/feature_3_disease.jpg",
-            "title": t("feat3_title", lang),
-            "sub": t("feat3_sub", lang),
-            "icon": "🩺",
-            "badge": t("feat3_badge", lang)
-        },
-        {
-            "img": "assets/features/feature_4_memory.jpg",
-            "title": t("feat4_title", lang),
-            "sub": t("feat4_sub", lang),
-            "icon": "📖",
-            "badge": t("feat4_badge", lang)
-        },
-        {
-            "img": "assets/features/feature_5_proof.jpg",
-            "title": t("feat5_title", lang),
-            "sub": t("feat5_sub", lang),
-            "icon": "📊",
-            "badge": t("feat5_badge", lang)
-        },
-        {
-            "img": "assets/features/feature_6_ai.jpg",
-            "title": t("feat6_title", lang),
-            "sub": t("feat6_sub", lang),
-            "icon": "💬",
-            "badge": t("feat6_badge", lang)
-        },
-        {
-            "img": "assets/features/feature_2_dosage.jpg",
-            "title": t("feat2_title", lang),
-            "sub": t("feat2_sub", lang),
-            "icon": "⚖️",
-            "badge": t("feat2_badge", lang)
-        }
-    ]
-
-    with st.container(border=True):
-        st.markdown(f"""
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
-            <div>
-                <div style="font-size: 1.25rem; font-weight: 900; color: #064e3b; display: flex; align-items: center; gap: 8px;">
-                    {t('nav_deck_title', lang)}
-                </div>
-                <div style="font-size: 0.92rem; color: #475569; font-weight: 600; margin-top: 2px;">
-                    {t('nav_deck_caption', lang)}
-                </div>
-            </div>
-            <div style="background: #ecfdf5; border: 1.5px solid #10b981; border-radius: 20px; padding: 4px 14px; font-size: 0.85rem; font-weight: 800; color: #047857;">
-                {t('nav_deck_badge', lang)}
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        f_cols = st.columns(7)
-        for f_idx, feat in enumerate(feature_meta):
-            is_active = (st.session_state.active_tab_idx == f_idx)
-            with f_cols[f_idx]:
-                card_border = "3px solid #059669; box-shadow: 0 6px 16px rgba(5, 150, 105, 0.25);" if is_active else "1.5px solid #cbd5e1;"
-                bg_style = "background: #f0fdf4;" if is_active else "background: #ffffff;"
-                status_pill = f"<span style='background: #059669; color: white; font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 10px;'>{t('nav_active_btn', lang)}</span>" if is_active else f"<span style='background: #e2e8f0; color: #334155; font-size: 0.70rem; font-weight: 700; padding: 2px 6px; border-radius: 8px;'>{feat['badge']}</span>"
-                b64_img = get_base64_image(feat['img'])
-                
-                st.markdown(f"""
-                <div style="border-radius: 12px; border: {card_border}; {bg_style} overflow: hidden; margin-bottom: 8px;">
-                    <img src="data:image/jpeg;base64,{b64_img}" alt="{feat['title']}" style="width: 100%; height: 95px; object-fit: cover; display: block;" />
-                    <div style="padding: 8px 6px; text-align: center;">
-                        <div style="display: flex; justify-content: center; margin-bottom: 4px;">{status_pill}</div>
-                        <div style="font-size: 0.95rem; font-weight: 800; color: #0f172a; line-height: 1.25; min-height: 38px; display: flex; align-items: center; justify-content: center;">
-                            {feat['icon']} {feat['title']}
-                        </div>
-                        <div style="font-size: 0.75rem; color: #475569; font-weight: 600; line-height: 1.2; margin-top: 2px; min-height: 28px;">
-                            {feat['sub']}
-                        </div>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                btn_label = feat['title']
-                btn_type = "primary" if is_active else "secondary"
-                if st.button(btn_label, key=f"nav_card_btn_{f_idx}", type=btn_type, use_container_width=True, help=f"Navigate directly to {feat['title']}"):
-                    st.session_state.active_tab_idx = f_idx
-                    st.session_state.tab_selector = tab_labels[f_idx]
-                    st.session_state.tab_nav_version = st.session_state.get('tab_nav_version', 0) + 1
-                    st.session_state.scroll_to_tabs = True
-                    st.rerun()
-
-        # Instant Client-Side Smooth Scroll Trigger to Main Tabs Section
-        if st.session_state.get("scroll_to_tabs"):
-            import streamlit.components.v1 as _comp
-            target_tab_idx = st.session_state.get("active_tab_idx", 0)
-            _comp.html(
-                f"""
-                <script>
-                    (function() {{
-                        function jumpToTabs() {{
-                            try {{
-                                var doc = window.parent.document;
-                                if (!doc) return;
-                                var target = doc.getElementById('platform_main_tabs') || doc.querySelector('div[data-testid="stTabs"]');
-                                if (target) {{
-                                    target.scrollIntoView({{ behavior: 'smooth', block: 'start' }});
-                                }}
-                                var tabButtons = doc.querySelectorAll('div[data-testid="stTabs"] button[role="tab"]');
-                                if (tabButtons && tabButtons.length > {target_tab_idx}) {{
-                                    tabButtons[{target_tab_idx}].click();
-                                }}
-                            }} catch(e) {{
-                                console.warn('Nav scroll error:', e);
-                            }}
-                        }}
-                        setTimeout(jumpToTabs, 60);
-                        setTimeout(jumpToTabs, 260);
-                        setTimeout(jumpToTabs, 600);
-                    }})();
-                </script>
-                """,
-                height=0,
-                width=0,
-            )
-
-    
     # Agro-Climatic Belt Matcher
     def get_closest_region(lat, lon):
         min_sq = float("inf")
@@ -970,186 +821,26 @@ def main():
     if 'farm_location_name' in st.session_state and st.session_state.farm_location_name:
         ow_live['location'] = st.session_state.farm_location_name
 
-    # INTERACTIVE WEATHER RADAR & CLOUD POSITION MAP WITH LIVE HUD
-    with st.container():
-        st.markdown(f"#### 🛰️ {t('radar_map_title', lang)}")
-        w_status = ow_live.get("status", "DEMO / SYNTHETIC")
-        w_source = ow_live.get("telemetry_source", "Regional Agro-Climatology Normals")
-        w_badge_bg = "#ecfdf5" if w_status == "LIVE" else "#eff6ff"
-        w_badge_border = "#86efac" if w_status == "LIVE" else "#bfdbfe"
-        w_badge_color = "#15803d" if w_status == "LIVE" else "#1e40af"
-        st.markdown(f"""
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
-            <span style="font-size:0.8rem; color:#475569;">Live Satellite Cloud Cover, Precipitation Radar, Wind Drift Engine & Exact Farm GPS Locator.</span>
-            <span style="background:{w_badge_bg}; border:1px solid {w_badge_border}; color:{w_badge_color}; font-size:0.72rem; font-weight:800; padding:2px 10px; border-radius:12px;">
-                STATUS: {w_status} ({w_source})
-            </span>
-        </div>
-        """, unsafe_allow_html=True)
-        map_html = interactive_map_service.generate_interactive_weather_map_html(
-            lat=st.session_state.farm_lat,
-            lon=st.session_state.farm_lon,
-            region_name=localized_reg,
-            active_crop=t_crop(st.session_state.selected_crop, lang),
-            weather_info=ow_live,
-            lang=lang
-        )
-        components.html(map_html, height=570)
 
-    # 🌾 ICAR REGIONAL CULTIVATION INTELLIGENCE & AGMARKNET 2.0 INTEGRATION
-    st.markdown("---")
-    st.markdown(f"#### 🌾 {t('crop_sec_heading', lang, region=localized_reg)} & Agmarknet 2.0 Benchmark")
-    st.caption("Official regional crop acreage distribution (ICAR) synchronized with live APMC daily market rates from [Home-Agmarknet 2.0 (agmarknet.gov.in/home)](https://agmarknet.gov.in/home). Tap any crop to run the ML causal attribution model and update all market economics:")
-
-    cur_crops = REGIONAL_CROP_SHARES.get(st.session_state.selected_region, {})
-    crop_card_cols = st.columns(len(cur_crops))
-    
-    for c_idx, (c_name, c_info) in enumerate(cur_crops.items()):
-        is_selected = (c_name == st.session_state.selected_crop)
-        localized_crop_name = t_crop(c_name, lang)
-        localized_season = t_season(c_info['season'], lang)
-        localized_crop_desc = t_crop_desc(c_info['desc'], lang)
-        acreage_text = t("acreage_share", lang, share=c_info['share'])
-        
-        # Ingest live Agmarknet 2.0 data for each card
-        c_mandi = agmarknet_engine.get_mandi_intelligence_for_crop(c_name, True)
-        c_price = c_mandi.get("latest_price", 0)
-        c_msp = c_mandi.get("msp", 0)
-        c_delta = c_mandi.get("price_vs_msp_delta", 0)
-        if c_msp > 0:
-            if c_delta >= 0:
-                mandi_tag_color = "#047857"
-                mandi_tag_text = f"+₹{c_delta:,.0f} {t('agmark_card_vs_msp', lang)}"
-            else:
-                mandi_tag_color = "#b91c1c"
-                mandi_tag_text = f"-₹{abs(c_delta):,.0f} {t('agmark_card_vs_msp', lang)}"
-        else:
-            p_chg = c_mandi.get("price_change_3d", 0)
-            if p_chg >= 0:
-                mandi_tag_color = "#047857"
-                mandi_tag_text = f"{t('agmark_card_72h', lang)} +₹{p_chg:,.0f}/q"
-            else:
-                mandi_tag_color = "#b91c1c"
-                mandi_tag_text = f"{t('agmark_card_72h', lang)} -₹{abs(p_chg):,.0f}/q"
-            
-        border_style = "2.5px solid #059669; background: #ecfdf5; box-shadow: 0 4px 14px rgba(5, 150, 105, 0.2);" if is_selected else "1px solid #e2e8f0; background: #ffffff;"
-        badge_html = f"<span style='background:#059669; color:white; font-size:0.82rem; font-weight:800; padding:3px 10px; border-radius:12px;'>★ {t('active_field_badge', lang)}</span>" if is_selected else f"<span style='background:#f1f5f9; color:#1e293b; font-size:0.82rem; font-weight:700; padding:3px 10px; border-radius:12px;'>{localized_season}</span>"
-        
-        with crop_card_cols[c_idx]:
-            card_html = (
-                f'<div style="border-radius: 14px; padding: 14px 10px; text-align: center; margin-bottom: 8px; border: {border_style}; min-height: 245px;">'
-                f'<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">'
-                f'<span style="font-size: 1.8rem;">{c_info["icon"]}</span>'
-                f'{badge_html}'
-                f'</div>'
-                f'<div style="font-weight: 800; font-size: 1.15rem; color: #0f172a; line-height: 1.25;">{localized_crop_name}</div>'
-                f'<div style="font-size: 0.90rem; font-weight: 700; color: #059669; margin: 4px 0;">{acreage_text}</div>'
-                f'<div style="background: #e2e8f0; border-radius: 6px; height: 6px; width: 100%; overflow: hidden; margin-bottom: 8px;">'
-                f'<div style="background: #059669; height: 100%; width: {c_info["share"]}%;"></div>'
-                f'</div>'
-                f'<div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 8px 6px; margin: 6px 0;">'
-                f'<div style="font-size: 0.80rem; color: #475569; font-weight: 800; text-transform: uppercase;">{t("mandi_badge", lang)}</div>'
-                f'<div style="font-size: 1.30rem; font-weight: 900; color: #047857;">₹{c_price:,.0f} <span style="font-size: 0.82rem; font-weight: 600; color: #475569;">/q</span></div>'
-                f'<div style="font-size: 0.85rem; font-weight: 800; color: {mandi_tag_color};">{mandi_tag_text}</div>'
-                f'</div>'
-                f'<div style="font-size: 0.86rem; color: #334155; line-height: 1.35; margin-top: 6px; font-weight: 550;">{localized_crop_desc}</div>'
-                f'</div>'
-            )
-            st.markdown(card_html, unsafe_allow_html=True)
-            if not is_selected:
-                if st.button(t("select_crop_btn", lang, crop=localized_crop_name.split()[0]), key=f"btn_crop_{c_idx}", use_container_width=True):
-                    st.session_state.selected_crop = c_name
-                    st.rerun()
-
-    # 🏛️ AGMARKNET 2.0 MULTI-SECTION COMMODITY MARKETPLACE (Official 24-Commodity Grid)
-    with st.container():
-        st.markdown(f"#### {t('agmark_expander_title', lang)}")
-        st.caption(f"{t('agmark_caption', lang)} [Home-Agmarknet 2.0 (agmarknet.gov.in/home)](https://agmarknet.gov.in/home)")
-        
-        tab_cereals, tab_oilseeds, tab_pulses, tab_fibre, tab_veg = st.tabs([
-            t("agmark_tab_cereals", lang),
-            t("agmark_tab_oilseeds", lang),
-            t("agmark_tab_pulses", lang),
-            t("agmark_tab_fibre", lang),
-            t("agmark_tab_veg", lang)
-        ])
-        
-        agmark_full_df = agmarknet_engine.load_agmarknet_data()
-        
-        lbl_msp = t("agmark_card_msp", lang)
-        lbl_perish = t("agmark_card_perishable", lang)
-        lbl_vs_msp = t("agmark_card_vs_msp", lang)
-        lbl_arrival = t("agmark_card_arrival", lang)
-        lbl_72h = t("agmark_card_72h", lang)
-        
-        def render_commodity_group_cards(group_filter, key_prefix):
-            if agmark_full_df.empty:
-                return
-            g_df = agmark_full_df[agmark_full_df["commodity_group"].isin(group_filter)] if isinstance(group_filter, list) else agmark_full_df[agmark_full_df["commodity_group"] == group_filter]
-            cols = st.columns(min(len(g_df), 4))
-            for i, (_, row) in enumerate(g_df.iterrows()):
-                c_name_raw = row["commodity"]
-                c_name_display = t_commodity(c_name_raw, lang)
-                msp_val = float(row.get("msp_2026_27", 0))
-                p_01 = float(row.get("price_01_sep", 0))
-                p_30 = float(row.get("price_30_aug", 0))
-                arr_01 = float(row.get("arrival_01_sep", 0))
-                delta = p_01 - msp_val if msp_val > 0 else 0
-                trend_delta = p_01 - p_30
-                trend_sym = f"+₹{trend_delta:,.0f}" if trend_delta >= 0 else f"-₹{abs(trend_delta):,.0f}"
-                
-                # Dynamic matching to platform crops
-                matched_app_crop = None
-                for app_c, ag_c in agmarknet_engine.CROP_TO_AGMARKNET.items():
-                    if ag_c.lower() in c_name_raw.lower() or c_name_raw.lower() in ag_c.lower():
-                        matched_app_crop = app_c
-                        break
-                if not matched_app_crop:
-                    if any(x in c_name_raw.lower() for x in ["bajra", "jowar", "barley", "ragi"]):
-                        matched_app_crop = "Maize"
-                    elif any(x in c_name_raw.lower() for x in ["moong", "urd", "masur"]):
-                        matched_app_crop = "Gram / Chickpea (Chana)"
-                    elif any(x in c_name_raw.lower() for x in ["sunflower", "sesam", "safflower", "copra"]):
-                        matched_app_crop = "Soybean"
-                    elif "potato" in c_name_raw.lower():
-                        matched_app_crop = "Onion"
-                    else:
-                        matched_app_crop = "Soybean"
-                        
-                is_active = (st.session_state.selected_crop == c_name_raw or st.session_state.selected_crop == matched_app_crop)
-                box_border = "2px solid #059669; background: #ecfdf5;" if is_active else "1.5px solid #e2e8f0; background: #ffffff;"
-                
-                with cols[i % 4]:
-                    box_html = (
-                        f'<div style="{box_border} border-radius: 12px; padding: 12px; margin-bottom: 8px; min-height: 180px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); display: flex; flex-direction: column; justify-content: space-between;">'
-                        f'<div>'
-                        f'<div style="font-weight: 800; font-size: 0.95rem; color: #0f172a; line-height: 1.2; margin-bottom: 4px;" title="{c_name_raw}">{c_name_display}</div>'
-                        f'<div style="font-size: 1.25rem; font-weight: 900; color: #059669; margin: 3px 0;">₹{p_01:,.0f} <span style="font-size: 0.72rem; font-weight: normal; color: #64748b;">/q</span></div>'
-                        f'<div style="font-size: 0.72rem; color: #475569;">{lbl_msp} <strong>{"₹" + f"{msp_val:,.0f}" if msp_val > 0 else f"{lbl_perish} (Free Trade)"}</strong></div>'
-                        f'<div style="font-size: 0.72rem; color: {"#047857" if (delta >= 0 if msp_val > 0 else trend_delta >= 0) else "#b91c1c"}; font-weight: 700;">{("🟢 +" if delta >= 0 else "🔴 -") + f"{abs(delta):,.0f} " + lbl_vs_msp if msp_val > 0 else f"📈 72h: {trend_sym} /q"}</div>'
-                        f'</div>'
-                        f'<div style="font-size: 0.70rem; color: #64748b; border-top: 1px dashed #cbd5e1; padding-top: 4px; margin-top: 4px;">{lbl_arrival} <strong>{arr_01:,.1f} MT</strong> | {lbl_72h} <strong>{trend_sym}</strong></div>'
-                        f'</div>'
-                    )
-                    st.markdown(box_html, unsafe_allow_html=True)
-                    if is_active:
-                        st.markdown(f'<div style="text-align: center; font-size: 0.75rem; font-weight: 800; color: #059669; padding: 6px 0;">★ {t("active_field_badge", lang)}</div>', unsafe_allow_html=True)
-                    else:
-                        btn_lbl = t("select_crop_btn", lang, crop=c_name_display.split()[0])
-                        if st.button(btn_lbl, key=f"sel_ag_{key_prefix}_{i}", use_container_width=True):
-                            st.session_state.selected_crop = c_name_raw
-                            st.rerun()
-                            
-        with tab_cereals:
-            render_commodity_group_cards("Cereals", "cereals")
-        with tab_oilseeds:
-            render_commodity_group_cards("Oil Seeds", "oilseeds")
-        with tab_pulses:
-            render_commodity_group_cards("Pulses", "pulses")
-        with tab_fibre:
-            render_commodity_group_cards("Fibre Crops", "fibre")
-        with tab_veg:
-            render_commodity_group_cards(["Vegetables", "Others"], "veg")
+    # Quick Active Crop Switcher & Live Field Context Badge
+    cur_crops_list = list(REGIONAL_CROP_SHARES.get(st.session_state.selected_region, {}).keys())
+    c_cols = st.columns(len(cur_crops_list) + 1)
+    for c_i, c_n in enumerate(cur_crops_list):
+        is_c_active = (c_n == st.session_state.selected_crop)
+        c_icon = REGIONAL_CROP_SHARES[st.session_state.selected_region][c_n].get('icon', '🌾')
+        c_short_name = t_crop(c_n, lang).split('(')[0].split('/')[0].strip()
+        c_label = f"✅ {c_icon} {c_short_name}" if is_c_active else f"{c_icon} {c_short_name}"
+        with c_cols[c_i]:
+            if st.button(c_label, key=f"quick_crop_{c_i}", type="primary" if is_c_active else "secondary", use_container_width=True, help=f"Switch active crop to {c_n}"):
+                st.session_state.selected_crop = c_n
+                st.rerun()
+    with c_cols[-1]:
+        w_temp = ow_live.get('temp_c', 28.0)
+        w_rh = ow_live.get('humidity_pct', 65)
+        w_wind = ow_live.get('wind_speed_kmh', 12.0)
+        st.markdown(f'''<div style="background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 8px; padding: 7px 6px; font-size: 0.76rem; color: #166534; font-weight: 700; text-align: center; white-space: nowrap;">
+📍 {st.session_state.get('farm_location_name', 'Pune')}: <b>{w_temp}°C</b> | 💧 <b>{w_rh}%</b> | 💨 <b>{w_wind}k</b>
+</div>''', unsafe_allow_html=True)
 
     # Active Variables Synchronized
     region = st.session_state.selected_region
@@ -1681,6 +1372,352 @@ def main():
 
         st.caption("Data Source Provenance: Trained on 1,600 multi-location trials (2021-2025 holdout). Prices from official Agmarknet 2.0 daily arrivals. Biological response modeled via counterfactual control contrast.")
 
+
+
+    # ══════════════════════════════════════════════════════════════════════
+    # 🛰️ SUPPORTING OPERATIONAL FIELD INTELLIGENCE & DEEP SUBSYSTEMS
+    # ══════════════════════════════════════════════════════════════════════
+    st.markdown("---")
+    st.markdown('''
+    <div style="margin-top: 14px; margin-bottom: 12px;">
+        <div style="font-size: 1.35rem; font-weight: 900; color: #064e3b; display: flex; align-items: center; gap: 8px;">
+            🛰️ Supporting Operational Intelligence & Deep Subsystems
+        </div>
+        <div style="font-size: 0.90rem; color: #475569; font-weight: 550;">
+            Deep diagnostics, interactive satellite weather radar, ICAR cultivation distribution, Agmarknet 2.0 APMC benchmark marketplace, and dedicated research tabs:
+        </div>
+    </div>
+    ''', unsafe_allow_html=True)
+
+    # 🌟 CORE ACCESSIBILITY FEATURE NAVIGATION DECK (Direct Click-to-Tab)
+    tab_keys = ["tab_decision", "tab_annam", "tab_disease", "tab_memory", "tab_prove", "tab_ai", "tab_counter"]
+    tab_labels = [t(k, lang) for k in tab_keys]
+
+    if 'active_tab_idx' not in st.session_state:
+        st.session_state.active_tab_idx = 0
+    if not (0 <= st.session_state.active_tab_idx < len(tab_labels)):
+        st.session_state.active_tab_idx = 0
+
+    if 'tab_selector' not in st.session_state or st.session_state.tab_selector not in tab_labels:
+        st.session_state.tab_selector = tab_labels[st.session_state.active_tab_idx]
+
+    feature_meta = [
+        {
+            "img": "assets/features/feature_1_decision.jpg",
+            "title": t("feat1_title", lang),
+            "sub": t("feat1_sub", lang),
+            "icon": "🌦️",
+            "badge": t("feat1_badge", lang)
+        },
+        {
+            "img": "assets/features/feature_7_annam.jpg",
+            "title": "ANNAM.AI",
+            "sub": "Live MCII Weather Station Network",
+            "icon": "🌐",
+            "badge": "ANNAM MCII"
+        },
+        {
+            "img": "assets/features/feature_3_disease.jpg",
+            "title": t("feat3_title", lang),
+            "sub": t("feat3_sub", lang),
+            "icon": "🩺",
+            "badge": t("feat3_badge", lang)
+        },
+        {
+            "img": "assets/features/feature_4_memory.jpg",
+            "title": t("feat4_title", lang),
+            "sub": t("feat4_sub", lang),
+            "icon": "📖",
+            "badge": t("feat4_badge", lang)
+        },
+        {
+            "img": "assets/features/feature_5_proof.jpg",
+            "title": t("feat5_title", lang),
+            "sub": t("feat5_sub", lang),
+            "icon": "📊",
+            "badge": t("feat5_badge", lang)
+        },
+        {
+            "img": "assets/features/feature_6_ai.jpg",
+            "title": t("feat6_title", lang),
+            "sub": t("feat6_sub", lang),
+            "icon": "💬",
+            "badge": t("feat6_badge", lang)
+        },
+        {
+            "img": "assets/features/feature_2_dosage.jpg",
+            "title": t("feat2_title", lang),
+            "sub": t("feat2_sub", lang),
+            "icon": "⚖️",
+            "badge": t("feat2_badge", lang)
+        }
+    ]
+
+    with st.container(border=True):
+        st.markdown(f"""
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+            <div>
+                <div style="font-size: 1.25rem; font-weight: 900; color: #064e3b; display: flex; align-items: center; gap: 8px;">
+                    {t('nav_deck_title', lang)}
+                </div>
+                <div style="font-size: 0.92rem; color: #475569; font-weight: 600; margin-top: 2px;">
+                    {t('nav_deck_caption', lang)}
+                </div>
+            </div>
+            <div style="background: #ecfdf5; border: 1.5px solid #10b981; border-radius: 20px; padding: 4px 14px; font-size: 0.85rem; font-weight: 800; color: #047857;">
+                {t('nav_deck_badge', lang)}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        f_cols = st.columns(7)
+        for f_idx, feat in enumerate(feature_meta):
+            is_active = (st.session_state.active_tab_idx == f_idx)
+            with f_cols[f_idx]:
+                card_border = "3px solid #059669; box-shadow: 0 6px 16px rgba(5, 150, 105, 0.25);" if is_active else "1.5px solid #cbd5e1;"
+                bg_style = "background: #f0fdf4;" if is_active else "background: #ffffff;"
+                status_pill = f"<span style='background: #059669; color: white; font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 10px;'>{t('nav_active_btn', lang)}</span>" if is_active else f"<span style='background: #e2e8f0; color: #334155; font-size: 0.70rem; font-weight: 700; padding: 2px 6px; border-radius: 8px;'>{feat['badge']}</span>"
+                b64_img = get_base64_image(feat['img'])
+                
+                st.markdown(f"""
+                <div style="border-radius: 12px; border: {card_border}; {bg_style} overflow: hidden; margin-bottom: 8px;">
+                    <img src="data:image/jpeg;base64,{b64_img}" alt="{feat['title']}" style="width: 100%; height: 95px; object-fit: cover; display: block;" />
+                    <div style="padding: 8px 6px; text-align: center;">
+                        <div style="display: flex; justify-content: center; margin-bottom: 4px;">{status_pill}</div>
+                        <div style="font-size: 0.95rem; font-weight: 800; color: #0f172a; line-height: 1.25; min-height: 38px; display: flex; align-items: center; justify-content: center;">
+                            {feat['icon']} {feat['title']}
+                        </div>
+                        <div style="font-size: 0.75rem; color: #475569; font-weight: 600; line-height: 1.2; margin-top: 2px; min-height: 28px;">
+                            {feat['sub']}
+                        </div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                btn_label = feat['title']
+                btn_type = "primary" if is_active else "secondary"
+                if st.button(btn_label, key=f"nav_card_btn_{f_idx}", type=btn_type, use_container_width=True, help=f"Navigate directly to {feat['title']}"):
+                    st.session_state.active_tab_idx = f_idx
+                    st.session_state.tab_selector = tab_labels[f_idx]
+                    st.session_state.tab_nav_version = st.session_state.get('tab_nav_version', 0) + 1
+                    st.session_state.scroll_to_tabs = True
+                    st.rerun()
+
+        # Instant Client-Side Smooth Scroll Trigger to Main Tabs Section
+        if st.session_state.get("scroll_to_tabs"):
+            import streamlit.components.v1 as _comp
+            target_tab_idx = st.session_state.get("active_tab_idx", 0)
+            _comp.html(
+                f"""
+                <script>
+                    (function() {{
+                        function jumpToTabs() {{
+                            try {{
+                                var doc = window.parent.document;
+                                if (!doc) return;
+                                var target = doc.getElementById('platform_main_tabs') || doc.querySelector('div[data-testid="stTabs"]');
+                                if (target) {{
+                                    target.scrollIntoView({{ behavior: 'smooth', block: 'start' }});
+                                }}
+                                var tabButtons = doc.querySelectorAll('div[data-testid="stTabs"] button[role="tab"]');
+                                if (tabButtons && tabButtons.length > {target_tab_idx}) {{
+                                    tabButtons[{target_tab_idx}].click();
+                                }}
+                            }} catch(e) {{
+                                console.warn('Nav scroll error:', e);
+                            }}
+                        }}
+                        setTimeout(jumpToTabs, 60);
+                        setTimeout(jumpToTabs, 260);
+                        setTimeout(jumpToTabs, 600);
+                    }})();
+                </script>
+                """,
+                height=0,
+                width=0,
+            )
+
+    
+    # INTERACTIVE WEATHER RADAR & CLOUD POSITION MAP WITH LIVE HUD
+    with st.container():
+        st.markdown(f"#### 🛰️ {t('radar_map_title', lang)}")
+        w_status = ow_live.get("status", "DEMO / SYNTHETIC")
+        w_source = ow_live.get("telemetry_source", "Regional Agro-Climatology Normals")
+        w_badge_bg = "#ecfdf5" if w_status == "LIVE" else "#eff6ff"
+        w_badge_border = "#86efac" if w_status == "LIVE" else "#bfdbfe"
+        w_badge_color = "#15803d" if w_status == "LIVE" else "#1e40af"
+        st.markdown(f"""
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
+            <span style="font-size:0.8rem; color:#475569;">Live Satellite Cloud Cover, Precipitation Radar, Wind Drift Engine & Exact Farm GPS Locator.</span>
+            <span style="background:{w_badge_bg}; border:1px solid {w_badge_border}; color:{w_badge_color}; font-size:0.72rem; font-weight:800; padding:2px 10px; border-radius:12px;">
+                STATUS: {w_status} ({w_source})
+            </span>
+        </div>
+        """, unsafe_allow_html=True)
+        map_html = interactive_map_service.generate_interactive_weather_map_html(
+            lat=st.session_state.farm_lat,
+            lon=st.session_state.farm_lon,
+            region_name=localized_reg,
+            active_crop=t_crop(st.session_state.selected_crop, lang),
+            weather_info=ow_live,
+            lang=lang
+        )
+        components.html(map_html, height=570)
+
+    # 🌾 ICAR REGIONAL CULTIVATION INTELLIGENCE & AGMARKNET 2.0 INTEGRATION
+    st.markdown("---")
+    st.markdown(f"#### 🌾 {t('crop_sec_heading', lang, region=localized_reg)} & Agmarknet 2.0 Benchmark")
+    st.caption("Official regional crop acreage distribution (ICAR) synchronized with live APMC daily market rates from [Home-Agmarknet 2.0 (agmarknet.gov.in/home)](https://agmarknet.gov.in/home). Tap any crop to run the ML causal attribution model and update all market economics:")
+
+    cur_crops = REGIONAL_CROP_SHARES.get(st.session_state.selected_region, {})
+    crop_card_cols = st.columns(len(cur_crops))
+    
+    for c_idx, (c_name, c_info) in enumerate(cur_crops.items()):
+        is_selected = (c_name == st.session_state.selected_crop)
+        localized_crop_name = t_crop(c_name, lang)
+        localized_season = t_season(c_info['season'], lang)
+        localized_crop_desc = t_crop_desc(c_info['desc'], lang)
+        acreage_text = t("acreage_share", lang, share=c_info['share'])
+        
+        # Ingest live Agmarknet 2.0 data for each card
+        c_mandi = agmarknet_engine.get_mandi_intelligence_for_crop(c_name, True)
+        c_price = c_mandi.get("latest_price", 0)
+        c_msp = c_mandi.get("msp", 0)
+        c_delta = c_mandi.get("price_vs_msp_delta", 0)
+        if c_msp > 0:
+            if c_delta >= 0:
+                mandi_tag_color = "#047857"
+                mandi_tag_text = f"+₹{c_delta:,.0f} {t('agmark_card_vs_msp', lang)}"
+            else:
+                mandi_tag_color = "#b91c1c"
+                mandi_tag_text = f"-₹{abs(c_delta):,.0f} {t('agmark_card_vs_msp', lang)}"
+        else:
+            p_chg = c_mandi.get("price_change_3d", 0)
+            if p_chg >= 0:
+                mandi_tag_color = "#047857"
+                mandi_tag_text = f"{t('agmark_card_72h', lang)} +₹{p_chg:,.0f}/q"
+            else:
+                mandi_tag_color = "#b91c1c"
+                mandi_tag_text = f"{t('agmark_card_72h', lang)} -₹{abs(p_chg):,.0f}/q"
+            
+        border_style = "2.5px solid #059669; background: #ecfdf5; box-shadow: 0 4px 14px rgba(5, 150, 105, 0.2);" if is_selected else "1px solid #e2e8f0; background: #ffffff;"
+        badge_html = f"<span style='background:#059669; color:white; font-size:0.82rem; font-weight:800; padding:3px 10px; border-radius:12px;'>★ {t('active_field_badge', lang)}</span>" if is_selected else f"<span style='background:#f1f5f9; color:#1e293b; font-size:0.82rem; font-weight:700; padding:3px 10px; border-radius:12px;'>{localized_season}</span>"
+        
+        with crop_card_cols[c_idx]:
+            card_html = (
+                f'<div style="border-radius: 14px; padding: 14px 10px; text-align: center; margin-bottom: 8px; border: {border_style}; min-height: 245px;">'
+                f'<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">'
+                f'<span style="font-size: 1.8rem;">{c_info["icon"]}</span>'
+                f'{badge_html}'
+                f'</div>'
+                f'<div style="font-weight: 800; font-size: 1.15rem; color: #0f172a; line-height: 1.25;">{localized_crop_name}</div>'
+                f'<div style="font-size: 0.90rem; font-weight: 700; color: #059669; margin: 4px 0;">{acreage_text}</div>'
+                f'<div style="background: #e2e8f0; border-radius: 6px; height: 6px; width: 100%; overflow: hidden; margin-bottom: 8px;">'
+                f'<div style="background: #059669; height: 100%; width: {c_info["share"]}%;"></div>'
+                f'</div>'
+                f'<div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 8px 6px; margin: 6px 0;">'
+                f'<div style="font-size: 0.80rem; color: #475569; font-weight: 800; text-transform: uppercase;">{t("mandi_badge", lang)}</div>'
+                f'<div style="font-size: 1.30rem; font-weight: 900; color: #047857;">₹{c_price:,.0f} <span style="font-size: 0.82rem; font-weight: 600; color: #475569;">/q</span></div>'
+                f'<div style="font-size: 0.85rem; font-weight: 800; color: {mandi_tag_color};">{mandi_tag_text}</div>'
+                f'</div>'
+                f'<div style="font-size: 0.86rem; color: #334155; line-height: 1.35; margin-top: 6px; font-weight: 550;">{localized_crop_desc}</div>'
+                f'</div>'
+            )
+            st.markdown(card_html, unsafe_allow_html=True)
+            if not is_selected:
+                if st.button(t("select_crop_btn", lang, crop=localized_crop_name.split()[0]), key=f"btn_crop_{c_idx}", use_container_width=True):
+                    st.session_state.selected_crop = c_name
+                    st.rerun()
+
+    # 🏛️ AGMARKNET 2.0 MULTI-SECTION COMMODITY MARKETPLACE (Official 24-Commodity Grid)
+    with st.container():
+        st.markdown(f"#### {t('agmark_expander_title', lang)}")
+        st.caption(f"{t('agmark_caption', lang)} [Home-Agmarknet 2.0 (agmarknet.gov.in/home)](https://agmarknet.gov.in/home)")
+        
+        tab_cereals, tab_oilseeds, tab_pulses, tab_fibre, tab_veg = st.tabs([
+            t("agmark_tab_cereals", lang),
+            t("agmark_tab_oilseeds", lang),
+            t("agmark_tab_pulses", lang),
+            t("agmark_tab_fibre", lang),
+            t("agmark_tab_veg", lang)
+        ])
+        
+        agmark_full_df = agmarknet_engine.load_agmarknet_data()
+        
+        lbl_msp = t("agmark_card_msp", lang)
+        lbl_perish = t("agmark_card_perishable", lang)
+        lbl_vs_msp = t("agmark_card_vs_msp", lang)
+        lbl_arrival = t("agmark_card_arrival", lang)
+        lbl_72h = t("agmark_card_72h", lang)
+        
+        def render_commodity_group_cards(group_filter, key_prefix):
+            if agmark_full_df.empty:
+                return
+            g_df = agmark_full_df[agmark_full_df["commodity_group"].isin(group_filter)] if isinstance(group_filter, list) else agmark_full_df[agmark_full_df["commodity_group"] == group_filter]
+            cols = st.columns(min(len(g_df), 4))
+            for i, (_, row) in enumerate(g_df.iterrows()):
+                c_name_raw = row["commodity"]
+                c_name_display = t_commodity(c_name_raw, lang)
+                msp_val = float(row.get("msp_2026_27", 0))
+                p_01 = float(row.get("price_01_sep", 0))
+                p_30 = float(row.get("price_30_aug", 0))
+                arr_01 = float(row.get("arrival_01_sep", 0))
+                delta = p_01 - msp_val if msp_val > 0 else 0
+                trend_delta = p_01 - p_30
+                trend_sym = f"+₹{trend_delta:,.0f}" if trend_delta >= 0 else f"-₹{abs(trend_delta):,.0f}"
+                
+                # Dynamic matching to platform crops
+                matched_app_crop = None
+                for app_c, ag_c in agmarknet_engine.CROP_TO_AGMARKNET.items():
+                    if ag_c.lower() in c_name_raw.lower() or c_name_raw.lower() in ag_c.lower():
+                        matched_app_crop = app_c
+                        break
+                if not matched_app_crop:
+                    if any(x in c_name_raw.lower() for x in ["bajra", "jowar", "barley", "ragi"]):
+                        matched_app_crop = "Maize"
+                    elif any(x in c_name_raw.lower() for x in ["moong", "urd", "masur"]):
+                        matched_app_crop = "Gram / Chickpea (Chana)"
+                    elif any(x in c_name_raw.lower() for x in ["sunflower", "sesam", "safflower", "copra"]):
+                        matched_app_crop = "Soybean"
+                    elif "potato" in c_name_raw.lower():
+                        matched_app_crop = "Onion"
+                    else:
+                        matched_app_crop = "Soybean"
+                        
+                is_active = (st.session_state.selected_crop == c_name_raw or st.session_state.selected_crop == matched_app_crop)
+                box_border = "2px solid #059669; background: #ecfdf5;" if is_active else "1.5px solid #e2e8f0; background: #ffffff;"
+                
+                with cols[i % 4]:
+                    box_html = (
+                        f'<div style="{box_border} border-radius: 12px; padding: 12px; margin-bottom: 8px; min-height: 180px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); display: flex; flex-direction: column; justify-content: space-between;">'
+                        f'<div>'
+                        f'<div style="font-weight: 800; font-size: 0.95rem; color: #0f172a; line-height: 1.2; margin-bottom: 4px;" title="{c_name_raw}">{c_name_display}</div>'
+                        f'<div style="font-size: 1.25rem; font-weight: 900; color: #059669; margin: 3px 0;">₹{p_01:,.0f} <span style="font-size: 0.72rem; font-weight: normal; color: #64748b;">/q</span></div>'
+                        f'<div style="font-size: 0.72rem; color: #475569;">{lbl_msp} <strong>{"₹" + f"{msp_val:,.0f}" if msp_val > 0 else f"{lbl_perish} (Free Trade)"}</strong></div>'
+                        f'<div style="font-size: 0.72rem; color: {"#047857" if (delta >= 0 if msp_val > 0 else trend_delta >= 0) else "#b91c1c"}; font-weight: 700;">{("🟢 +" if delta >= 0 else "🔴 -") + f"{abs(delta):,.0f} " + lbl_vs_msp if msp_val > 0 else f"📈 72h: {trend_sym} /q"}</div>'
+                        f'</div>'
+                        f'<div style="font-size: 0.70rem; color: #64748b; border-top: 1px dashed #cbd5e1; padding-top: 4px; margin-top: 4px;">{lbl_arrival} <strong>{arr_01:,.1f} MT</strong> | {lbl_72h} <strong>{trend_sym}</strong></div>'
+                        f'</div>'
+                    )
+                    st.markdown(box_html, unsafe_allow_html=True)
+                    if is_active:
+                        st.markdown(f'<div style="text-align: center; font-size: 0.75rem; font-weight: 800; color: #059669; padding: 6px 0;">★ {t("active_field_badge", lang)}</div>', unsafe_allow_html=True)
+                    else:
+                        btn_lbl = t("select_crop_btn", lang, crop=c_name_display.split()[0])
+                        if st.button(btn_lbl, key=f"sel_ag_{key_prefix}_{i}", use_container_width=True):
+                            st.session_state.selected_crop = c_name_raw
+                            st.rerun()
+                            
+        with tab_cereals:
+            render_commodity_group_cards("Cereals", "cereals")
+        with tab_oilseeds:
+            render_commodity_group_cards("Oil Seeds", "oilseeds")
+        with tab_pulses:
+            render_commodity_group_cards("Pulses", "pulses")
+        with tab_fibre:
+            render_commodity_group_cards("Fibre Crops", "fibre")
+        with tab_veg:
+            render_commodity_group_cards(["Vegetables", "Others"], "veg")
 
     # 🏛️ IN-APP GOVERNMENT SOURCES & SCIENTIFIC PROOFS DRAWER
     with st.container():
