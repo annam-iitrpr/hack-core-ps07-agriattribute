@@ -844,46 +844,33 @@ def main():
             )
 
     
-    # 📖 MASTER EVALUATOR & QUICK RECALL EXPANDER (Demo / Viva Cheat-Sheet)
-    with st.expander(t("master_recall_title", lang), expanded=False):
-        mr_col1, mr_col2, mr_col3 = st.columns(3)
-        with mr_col1:
-            st.markdown(f"""
-            <div style="background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 12px; padding: 14px; min-height: 220px;">
-                <div style="font-weight: 800; font-size: 0.95rem; color: #166534; margin-bottom: 6px;">{t('mr_card1_title', lang)}</div>
-                <div style="font-size: 0.82rem; color: #1e293b; line-height: 1.45;">
-                    {t('mr_card1_body', lang)}
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-        with mr_col2:
-            st.markdown(f"""
-            <div style="background: #eff6ff; border: 1.5px solid #93c5fd; border-radius: 12px; padding: 14px; min-height: 220px;">
-                <div style="font-weight: 800; font-size: 0.95rem; color: #1e40af; margin-bottom: 6px;">{t('mr_card2_title', lang)}</div>
-                <div style="font-size: 0.82rem; color: #1e293b; line-height: 1.45;">
-                    {t('mr_card2_body', lang)}
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-        with mr_col3:
-            st.markdown(f"""
-            <div style="background: #fefce8; border: 1.5px solid #fde047; border-radius: 12px; padding: 14px; min-height: 220px;">
-                <div style="font-weight: 800; font-size: 0.95rem; color: #854d0e; margin-bottom: 6px;">{t('mr_card3_title', lang)}</div>
-                <div style="font-size: 0.82rem; color: #1e293b; line-height: 1.45;">
-                    {t('mr_card3_body', lang)}
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+    # Agro-Climatic Belt Matcher
+    def get_closest_region(lat, lon):
+        min_sq = float("inf")
+        best_r = "Maharashtra & Vidarbha (Deccan)"
+        for r_n, r_c in REGION_COORDS.items():
+            dist_sq = (lat - r_c["lat"])**2 + (lon - r_c["lon"])**2
+            if dist_sq < min_sq:
+                min_sq = dist_sq
+                best_r = r_n
+        return best_r
 
-
-    # URL Query Sync for Farm GPS & Location
+    # URL Query Sync for Farm GPS & Location with Auto-Belt Shifting
     qp = st.query_params
     if "lat" in qp and "lon" in qp:
         try:
-            st.session_state.farm_lat = float(qp["lat"])
-            st.session_state.farm_lon = float(qp["lon"])
+            q_lat = float(qp["lat"])
+            q_lon = float(qp["lon"])
+            st.session_state.farm_lat = q_lat
+            st.session_state.farm_lon = q_lon
             if "place" in qp:
                 st.session_state.farm_location_name = qp["place"]
+            matched_reg = get_closest_region(q_lat, q_lon)
+            if matched_reg != st.session_state.get('selected_region'):
+                st.session_state.selected_region = matched_reg
+                avail_crops = list(REGIONAL_CROP_SHARES.get(matched_reg, {}).keys())
+                if st.session_state.get('selected_crop') not in avail_crops:
+                    st.session_state.selected_crop = avail_crops[0]
         except Exception:
             pass
 
@@ -907,10 +894,10 @@ def main():
     localized_reg = t_region(st.session_state.selected_region, lang)
     farm_disp_name = st.session_state.get('farm_location_name', 'Pune')
 
-    # Quick Region Switcher Pills
+    # Quick Region Switcher with Live Location Auto-Shifting
     st.markdown(f"<div style='font-size: 0.8rem; font-weight: 600; color: #64748b; margin-top: 10px; margin-bottom: 6px;'>{t('loc_change_belt', lang)}</div>", unsafe_allow_html=True)
     belt_keys = ["belt_punjab", "belt_vidarbha", "belt_andhra", "belt_up", "belt_karnataka"]
-    p_cols = st.columns(5)
+    p_cols = st.columns([1.3, 1, 1, 1, 1, 1])
     reg_city_map = {
         "Punjab & Western UP": "Ludhiana",
         "Maharashtra & Vidarbha (Deccan)": "Pune",
@@ -918,10 +905,50 @@ def main():
         "Eastern UP & Bihar": "Varanasi",
         "Karnataka & Tamil Nadu": "Bengaluru"
     }
+    
+    with p_cols[0]:
+        if st.button("🎯 Live Location", key="btn_detect_live_loc", type="primary", use_container_width=True, help="Automatically shift the agro-climatic belt to your live location"):
+            det_lat = None
+            det_lon = None
+            det_city = "My Live Location"
+            try:
+                r_ip = requests.get("http://ip-api.com/json/", timeout=3)
+                if r_ip.status_code == 200:
+                    d_ip = r_ip.json()
+                    if d_ip.get("status") == "success":
+                        det_lat = float(d_ip.get("lat"))
+                        det_lon = float(d_ip.get("lon"))
+                        det_city = d_ip.get("city", "Live Location")
+            except Exception:
+                pass
+            if not det_lat:
+                try:
+                    r_ip2 = requests.get("https://ipapi.co/json/", timeout=3)
+                    if r_ip2.status_code == 200:
+                        d2 = r_ip2.json()
+                        det_lat = float(d2.get("latitude"))
+                        det_lon = float(d2.get("longitude"))
+                        det_city = d2.get("city", "Live Location")
+                except Exception:
+                    pass
+            if det_lat and det_lon:
+                st.session_state.farm_lat = det_lat
+                st.session_state.farm_lon = det_lon
+                st.session_state.farm_location_name = det_city
+                matched_reg = get_closest_region(det_lat, det_lon)
+                st.session_state.selected_region = matched_reg
+                avail_crops = list(REGIONAL_CROP_SHARES[matched_reg].keys())
+                if st.session_state.selected_crop not in avail_crops:
+                    st.session_state.selected_crop = avail_crops[0]
+                st.toast(f"📍 Shifted to {matched_reg} ({det_city})", icon="🎯")
+                st.rerun()
+            else:
+                st.warning("Could not detect location. Please select an agro-climatic belt.")
+
     for p_idx, reg_name in enumerate(REGION_COORDS.keys()):
         short_label = t(belt_keys[p_idx], lang)
         is_active = (reg_name == st.session_state.selected_region)
-        with p_cols[p_idx]:
+        with p_cols[p_idx + 1]:
             btn_label = f"✅ {short_label}" if is_active else f"📍 {short_label}"
             if st.button(btn_label, key=f"reg_pill_{p_idx}", type="primary" if is_active else "secondary", use_container_width=True, help=t("help_belt", lang)):
                 st.session_state.selected_region = reg_name
@@ -938,7 +965,8 @@ def main():
         ow_live['location'] = st.session_state.farm_location_name
 
     # INTERACTIVE WEATHER RADAR & CLOUD POSITION MAP WITH LIVE HUD
-    with st.expander(t("radar_map_title", lang), expanded=True):
+    with st.container():
+        st.markdown(f"#### 🛰️ {t('radar_map_title', lang)}")
         w_status = ow_live.get("status", "DEMO / SYNTHETIC")
         w_source = ow_live.get("telemetry_source", "Regional Agro-Climatology Normals")
         w_badge_bg = "#ecfdf5" if w_status == "LIVE" else "#eff6ff"
@@ -1028,7 +1056,8 @@ def main():
                     st.rerun()
 
     # 🏛️ AGMARKNET 2.0 MULTI-SECTION COMMODITY MARKETPLACE (Official 24-Commodity Grid)
-    with st.expander(t("agmark_expander_title", lang), expanded=False):
+    with st.container():
+        st.markdown(f"#### {t('agmark_expander_title', lang)}")
         st.caption(f"{t('agmark_caption', lang)} [Home-Agmarknet 2.0 (agmarknet.gov.in/home)](https://agmarknet.gov.in/home)")
         
         tab_cereals, tab_oilseeds, tab_pulses, tab_fibre, tab_veg = st.tabs([
@@ -1330,7 +1359,8 @@ def main():
         st.markdown(benefit_card_html, unsafe_allow_html=True)
 
     # 🏛️ IN-APP GOVERNMENT SOURCES & SCIENTIFIC PROOFS DRAWER
-    with st.expander(t("proof_sources_expander", lang)):
+    with st.container():
+        st.markdown(f"#### 📚 {t('proof_sources_expander', lang)}")
         p_c1, p_c2 = st.columns(2)
         with p_c1:
             sources_govt_html = (
@@ -1424,7 +1454,8 @@ def main():
             st.markdown(sources_algo_html, unsafe_allow_html=True)
 
     # 🏛️ TNAU AGRITECH UNIVERSITY KNOWLEDGE HUB (OFFICIAL PORTAL INTEGRATION)
-    with st.expander("🏛️ Official TNAU Agritech Portal Knowledge Hub (Tamil Nadu Agricultural University — agritech.tnau.ac.in)", expanded=False):
+    with st.container():
+        st.markdown("#### 🏛️ Official TNAU Agritech Portal Knowledge Hub (Tamil Nadu Agricultural University — agritech.tnau.ac.in)")
         st.markdown("""
         <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 12px 16px; margin-bottom: 12px;">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
@@ -1530,8 +1561,6 @@ def main():
     # TAB 1: TODAY'S DECISION & WEATHER + WHATSAPP SHARE
     with tab_decision:
         st.subheader(t("tab1_heading", lang))
-        with st.expander(t("tab1_recall_title", lang), expanded=False):
-            st.markdown(f"""<div style="background:#f0fdf4; border-left:4px solid #059669; padding:10px 14px; border-radius:6px; font-size:0.86rem; color:#0f172a; line-height:1.5;">{t("tab1_recall_text", lang)}</div>""", unsafe_allow_html=True)
         
         st.markdown(f"""
         <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 12px; padding: 12px 16px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
@@ -1629,17 +1658,11 @@ def main():
         )
         encoded_w_wa = urllib.parse.quote(weather_wa_text.encode('utf-8'))
         st.markdown(f'<a href="https://wa.me/?text={encoded_w_wa}" target="_blank" class="wa-button" style="width: 100%;">{t("share_weather_wa_btn", lang)}</a>', unsafe_allow_html=True)
-        
-        with st.expander(t("briefing_expander_title", lang)):
-            st.code(weather_wa_text, language="markdown")
-            
 
     # TAB 2: COUNTERFACTUAL (ACT VS DO NOTHING)
     with tab_counter:
         st.subheader(t("tab2_heading", lang))
         st.caption(t("tab2_caption", lang))
-        with st.expander(t("tab2_recall_title", lang), expanded=False):
-            st.markdown(f"""<div style="background:#eff6ff; border-left:4px solid #2563eb; padding:10px 14px; border-radius:6px; font-size:0.86rem; color:#0f172a; line-height:1.5;">{t("tab2_recall_text", lang)}</div>""", unsafe_allow_html=True)
         
         # Real-time Synchronized Field Parameters Ribbon
         farm_name = st.session_state.get('farm_location_name', 'Pune')
@@ -1880,8 +1903,6 @@ def main():
     with tab_disease:
         st.subheader(t("soil_card_title", lang))
         st.caption(t("soil_card_subtitle", lang))
-        with st.expander(t("tab3_recall_title", lang), expanded=False):
-            st.markdown(f"""<div style="background:#fefce8; border-left:4px solid #ca8a04; padding:10px 14px; border-radius:6px; font-size:0.86rem; color:#0f172a; line-height:1.5;">{t("tab3_recall_text", lang)}</div>""", unsafe_allow_html=True)
         
         # 12-Parameter Soil Health Card Grid Synchronized with Exact Farm GPS
         farm_lat = float(st.session_state.get('farm_lat', 18.5204))
@@ -1909,8 +1930,9 @@ def main():
         </div>
         """, unsafe_allow_html=True)
         
-        # Official Government Source Provenance Expander
-        with st.expander(t("soil_sources_expander_title", lang)):
+        # Official Government Source Provenance Section
+        with st.container():
+            st.markdown(f"##### 🏛️ {t('soil_sources_expander_title', lang)}")
             st.markdown("""
             * **Primary Authority:** Ministry of Agriculture & Farmers Welfare, Government of India — [National Soil Health Card Scheme (Phase-II)](https://soilhealth.dac.gov.in/).
             * **Geospatial Soil Mapping:** ICAR - National Bureau of Soil Survey & Land Use Planning (NBSS&LUP), Nagpur — *Agro-Ecological Sub-Region (AESR) Soil Taxonomy 1:250,000 Grid*.
@@ -2088,9 +2110,6 @@ def main():
 
     # TAB 4: MY FARM MEMORY & CLOSED-LOOP RETRAIN ENGINE
     with tab_memory:
-        with st.expander(t("tab4_recall_title", lang), expanded=False):
-            st.markdown(f"""<div style="background:#fdf4ff; border-left:4px solid #a855f7; padding:10px 14px; border-radius:6px; font-size:0.86rem; color:#0f172a; line-height:1.5;">{t("tab4_recall_text", lang)}</div>""", unsafe_allow_html=True)
-        
         # Human-Centric Value & Purpose Cockpit
         db_conn = supabase_client.test_connection()
         db_status_text = "🟢 LIVE: Supabase Cloud PostgreSQL" if db_conn.get("status") == "LIVE" else "🟡 DEMO / SYNTHETIC: Local Session Memory"
@@ -2327,8 +2346,9 @@ def main():
 
         st.markdown("<div style='margin-top: 18px;'></div>", unsafe_allow_html=True)
 
-        # Official KCC / PMFBY Certificate Generator
-        with st.expander(t("kcc_cert_btn", lang)):
+        # Official KCC / PMFBY Certificate Section
+        with st.container():
+            st.markdown(f"##### 📄 {t('kcc_cert_btn', lang)}")
             st.caption("Official attestation certifying proactive application of climate-resilient Syngenta biological inputs.")
             cert_text = supabase_client.generate_kcc_certificate_text(history[0] if history else {})
             st.code(cert_text, language="text")
@@ -2352,8 +2372,6 @@ def main():
     # TAB 5: ATTRIBUTION & OUTCOME (DID IT WORK?)
     with tab_prove:
         st.subheader(t("tab5_heading", lang))
-        with st.expander(t("tab5_recall_title", lang), expanded=False):
-            st.markdown(f"""<div style="background:#ecfdf5; border-left:4px solid #059669; padding:10px 14px; border-radius:6px; font-size:0.86rem; color:#0f172a; line-height:1.5;">{t("tab5_recall_text", lang)}</div>""", unsafe_allow_html=True)
         
         col_attr1, col_attr2 = st.columns(2)
         with col_attr1:
@@ -2504,8 +2522,9 @@ def main():
             
         st.info(f"💡 **Market Action Advisory for Farmers:** {mandi_info['action_advice']}")
         
-        # Complete 24-Commodity Agmarknet 2.0 Report Expander
-        with st.expander(t("view_agmark_matrix_title", lang)):
+        # Complete 24-Commodity Agmarknet 2.0 Report Section
+        with st.container():
+            st.markdown(f"##### 📑 {t('view_agmark_matrix_title', lang)}")
             agmark_df = agmarknet_engine.load_agmarknet_data()
             if not agmark_df.empty:
                 st.dataframe(
@@ -2518,8 +2537,6 @@ def main():
 
     # TAB 6: FIELD INTELLIGENCE CO-PILOT (GEMINI 2.5 FLASH — CONTEXT-AWARE + VOICE)
     with tab_ai:
-        with st.expander(t("tab6_recall_title", lang), expanded=False):
-            st.markdown(f"""<div style="background:#f0fdf4; border-left:4px solid #047857; padding:10px 14px; border-radius:6px; font-size:0.86rem; color:#0f172a; line-height:1.5;">{t("tab6_recall_text", lang)}</div>""", unsafe_allow_html=True)
 
         # ── Hero Header ────────────────────────────────────────────────────────
         ai_engine_status = gemini_service.get_engine_status()

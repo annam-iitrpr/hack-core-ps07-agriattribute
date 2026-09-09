@@ -639,6 +639,17 @@ def generate_interactive_weather_map_html(
                     marker.setLatLng([userLat, userLon]);
                     if (btn) btn.innerText = origText;
                     updateFieldWeather(userLat, userLon, "Live Farm GPS");
+                    // Auto-sync parent Streamlit platform to shift agro-climatic belt
+                    try {{
+                        var targetSearch = "?lat=" + userLat.toFixed(4) + "&lon=" + userLon.toFixed(4) + "&place=" + encodeURIComponent("Live GPS Location");
+                        if (window.top && window.top !== window.self) {{
+                            window.top.location.search = targetSearch;
+                        }} else {{
+                            window.location.search = targetSearch;
+                        }}
+                    }} catch(e) {{
+                        console.log("Parent sync notice:", e);
+                    }}
                 }}, function(error) {{
                     if (btn) btn.innerText = origText;
                     var msg = "Unable to retrieve GPS location: " + error.message;

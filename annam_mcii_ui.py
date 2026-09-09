@@ -547,7 +547,8 @@ def render_annam_mcii_tab(lang: str = "English", active_crop: str = "Soybean"):
     # ─────────────────────────────────────────────────────────────────────────
     # 8. STEP 7: DATA SOURCE & GROUND PROVENANCE
     # ─────────────────────────────────────────────────────────────────────────
-    with st.expander("📚 Data source & ground provenance (ANNAM.AI / MCII)", expanded=False):
+    with st.container():
+        st.markdown("##### 📚 Data source & ground provenance (ANNAM.AI / MCII)")
         st.markdown(f"""
         **Technical Telemetry Attribution:**
         * **Origin Organization:** ANNAM.AI — Center of Excellence for AI in Agriculture, IIT Ropar (Ministry of Education, Govt. of India).
