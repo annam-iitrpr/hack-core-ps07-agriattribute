@@ -177,3 +177,135 @@ def generate_whatsapp_briefing(
     )
     return briefing
 
+
+
+# Dynamically injected ANNAM.AI MCII localized strings
+_ANNAM_STRINGS = {
+    "en": {
+        "tab_annam": "🌐 ANNAM.AI Intelligence",
+        "annam_header": "ANNAM.AI AGRICULTURAL INTELLIGENCE",
+        "annam_subheading": "Hyperlocal field intelligence connected to farmer decisions.",
+        "annam_sec_coverage": "MCII Hyperlocal Network Coverage",
+        "annam_sec_map": "Interactive Weather Station Map",
+        "annam_sec_selected": "Station Telemetry Inspector",
+        "annam_sec_params": "Live Sensor Readings",
+        "annam_sec_history": "Historical Trend Explorer",
+        "annam_sec_signals": "AgriAttribute Derived Field Signals",
+        "annam_sec_provenance": "Data Source & Ground Provenance"
+    },
+    "hi": {
+        "tab_annam": "🌐 ANNAM.AI कृषि बुद्धिमत्ता",
+        "annam_header": "ANNAM.AI कृषि बुद्धिमत्ता (MCII)",
+        "annam_subheading": "अति-स्थानीय प्रक्षेत्र सूचना को किसान निर्णयों से जोड़ना।",
+        "annam_sec_coverage": "MCII नेटवर्क विस्तार व कवरेज",
+        "annam_sec_map": "इंटरैक्टिव मौसम स्टेशन मानचित्र",
+        "annam_sec_selected": "स्टेशन टेलीमेट्री निरीक्षक",
+        "annam_sec_params": "लाइव सेंसर रीडिंग",
+        "annam_sec_history": "ऐतिहासिक रुझान एक्सप्लोरर",
+        "annam_sec_signals": "एग्री-एट्रीब्यूट व्युत्पन्न कृषि संकेत",
+        "annam_sec_provenance": "डेटा स्रोत व वैज्ञानिक प्रमाणिकता"
+    },
+    "mr": {
+        "tab_annam": "🌐 ANNAM.AI कृषी बुद्धिमत्ता",
+        "annam_header": "ANNAM.AI कृषी बुद्धिमत्ता (MCII)",
+        "annam_subheading": "अति-स्थानिक शेत माहिती शेतकरी निर्णयाशी जोडणारा दुवा.",
+        "annam_sec_coverage": "MCII नेटवर्क कव्हरेज",
+        "annam_sec_map": "परस्परसंवादी हवामान केंद्र नकाशा",
+        "annam_sec_selected": "हवामान केंद्र तपशील",
+        "annam_sec_params": "थेट सेन्सर वाचन",
+        "annam_sec_history": "ऐतिहासिक कल विश्लेषक",
+        "annam_sec_signals": "अ‍ॅग्री-अ‍ॅट्रिब्यूट कृषी संकेत",
+        "annam_sec_provenance": "डेटा स्रोत व अधिकृत माहिती"
+    },
+    "pa": {
+        "tab_annam": "🌐 ANNAM.AI ਖੇਤੀਬਾੜੀ ਇੰਟੈਲੀਜੈਂਸ",
+        "annam_header": "ANNAM.AI ਖੇਤੀਬਾੜੀ ਇੰਟੈਲੀਜੈਂਸ (MCII)",
+        "annam_subheading": "ਅਤਿ-ਸਥਾਨਕ ਖੇਤ ਜਾਣਕਾਰੀ ਨੂੰ ਕਿਸਾਨੀ ਫੈਸਲਿਆਂ ਨਾਲ ਜੋੜਨਾ।",
+        "annam_sec_coverage": "MCII ਨੈੱਟਵਰਕ ਕਵਰੇਜ",
+        "annam_sec_map": "ਮੌਸਮ ਸਟੇਸ਼ਨ ਨਕਸ਼ਾ",
+        "annam_sec_selected": "ਸਟੇਸ਼ਨ ਟੈਲੀਮੈਟਰੀ ਵੇਰਵਾ",
+        "annam_sec_params": "ਲਾਈਵ ਸੈਂਸਰ ਰੀਡਿੰਗ",
+        "annam_sec_history": "ਇਤਿਹਾਸਕ ਰੁਝਾਨ ਐਕਸਪਲੋਰਰ",
+        "annam_sec_signals": "ਖੇਤੀਬਾੜੀ ਸਿਗਨਲ",
+        "annam_sec_provenance": "ਡਾਟਾ ਸਰੋਤ ਅਤੇ ਪ੍ਰਮਾਣਿਕਤਾ"
+    },
+    "te": {
+        "tab_annam": "🌐 ANNAM.AI వ్యవసాయ ఇంటెలిజెన్స్",
+        "annam_header": "ANNAM.AI వ్యవసాయ ఇంటెలిజెన్స్ (MCII)",
+        "annam_subheading": "హైపర్‌లోకల్ క్షేత్ర సమాచారాన్ని రైతు నిర్ణయాలతో అనుసంధానించడం.",
+        "annam_sec_coverage": "MCII నెట్‌వర్క్ కవరేజ్",
+        "annam_sec_map": "వాతావరణ కేంద్రాల మ్యాప్",
+        "annam_sec_selected": "కేంద్రం టెలిమెట్రీ వివరాలు",
+        "annam_sec_params": "ప్రత్యక్ష సెన్సార్ రీడింగ్‌లు",
+        "annam_sec_history": "చారిత్రక ధోరణుల అన్వేషణ",
+        "annam_sec_signals": "వ్యవసాయ నిర్ణయ సూచికలు",
+        "annam_sec_provenance": "డేటా మూలం మరియు ధృవీకరణ"
+    },
+    "gu": {
+        "tab_annam": "🌐 ANNAM.AI કૃષિ ઇન્ટેલિજન્સ",
+        "annam_header": "ANNAM.AI કૃષિ ઇન્ટેલિજન્સ (MCII)",
+        "annam_subheading": "અતિ-સ્થાનિક ખેતર માહિતીને ખેડૂત નિર્ણયો સાથે જોડવું.",
+        "annam_sec_coverage": "MCII નેટવર્ક કવરેજ",
+        "annam_sec_map": "હવામાન સ્ટેશન નકશો",
+        "annam_sec_selected": "સ્ટેશન ટેલિમેટ્રી વિગત",
+        "annam_sec_params": "લાઇવ સેન્સર રીડિંગ્સ",
+        "annam_sec_history": "ઐતિહાસિક વલણ એક્સપ્લોરર",
+        "annam_sec_signals": "કૃષિ નિર્ણય સંકેતો",
+        "annam_sec_provenance": "ડેટા સ્ત્રોત અને વિશ્વસનીયતા"
+    },
+    "kn": {
+        "tab_annam": "🌐 ANNAM.AI ಕೃಷಿ ಇಂಟೆಲಿಜೆನ್ಸ್",
+        "annam_header": "ANNAM.AI ಕೃಷಿ ಇಂಟೆಲಿಜೆನ್ಸ್ (MCII)",
+        "annam_subheading": "ಹೈಪರ್‌ಲೋಕಲ್ ಕ್ಷೇತ್ರ ಮಾಹಿತಿಯನ್ನು ರೈತರ ನಿರ್ಧಾರಗಳಿಗೆ ಜೋಡಿಸುವುದು.",
+        "annam_sec_coverage": "MCII ನೆಟ್‌ವರ್ಕ್ ವ್ಯಾಪ್ತಿ",
+        "annam_sec_map": "ಹವಾಮಾನ ಕೇಂದ್ರ ನಕ್ಷೆ",
+        "annam_sec_selected": "ಕೇಂದ್ರದ ವಿವರಗಳು",
+        "annam_sec_params": "ನೇರ ಸಂವೇದಕ ಅಂಕಿಅಂಶ",
+        "annam_sec_history": "ಐತಿಹಾಸಿಕ ಪ್ರವೃತ್ತಿ",
+        "annam_sec_signals": "ಕೃಷಿ ನಿರ್ಧಾರ ಸಂಕೇತಗಳು",
+        "annam_sec_provenance": "ಡೇಟಾ ಮೂಲ ಮತ್ತು ಪ್ರಾಮಾಣಿಕತೆ"
+    },
+    "ta": {
+        "tab_annam": "🌐 ANNAM.AI விவசாய நுண்ணறிவு",
+        "annam_header": "ANNAM.AI விவசாய நுண்ணறிவு (MCII)",
+        "annam_subheading": "துல்லியமான களத் தகவல்களை விவசாயிகளின் முடிவுகளுடன் இணைத்தல்.",
+        "annam_sec_coverage": "MCII நெட்வொர்க் கவரேஜ்",
+        "annam_sec_map": "வானிலை நிலைய வரைபடம்",
+        "annam_sec_selected": "நிலைய விவரங்கள்",
+        "annam_sec_params": "நேரடி சென்சார் அளவீடுகள்",
+        "annam_sec_history": "வரலாற்றுப் போக்குகள்",
+        "annam_sec_signals": "விவசாய வழிகாட்டுதல் சமிக்கைகள்",
+        "annam_sec_provenance": "தரவு மூலம் மற்றும் ஆதாரம்"
+    },
+    "bn": {
+        "tab_annam": "🌐 ANNAM.AI কৃষি বুদ্ধিমত্তা",
+        "annam_header": "ANNAM.AI কৃষি বুদ্ধিমত্তা (MCII)",
+        "annam_subheading": "স্থানীয় কৃষি তথ্যকে কৃষকের সিদ্ধান্তের সাথে সংযুক্ত করা।",
+        "annam_sec_coverage": "MCII নেটওয়ার্ক কভারেজ",
+        "annam_sec_map": "আবহাওয়া স্টেশন মানচিত্র",
+        "annam_sec_selected": "স্টেশন টেলিমেট্রি বিবরণ",
+        "annam_sec_params": "লাইভ সেন্সর রিডিং",
+        "annam_sec_history": "ঐতিহাসিক প্রবণতা এক্সপ্লোরার",
+        "annam_sec_signals": "কৃষি সিদ্ধান্ত সূচক",
+        "annam_sec_provenance": "উপাত্তের উৎস ও প্রামাণিকতা"
+    }
+}
+for _lang, _kvs in _ANNAM_STRINGS.items():
+    if _lang in TRANSLATIONS:
+        TRANSLATIONS[_lang].update(_kvs)
+
+_FEAT7_EXTRAS = {
+    'en': {'feat7_title': 'ANNAM.AI', 'feat7_sub': 'Live MCII Weather Station Network', 'feat7_badge': 'ANNAM MCII'},
+    'hi': {'feat7_title': 'ANNAM.AI', 'feat7_sub': 'लाइव MCII मौसम स्टेशन नेटवर्क', 'feat7_badge': 'ANNAM MCII'},
+    'mr': {'feat7_title': 'ANNAM.AI', 'feat7_sub': 'थेट MCII हवामान केंद्र नेटवर्क', 'feat7_badge': 'ANNAM MCII'},
+    'pa': {'feat7_title': 'ANNAM.AI', 'feat7_sub': 'ਲਾਈਵ MCII ਮੌਸਮ ਸਟੇਸ਼ਨ ਨੈੱਟਵਰਕ', 'feat7_badge': 'ANNAM MCII'},
+    'te': {'feat7_title': 'ANNAM.AI', 'feat7_sub': 'ప్రత్యక్ష MCII వాతావరణ కేంద్రాల నెట్‌వర్క్', 'feat7_badge': 'ANNAM MCII'},
+    'gu': {'feat7_title': 'ANNAM.AI', 'feat7_sub': 'લાઇવ MCII હવામાન સ્ટેશન નેટવર્ક', 'feat7_badge': 'ANNAM MCII'},
+    'kn': {'feat7_title': 'ANNAM.AI', 'feat7_sub': 'ನೇರ MCII ಹವಾಮಾನ ಕೇಂದ್ರ ಜಾಲ', 'feat7_badge': 'ANNAM MCII'},
+    'ta': {'feat7_title': 'ANNAM.AI', 'feat7_sub': 'நேரலை MCII வானிலை நிலைய நெட்வொர்க்', 'feat7_badge': 'ANNAM MCII'},
+    'bn': {'feat7_title': 'ANNAM.AI', 'feat7_sub': 'লাইভ MCII আবহাওয়া স্টেশন নেটওয়ার্ক', 'feat7_badge': 'ANNAM MCII'}
+}
+for _l, _kv in _FEAT7_EXTRAS.items():
+    if _l in TRANSLATIONS:
+        TRANSLATIONS[_l].update(_kv)
+

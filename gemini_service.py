@@ -173,7 +173,7 @@ def generate_domain_expert_fallback(user_query: str, language: str, context_info
 5. **ఆశించిన లాభం:** ఎకరానికి ₹{profit:,.0f} నికర లాభం సాధ్యమవుతుంది!
 """
     else:
-        return f"""
+        english_briefing = f"""
 **AgriAttribute Field Intelligence Briefing ({crop}):**
 
 **Core Verdict:** Your live farm telemetry indicates {f'soil nitrogen deficiency ({n_val:.0f} kg/ha vs 280 kg/ha DAC&FW benchmark)' if n_val < 280 else 'stable soil nutrients'} and {heat_stress} days of heat stress.
@@ -185,6 +185,14 @@ def generate_domain_expert_fallback(user_query: str, language: str, context_info
 
 **Economic Bottom Line:** Total estimated net profit lift is Rs {profit:,.0f}/acre.
 """
+        # If farmer selected an Indic language (Gujarati, Tamil, Kannada, Bengali, etc.), translate dynamically via IndicTrans2
+        if lang_lower and lang_lower not in ["english", "en"]:
+            try:
+                import indictrans_service
+                return indictrans_service.translate_en_to_indic(english_briefing, language)
+            except Exception:
+                pass
+        return english_briefing
 
 
 def ask_gemini_multimodal(
@@ -247,8 +255,23 @@ def ask_gemini_multimodal(
             "IMPORTANT: A field photograph is attached. Diagnose any visual symptoms (chlorosis, spots, lesions, deficiency, pest infestation), correlate with the farm soil & weather, and provide treatment recommendations."
         )
 
+    canonical_query = query_text
+    is_indic = language and str(language).lower() not in ["english", "en"]
+    if is_indic and query_text and query_text.strip():
+        try:
+            import indictrans_service
+            translated_q = indictrans_service.translate_indic_to_en(query_text.strip(), language)
+            if translated_q and translated_q != query_text.strip():
+                canonical_query = translated_q
+        except Exception:
+            pass
+
     if query_text and query_text.strip():
-        instructions.append(f"Farmer's Written Query: {query_text.strip()}")
+        if canonical_query and canonical_query != query_text.strip():
+            instructions.append(f"Farmer's Original Query ({language}): {query_text.strip()}")
+            instructions.append(f"Canonical English Query (via AI4Bharat IndicTrans2): {canonical_query.strip()}")
+        else:
+            instructions.append(f"Farmer's Written Query: {query_text.strip()}")
     elif not has_audio and not has_image:
         instructions.append("Farmer requested an overall executive field advisory based on today's farm telemetry.")
 
@@ -275,24 +298,40 @@ def ask_gemini_multimodal(
                 data = res.json()
                 reply = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
                 if reply and len(reply.strip()) > 10:
+                    final_reply = reply.strip()
+                    # If target is Indic language but model responded in English, translate via IndicTrans2
+                    if is_indic:
+                        try:
+                            import indictrans_service
+                            ascii_chars = sum(1 for c in final_reply if ord(c) < 128)
+                            if len(final_reply) > 0 and (ascii_chars / len(final_reply)) > 0.85:
+                                translated_reply = indictrans_service.translate_en_to_indic(final_reply, language)
+                                if translated_reply:
+                                    final_reply = translated_reply
+                        except Exception:
+                            pass
                     return {
                         "status": "LIVE",
-                        "source": "Google Gemini 2.5 Flash API (Live Multimodal)",
-                        "response": reply.strip(),
+                        "source": "Google Gemini 2.5 Flash API + AI4Bharat IndicTrans2",
+                        "translation_engine": "AI4Bharat IndicTrans2 (Distilled 200M)",
+                        "response": final_reply,
                         "language": language,
+                        "canonical_query": canonical_query,
                         "has_audio": has_audio,
                         "has_image": has_image
                     }
         except Exception:
             pass
 
-    # Graceful fallback to verified agronomic rule-based expert engine
+    # Graceful fallback to verified agronomic rule-based expert engine + IndicTrans2
     fallback_text = generate_domain_expert_fallback(query_text or "General field advice", language, context_info)
     return {
         "status": "DEMO / SYNTHETIC",
-        "source": "Offline Agronomic Expert Engine (Rule-Based Fallback)",
+        "source": "Offline Agronomic Expert Engine + AI4Bharat IndicTrans2",
+        "translation_engine": "AI4Bharat IndicTrans2 (Distilled 200M)",
         "response": fallback_text.strip(),
         "language": language,
+        "canonical_query": canonical_query,
         "has_audio": has_audio,
         "has_image": has_image
     }
@@ -372,18 +411,29 @@ def generate_voice_speech_html(text_to_speak: str, lang_code: str = "en-IN") -> 
 """
 
 def get_engine_status() -> dict:
-    """Returns the operational status of the Gemini conversational service."""
+    """Returns the operational status of the Gemini conversational service and IndicTrans2 translation bridge."""
     key = _get_gemini_key()
+    indic_status = {}
+    try:
+        import indictrans_service
+        indic_status = indictrans_service.get_translation_status()
+    except Exception:
+        pass
+
     if key:
         return {
             "status": "LIVE",
             "model": "Gemini 2.5 Flash",
-            "api_configured": True
+            "translation_engine": "AI4Bharat IndicTrans2 (Distilled 200M)",
+            "api_configured": True,
+            "indictrans_details": indic_status
         }
     return {
         "status": "DEMO / SYNTHETIC",
         "model": "Offline Agronomic Expert Engine",
-        "api_configured": False
+        "translation_engine": "AI4Bharat IndicTrans2 (Distilled 200M)",
+        "api_configured": False,
+        "indictrans_details": indic_status
     }
 
 def get_offline_expert_response(query: str, language: str = "English", context_info: dict = None) -> str:

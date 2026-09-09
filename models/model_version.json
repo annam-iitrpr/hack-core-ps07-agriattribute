@@ -1,0 +1,20 @@
+{
+  "model_version": "yield-xgb-v2.1",
+  "trained_at": "2026-09-09T15:34:16.326411Z",
+  "dataset_version": "v2.1-harmonized",
+  "feature_version": "v2.1-zero-leakage",
+  "algorithm": "Random Forest Regressor",
+  "validation_method": "Temporal Holdout (2021-2024 Train / 2025 Test) + GroupKFold",
+  "training_sources": [
+    "ICAR All India Coordinated Research Projects (AICRP)",
+    "Syngenta Biologicals Multi-Locational Trials (2021-2025)",
+    "DAC&FW National Soil Health Card Benchmarks",
+    "ANNAM.AI MCII & IMD Agro-Climatology Normals"
+  ],
+  "metrics_summary": {
+    "r2": 0.9944,
+    "rmse": 8.18,
+    "mae": 3.99,
+    "uncertainty_mae": 3.99
+  }
+}

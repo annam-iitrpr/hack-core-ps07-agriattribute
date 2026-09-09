@@ -1,0 +1,337 @@
+{
+  "data_dictionary_version": "2.1.0",
+  "entity_types": {
+    "crop_taxonomy": {
+      "Cotton": {
+        "canonical": "Cotton",
+        "aliases": [
+          "cotton",
+          "bt cotton",
+          "kapas",
+          "rch-659"
+        ],
+        "family": "Malvaceae",
+        "season": "Kharif",
+        "yield_unit": "q/acre"
+      },
+      "Soybean": {
+        "canonical": "Soybean",
+        "aliases": [
+          "soybean",
+          "soya",
+          "glycine max",
+          "js-335"
+        ],
+        "family": "Fabaceae",
+        "season": "Kharif",
+        "yield_unit": "q/acre"
+      },
+      "Rice (Paddy)": {
+        "canonical": "Rice (Paddy)",
+        "aliases": [
+          "rice",
+          "paddy",
+          "dhan",
+          "oryza sativa"
+        ],
+        "family": "Poaceae",
+        "season": "Kharif/Rabi",
+        "yield_unit": "q/acre"
+      },
+      "Wheat": {
+        "canonical": "Wheat",
+        "aliases": [
+          "wheat",
+          "gehun",
+          "triticum aestivum"
+        ],
+        "family": "Poaceae",
+        "season": "Rabi",
+        "yield_unit": "q/acre"
+      },
+      "Maize": {
+        "canonical": "Maize",
+        "aliases": [
+          "maize",
+          "corn",
+          "makka",
+          "zea mays"
+        ],
+        "family": "Poaceae",
+        "season": "Kharif/Rabi",
+        "yield_unit": "q/acre"
+      },
+      "Groundnut (Peanut)": {
+        "canonical": "Groundnut (Peanut)",
+        "aliases": [
+          "groundnut",
+          "peanut",
+          "mungphali",
+          "arachis hypogaea"
+        ],
+        "family": "Fabaceae",
+        "season": "Kharif/Rabi",
+        "yield_unit": "q/acre"
+      },
+      "Mustard / Rapeseed": {
+        "canonical": "Mustard / Rapeseed",
+        "aliases": [
+          "mustard",
+          "rapeseed",
+          "sarson",
+          "rai",
+          "brassica"
+        ],
+        "family": "Brassicaceae",
+        "season": "Rabi",
+        "yield_unit": "q/acre"
+      },
+      "Chickpea (Gram / Chana)": {
+        "canonical": "Chickpea (Gram / Chana)",
+        "aliases": [
+          "chickpea",
+          "gram",
+          "chana",
+          "bengal gram",
+          "cicer arietinum"
+        ],
+        "family": "Fabaceae",
+        "season": "Rabi",
+        "yield_unit": "q/acre"
+      },
+      "Tur / Pigeon Pea (Arhar)": {
+        "canonical": "Tur / Pigeon Pea (Arhar)",
+        "aliases": [
+          "tur",
+          "pigeon pea",
+          "arhar",
+          "red gram",
+          "cajanus cajan"
+        ],
+        "family": "Fabaceae",
+        "season": "Kharif",
+        "yield_unit": "q/acre"
+      },
+      "Tomato": {
+        "canonical": "Tomato",
+        "aliases": [
+          "tomato",
+          "tamatar",
+          "solanum lycopersicum"
+        ],
+        "family": "Solanaceae",
+        "season": "Annual",
+        "yield_unit": "q/acre"
+      },
+      "Onion": {
+        "canonical": "Onion",
+        "aliases": [
+          "onion",
+          "pyaz",
+          "kanda",
+          "allium cepa"
+        ],
+        "family": "Amaryllidaceae",
+        "season": "Rabi/Kharif",
+        "yield_unit": "q/acre"
+      },
+      "Sugarcane": {
+        "canonical": "Sugarcane",
+        "aliases": [
+          "sugarcane",
+          "ganna",
+          "saccharum officinarum"
+        ],
+        "family": "Poaceae",
+        "season": "Annual",
+        "yield_unit": "q/acre"
+      }
+    },
+    "state_normalization": {
+      "Maharashtra": [
+        "MH",
+        "Mah.",
+        "Maharashtra State",
+        "Maha",
+        "Maharastra"
+      ],
+      "Madhya Pradesh": [
+        "MP",
+        "M.P.",
+        "Madhya Pradesh State"
+      ],
+      "Punjab": [
+        "PB",
+        "Pb.",
+        "Punjab State"
+      ],
+      "Haryana": [
+        "HR",
+        "Har.",
+        "Haryana State"
+      ],
+      "Telangana": [
+        "TS",
+        "TG",
+        "Telangana State"
+      ],
+      "Andhra Pradesh": [
+        "AP",
+        "A.P.",
+        "Andhra"
+      ],
+      "Gujarat": [
+        "GJ",
+        "Guj.",
+        "Gujarat State"
+      ],
+      "Karnataka": [
+        "KA",
+        "Kar.",
+        "Karnataka State"
+      ],
+      "Tamil Nadu": [
+        "TN",
+        "T.N.",
+        "Tamilnadu"
+      ],
+      "Uttar Pradesh": [
+        "UP",
+        "U.P.",
+        "Uttar Pradesh State"
+      ]
+    },
+    "season_normalization": {
+      "Kharif": [
+        "kharif",
+        "monsoon",
+        "rainy",
+        "kharif season"
+      ],
+      "Rabi": [
+        "rabi",
+        "winter",
+        "post-monsoon",
+        "rabi season"
+      ],
+      "Zaid / Annual": [
+        "zaid",
+        "summer",
+        "annual",
+        "whole year"
+      ]
+    },
+    "treatment_categories": {
+      "Biostimulant": [
+        "Syngenta Quantis",
+        "Syngenta Isabion",
+        "MEGAFOL\u00ae",
+        "CropBio+"
+      ],
+      "Biofungicide": [
+        "TAEGRO\u00ae",
+        "Trichoderma viride",
+        "Pseudomonas fluorescens"
+      ],
+      "Biocontrol": [
+        "REVERB\u2122",
+        "EXPLOYO\u00ae Vit",
+        "Neem Azadirachtin"
+      ],
+      "Untreated Check": [
+        "Control",
+        "Untreated",
+        "Check Plot",
+        "Standard Chemical Check"
+      ]
+    }
+  },
+  "feature_dictionary": {
+    "trial_id": {
+      "type": "string",
+      "description": "Unique identifier of trial observation"
+    },
+    "experiment_id": {
+      "type": "string",
+      "description": "Group identifier for grouping multi-plot trials without leakage"
+    },
+    "crop": {
+      "type": "categorical",
+      "description": "Target agricultural crop (12 supported crops)"
+    },
+    "state": {
+      "type": "categorical",
+      "description": "State territory within India"
+    },
+    "district": {
+      "type": "categorical",
+      "description": "District administrative boundary"
+    },
+    "year": {
+      "type": "integer",
+      "description": "Year of harvest"
+    },
+    "season": {
+      "type": "categorical",
+      "description": "Agricultural season"
+    },
+    "treatment": {
+      "type": "categorical",
+      "description": "Product applied to plot"
+    },
+    "treated_group": {
+      "type": "binary",
+      "description": "1 if biological treatment applied, 0 for control"
+    },
+    "application_rate": {
+      "type": "float",
+      "unit": "L/acre",
+      "description": "Dosage applied per acre"
+    },
+    "soil_soc": {
+      "type": "float",
+      "unit": "%",
+      "description": "Soil Organic Carbon (Walkley-Black)"
+    },
+    "soil_ph": {
+      "type": "float",
+      "unit": "pH scale",
+      "description": "Soil reaction (1:2.5 soil-water suspension)"
+    },
+    "soil_n": {
+      "type": "float",
+      "unit": "kg/ha",
+      "description": "Available Nitrogen (Alkaline Permanganate)"
+    },
+    "soil_p": {
+      "type": "float",
+      "unit": "kg/ha",
+      "description": "Available Phosphorus (Olsen P)"
+    },
+    "soil_k": {
+      "type": "float",
+      "unit": "kg/ha",
+      "description": "Available Potassium (Ammonium Acetate Flame)"
+    },
+    "temperature": {
+      "type": "float",
+      "unit": "\u00b0C",
+      "description": "Mean diurnal temperature during reproductive phase"
+    },
+    "heat_stress_days": {
+      "type": "integer",
+      "unit": "days",
+      "description": "Cumulative days with max temperature > 35\u00b0C"
+    },
+    "rainfall": {
+      "type": "float",
+      "unit": "mm",
+      "description": "Cumulative seasonal precipitation"
+    },
+    "yield": {
+      "type": "float",
+      "unit": "q/acre",
+      "description": "Observed harvested economic yield (TARGET)"
+    }
+  }
+}
