@@ -1209,7 +1209,8 @@ def main():
         dosage_override=float(st.session_state.get('whatif_dosage', dosage)),
         fertilizer_ratio_override=float(st.session_state.get('whatif_fert_ratio', 100.0)) / 100.0
     )
-    factor_explanations = decision_simulator.explain_attribution(field_ctx, model, explainer=explainer)
+    explainer_obj = artifacts.get("explainer") if isinstance(artifacts, dict) else artifacts
+    factor_explanations = decision_simulator.explain_attribution(field_ctx, model, explainer=explainer_obj)
 
     # Extract synchronized metrics for display and downstream tabs
     curr_scen = scenario_sim["scenarios"][0]
@@ -1532,31 +1533,30 @@ def main():
         # ══════════════════════════════════════════════════════════════════
         # 🌟 LEVEL 2: WHY? (Plain Agronomic Reasoning & Provenance)
         # ══════════════════════════════════════════════════════════════════
-        st.markdown(f"""
-        <div class="why-box" style="background: #ffffff; border: 2px solid #a7f3d0; border-radius: 14px; padding: 18px 22px; margin-top: 10px; box-shadow: 0 4px 12px rgba(5,150,105,0.06);">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="font-size: 1.3rem;">👨‍🌾</span>
-                    <strong style="color: #065f46; font-size: 1.15rem;">{t('why_title', lang)} — {localized_active_crop}</strong>
-                </div>
-                <span style="font-size: 0.72rem; font-weight: 800; background: #ecfdf5; color: #047857; padding: 2px 8px; border-radius: 8px; border: 1px solid #86efac;">
-                    Level 2 Agronomic Attribution
-                </span>
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px;">
-                {"".join([f'''
-                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px;">
-                    <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 0.85rem; color: #0f172a;">
-                        <span>{f['arrow']} {f['name'].split('(')[0]}</span>
-                        <span style="color: #059669;">{f['impact_q_acre']}</span>
-                    </div>
-                    <div style="font-size: 0.76rem; color: #475569; margin-top: 3px; line-height: 1.3;">{f['explanation']}</div>
-                    <div style="font-size: 0.68rem; color: #64748b; margin-top: 4px; border-top: 1px dashed #cbd5e1; padding-top: 2px;">Src: {f['provenance']}</div>
-                </div>
-                ''' for f in factor_explanations])}
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        factors_cards_html = ""
+        for f in factor_explanations:
+            factors_cards_html += f"""<div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 10px 12px; margin-bottom: 4px;">
+<div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 0.88rem; color: #0f172a;">
+<span>{f['arrow']} {f['name'].split('(')[0]}</span>
+<span style="color: #059669; font-weight: 800;">{f['impact_q_acre']}</span>
+</div>
+<div style="font-size: 0.78rem; color: #475569; margin-top: 3px; line-height: 1.35;">{f['explanation']}</div>
+<div style="font-size: 0.70rem; color: #64748b; margin-top: 4px; border-top: 1px dashed #cbd5e1; padding-top: 2px;"><b>Source:</b> {f['provenance']}</div>
+</div>"""
+
+        why_html = f"""<div class="why-box" style="background: #ffffff; border: 2px solid #a7f3d0; border-radius: 14px; padding: 18px 22px; margin-top: 10px; box-shadow: 0 4px 12px rgba(5,150,105,0.06);">
+<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+<div style="display: flex; align-items: center; gap: 8px;">
+<span style="font-size: 1.3rem;">👨‍🌾</span>
+<strong style="color: #065f46; font-size: 1.15rem;">{t('why_title', lang)} — {localized_active_crop}</strong>
+</div>
+<span style="font-size: 0.72rem; font-weight: 800; background: #ecfdf5; color: #047857; padding: 2px 8px; border-radius: 8px; border: 1px solid #86efac;">Level 2 Agronomic Attribution</span>
+</div>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px;">
+{factors_cards_html}
+</div>
+</div>"""
+        st.markdown(why_html, unsafe_allow_html=True)
 
     with col_hero2:
         unit_str = f"/ {t('yield_unit', lang).split('/')[1]}" if '/' in t('yield_unit', lang) else "/ acre"
