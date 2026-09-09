@@ -37,23 +37,34 @@ def _clean_supa_val(v: str) -> str:
         return ""
     return v
 
-_raw_url = _clean_supa_val(os.getenv("SUPABASE_URL", ""))
-SUPABASE_URL = _raw_url if _raw_url else "https://wnujxbnjqrwybllvbahm.supabase.co"
-SUPABASE_PUB_KEY = _clean_supa_val(os.getenv("SUPABASE_PUB_KEY", ""))
-SUPABASE_SECRET_KEY = _clean_supa_val(os.getenv("SUPABASE_SECRET_KEY", ""))
+def _get_supa_config(name: str) -> str:
+    val = os.getenv(name, "")
+    if not val:
+        try:
+            import streamlit as st
+            if hasattr(st, "secrets") and name in st.secrets:
+                val = str(st.secrets[name])
+        except Exception:
+            pass
+    return _clean_supa_val(val)
+
+SUPABASE_URL = _get_supa_config("SUPABASE_URL")
+SUPABASE_PUB_KEY = _get_supa_config("SUPABASE_PUB_KEY")
+SUPABASE_SECRET_KEY = _get_supa_config("SUPABASE_SECRET_KEY")
 ACTIVE_KEY = SUPABASE_SECRET_KEY if SUPABASE_SECRET_KEY else SUPABASE_PUB_KEY
 
 # Persistent local fallback paths (guarantees zero data loss)
 SCRATCH_DIR = os.path.join(os.path.dirname(__file__), "scratch")
-os.makedirs(SCRATCH_DIR, exist_ok=True)
 LOCAL_JOURNAL_FILE = os.path.join(SCRATCH_DIR, "farm_memory_records.json")
 LOCAL_TELEMETRY_FILE = os.path.join(SCRATCH_DIR, "telemetry_snapshots.json")
 
-# Baseline historical seeds
+# Baseline historical demonstration seeds (explicitly labeled as sample data)
 INITIAL_JOURNAL_SEEDS = [
     {
         "created_at": "2026-08-28T10:15:00",
-        "farmer_id": "IND_FARMER_001",
+        "farmer_id": "DEMO_FARMER_001",
+        "is_sample": True,
+        "record_type": "Sample Farmer Data",
         "region": "Maharashtra & Vidarbha (Deccan)",
         "crop_type": "Cotton",
         "product_applied": "Syngenta Isabion",
@@ -62,11 +73,13 @@ INITIAL_JOURNAL_SEEDS = [
         "yield_actual_q_acre": 12.8,
         "bio_attributed_lift": 2.4,
         "net_profit_rs": 14080.0,
-        "farmer_notes": "Heat stress buffered during flowering phase. Zero boll shedding."
+        "farmer_notes": "Demonstration benchmark: Heat stress buffered during flowering phase."
     },
     {
         "created_at": "2026-06-12T14:30:00",
-        "farmer_id": "IND_FARMER_001",
+        "farmer_id": "DEMO_FARMER_002",
+        "is_sample": True,
+        "record_type": "Sample Farmer Data",
         "region": "Maharashtra & Vidarbha (Deccan)",
         "crop_type": "Soybean",
         "product_applied": "Syngenta Quantis",
@@ -75,11 +88,13 @@ INITIAL_JOURNAL_SEEDS = [
         "yield_actual_q_acre": 14.5,
         "bio_attributed_lift": 3.1,
         "net_profit_rs": 11860.0,
-        "farmer_notes": "Applied before 12-day dry spell. Canopy stayed green throughout drought."
+        "farmer_notes": "Demonstration benchmark: Applied before 12-day dry spell."
     },
     {
         "created_at": "2025-11-20T09:00:00",
-        "farmer_id": "IND_FARMER_001",
+        "farmer_id": "DEMO_FARMER_003",
+        "is_sample": True,
+        "record_type": "Sample Farmer Data",
         "region": "Punjab & Haryana (Indo-Gangetic)",
         "crop_type": "Wheat",
         "product_applied": "Syngenta Quantis",
@@ -88,14 +103,16 @@ INITIAL_JOURNAL_SEEDS = [
         "yield_actual_q_acre": 24.2,
         "bio_attributed_lift": 3.6,
         "net_profit_rs": 7250.0,
-        "farmer_notes": "Sprayed before terminal March heat wave. Grain test weight maintained at 41g."
+        "farmer_notes": "Demonstration benchmark: Sprayed before terminal March heat wave."
     }
 ]
 
 INITIAL_TELEMETRY_SEEDS = [
     {
         "snapshot_time": (datetime.now() - timedelta(minutes=45)).strftime("%Y-%m-%d %H:%M:%S"),
-        "farmer_id": "IND_FARMER_001",
+        "farmer_id": "DEMO_FARMER_001",
+        "is_sample": True,
+        "record_type": "Sample Demonstration Telemetry",
         "region": "Maharashtra & Vidarbha (Deccan)",
         "latitude": 19.8833,
         "longitude": 74.4833,
@@ -114,7 +131,9 @@ INITIAL_TELEMETRY_SEEDS = [
     },
     {
         "snapshot_time": (datetime.now() - timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M:%S"),
-        "farmer_id": "IND_FARMER_001",
+        "farmer_id": "DEMO_FARMER_001",
+        "is_sample": True,
+        "record_type": "Sample Demonstration Telemetry",
         "region": "Maharashtra & Vidarbha (Deccan)",
         "latitude": 19.8833,
         "longitude": 74.4833,
@@ -130,32 +149,13 @@ INITIAL_TELEMETRY_SEEDS = [
         "disease_risk_score": 49.6,
         "recommended_product": "Syngenta Quantis (2.5 L/ha)",
         "spray_window_status": "Optimal Spray Window (Calm Wind, No Rain)"
-    },
-    {
-        "snapshot_time": (datetime.now() - timedelta(minutes=15)).strftime("%Y-%m-%d %H:%M:%S"),
-        "farmer_id": "IND_FARMER_001",
-        "region": "Maharashtra & Vidarbha (Deccan)",
-        "latitude": 19.8833,
-        "longitude": 74.4833,
-        "crop_type": "Soybean",
-        "temperature_c": 28.6,
-        "humidity_pct": 64,
-        "rain_probability_pct": 8,
-        "heat_stress_days": 5,
-        "soil_n_kg_ha": 138.6,
-        "soil_p_kg_ha": 14.4,
-        "soil_k_kg_ha": 335.2,
-        "soil_ph": 7.6,
-        "disease_risk_score": 49.6,
-        "recommended_product": "Syngenta Quantis (2.5 L/ha)",
-        "spray_window_status": "Optimal Spray Window (Calm Wind, No Rain)"
     }
 ]
 
 def get_supabase_client() -> Client:
     """Returns an authenticated Supabase client."""
     try:
-        if create_client and ACTIVE_KEY:
+        if create_client and ACTIVE_KEY and SUPABASE_URL:
             return create_client(SUPABASE_URL, ACTIVE_KEY)
         return None
     except Exception:
@@ -163,34 +163,47 @@ def get_supabase_client() -> Client:
 
 def test_supabase_connection() -> dict:
     """Tests connection to Supabase instance and returns system status."""
+    if not ACTIVE_KEY or not SUPABASE_URL:
+        return {
+            "status": "DEMO / SYNTHETIC",
+            "storage_mode": "Local Offline Storage Ledger",
+            "project_url": "Offline Local Storage (scratch/farm_memory_records.json)",
+            "engine": "Local JSON Ledger",
+            "tables_ready": True
+        }
     headers = {
         "apikey": ACTIVE_KEY,
         "Authorization": f"Bearer {ACTIVE_KEY}",
         "Content-Type": "application/json"
     }
     try:
-        res = requests.get(f"{SUPABASE_URL}/rest/v1/", headers=headers, timeout=5)
+        res = requests.get(f"{SUPABASE_URL}/rest/v1/", headers=headers, timeout=4)
         if res.status_code in [200, 204]:
             return {
-                "status": "Connected (Active)",
+                "status": "LIVE",
+                "storage_mode": "Cloud Connected (PostgreSQL)",
                 "project_url": SUPABASE_URL,
                 "engine": "PostgreSQL + PostGIS (Supabase Cloud)",
                 "tables_ready": True
             }
         else:
             return {
-                "status": f"HTTP {res.status_code}",
+                "status": "DEMO / SYNTHETIC",
+                "storage_mode": f"Cloud Inactive ({res.status_code}) — Using Local JSON",
                 "project_url": SUPABASE_URL,
-                "engine": "Supabase API Gateway",
+                "engine": "Local JSON Ledger",
                 "tables_ready": False
             }
-    except Exception as ex:
+    except Exception:
         return {
-            "status": f"Offline Mode ({ex})",
-            "project_url": SUPABASE_URL,
-            "engine": "Dual-Tier Local Ledger Fallback Active",
-            "tables_ready": False
+            "status": "DEMO / SYNTHETIC",
+            "storage_mode": "Local Offline Storage Ledger",
+            "project_url": "Offline Local Storage (scratch/farm_memory_records.json)",
+            "engine": "Local JSON Ledger",
+            "tables_ready": True
         }
+
+test_connection = test_supabase_connection
 
 # --- DUAL-TIER STORAGE HELPERS ---
 
@@ -200,6 +213,9 @@ def _load_local_json(filepath: str, default_seeds: list) -> list:
             with open(filepath, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 if isinstance(data, list) and len(data) > 0:
+                    for item in data:
+                        if isinstance(item, dict) and "is_sample" not in item:
+                            item["is_sample"] = True
                     return data
         except Exception:
             pass
@@ -208,6 +224,7 @@ def _load_local_json(filepath: str, default_seeds: list) -> list:
 
 def _save_local_json(filepath: str, data: list) -> bool:
     try:
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
         with open(filepath, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
         return True
@@ -220,7 +237,9 @@ def log_season_journal_entry(field_data: dict) -> bool:
     """
     entry = {
         "created_at": field_data.get("created_at", datetime.now().isoformat()),
-        "farmer_id": field_data.get("farmer_id", "IND_FARMER_001"),
+        "farmer_id": field_data.get("farmer_id", "USER_FARMER_001"),
+        "is_sample": False,
+        "record_type": "User Farm Record",
         "region": field_data.get("region", "Maharashtra & Vidarbha (Deccan)"),
         "crop_type": field_data.get("crop_type", "Soybean"),
         "product_applied": field_data.get("product_applied", "Syngenta Quantis"),

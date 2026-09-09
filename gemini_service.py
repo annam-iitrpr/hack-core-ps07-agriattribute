@@ -31,26 +31,32 @@ def _clean_gemini_key(k: str) -> str:
         return ""
     return k
 
-GEMINI_API_KEY = _clean_gemini_key(os.getenv("GEMINI_API_KEY", ""))
-GEMINI_ENDPOINT = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
+def _get_gemini_key() -> str:
+    val = os.getenv("GEMINI_API_KEY", "")
+    if not val:
+        try:
+            import streamlit as st
+            if hasattr(st, "secrets") and "GEMINI_API_KEY" in st.secrets:
+                val = str(st.secrets["GEMINI_API_KEY"])
+        except Exception:
+            pass
+    return _clean_gemini_key(val)
 
 # ─── System Prompt ────────────────────────────────────────────────────────────
 AGRI_SYSTEM_PROMPT = """
-You are AgriAttribute AI — an elite precision field intelligence co-pilot built for Indian farmers, agronomic consultants, and Syngenta field officers (Syngenta & ANNAM.AI, Hack Core PS-07).
+You are AgriAttribute AI — a precision agronomic advisory assistant built for Indian farmers, agricultural extension workers, and field officers (Syngenta & ANNAM.AI, Hack Core PS-07).
 
 CORE OPERATING DIRECTIVES:
-1. YOU ARE DEEPLY SYNCHRONIZED with the farmer's live farm data provided in the [SYNCHRONIZED FARM TELEMETRY] block.
-2. ALWAYS quote and reference the EXACT live numbers (e.g. current temp, exact NPK values, today's Agmarknet mandi price, predicted yield) to prove you know their exact farm state.
-3. If the user provided a VOICE NOTE (audio), transcribe their exact spoken question first under a bold line: "**🗣️ Transcribed Voice Query:** <exact question>".
-4. If the user provided an IMAGE (leaf/soil/crop/pest), inspect the visual signs (leaf chlorosis, necrotic lesions, nutrient deficiency, pest damage) and correlate with their Soil Health Card and weather data.
-5. Provide actionable, clinical agronomic prescriptions:
-   • Exact product (Syngenta Quantis, Isabion, Ampli-Fol, CropBio+)
-   • Application timing (optimal morning/evening stomatal window, avoiding >32°C peak sun)
-   • Water volume (400-500 L/ha) & nozzle recommendation (hollow-cone)
-   • Soil remediation (DAC&FW SHC benchmarks: N: 280-560 kg/ha, P: 23-56 kg/ha, K: 145-336 kg/ha)
-6. Deliver a clear CACP/Agmarknet 2.0 economic bottom line (e.g. Grade-A quality auction bonus, profit gain per acre).
-7. Respond fluently and warmly in the farmer's requested language (English, Hindi, Marathi, Punjabi, Telugu, Gujarati, Kannada, Tamil, Bengali).
-8. Use clean, professional formatting with emojis for easy scanning on mobile devices.
+1. SCIENTIFIC & ADVISORY INTEGRITY:
+   • Never make claims of 'guaranteed profit', 'ensure 100% yield', or 'will definitely increase yield'.
+   • Always use probabilistic, evidence-based advisory language (e.g., 'calibrated models project an estimated response of...', 'recommended best practice indicates...', 'subject to weather and field conditions').
+   • Clearly distinguish measured field telemetry from modeled estimates or demonstration data.
+2. SYNCHRONIZED FARM CONTEXT: Reference the contextual numbers provided in the [SYNCHRONIZED FARM TELEMETRY] block (temperature, soil parameters, Agmarknet mandi benchmarks).
+3. If the user provided a VOICE NOTE (audio), transcribe their exact spoken query first under: "**🗣️ Transcribed Voice Query:** <query>".
+4. If the user provided an IMAGE (leaf/crop/pest), evaluate visual symptoms and remind the user that AI visual screening is preliminary and should be verified with an agronomist or local KVK expert.
+5. Prescriptions must be balanced: specify crop, dosage unit (g/L or ml/acre), application timing, safety pre-harvest interval (PHI), and non-chemical/regenerative biocontrol alternatives (*Trichoderma*, *Pseudomonas*, neem oil).
+6. Deliver a clear CACP/Agmarknet economic perspective, noting market assumptions transparently.
+7. Respond fluently and respectfully in the farmer's requested language.
 """
 
 def build_context_block(ctx: dict) -> str:
@@ -260,15 +266,18 @@ def ask_gemini_multimodal(
     }
     headers = {"Content-Type": "application/json"}
 
-    if GEMINI_API_KEY:
+    api_key = _get_gemini_key()
+    if api_key:
+        endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
         try:
-            res = requests.post(GEMINI_ENDPOINT, json=payload, headers=headers, timeout=10)
+            res = requests.post(endpoint, json=payload, headers=headers, timeout=10)
             if res.status_code == 200:
                 data = res.json()
                 reply = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
                 if reply and len(reply.strip()) > 10:
                     return {
-                        "status": "live",
+                        "status": "LIVE",
+                        "source": "Google Gemini 2.5 Flash API (Live Multimodal)",
                         "response": reply.strip(),
                         "language": language,
                         "has_audio": has_audio,
@@ -277,10 +286,11 @@ def ask_gemini_multimodal(
         except Exception:
             pass
 
-    # Graceful fallback
+    # Graceful fallback to verified agronomic rule-based expert engine
     fallback_text = generate_domain_expert_fallback(query_text or "General field advice", language, context_info)
     return {
-        "status": "offline",
+        "status": "DEMO / SYNTHETIC",
+        "source": "Offline Agronomic Expert Engine (Rule-Based Fallback)",
         "response": fallback_text.strip(),
         "language": language,
         "has_audio": has_audio,
@@ -360,3 +370,23 @@ def generate_voice_speech_html(text_to_speak: str, lang_code: str = "en-IN") -> 
     </script>
 </div>
 """
+
+def get_engine_status() -> dict:
+    """Returns the operational status of the Gemini conversational service."""
+    key = _get_gemini_key()
+    if key:
+        return {
+            "status": "LIVE",
+            "model": "Gemini 2.5 Flash",
+            "api_configured": True
+        }
+    return {
+        "status": "DEMO / SYNTHETIC",
+        "model": "Offline Agronomic Expert Engine",
+        "api_configured": False
+    }
+
+def get_offline_expert_response(query: str, language: str = "English", context_info: dict = None) -> str:
+    """Direct wrapper for offline expert knowledge fallback."""
+    return generate_domain_expert_fallback(query, language, context_info)
+

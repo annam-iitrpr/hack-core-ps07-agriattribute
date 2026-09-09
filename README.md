@@ -2,8 +2,10 @@
 
 > **Biological Yield Attribution & Farmer Decision Platform**  
 > Built for **Syngenta Biologicals & ANNAM.AI — Hack Core 2026** (Problem Statement 07)  
-> **Team 15:** Soham Prabhakar Kadu (Lead), Singireddy Prabhumitrareddy, Bhakti Ajay Kadam  
-> **Mentors / Advisors:** Dr. Shahbaz, Hana Hafer
+> **Team:** Team 15 BHOOMI  
+> **Members:** Soham Kadu ([@soham0777](https://github.com/soham0777)), Bhakti Ajay Kadam ([@Bhakti2709](https://github.com/Bhakti2709)), Singireddy Prabhumitrareddy ([@prabhumitra123-debug](https://github.com/prabhumitra123-debug))  
+> **Target Organization:** [annam-iitrpr](https://github.com/annam-iitrpr)  
+> **Current Repository:** [soham0777/hack-core-ps07-agriattribute](https://github.com/soham0777/hack-core-ps07-agriattribute)  
 
 [![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/deploy?repository=soham0777/hack-core-ps07-agriattribute&branch=main&mainModule=app.py)
 
@@ -188,9 +190,9 @@ For a complete itemized list of every formula, dataset, and statutory standard, 
 
 ## The Team
 
-Built with genuine passion for Indian agriculture by **Team 15**:
-- **Soham Prabhakar Kadu** (Team Lead & Machine Learning Architecture)
-- **Singireddy Prabhumitrareddy** (Backend Engineering & Cloud Database)
-- **Bhakti Ajay Kadam** (Agronomic Research & UI Design)
+Built with genuine passion for Indian agriculture by **Team 15 BHOOMI**:
+- **Soham Kadu** ([@soham0777](https://github.com/soham0777)) — Team Lead & Machine Learning Architecture
+- **Bhakti Ajay Kadam** ([@Bhakti2709](https://github.com/Bhakti2709)) — Agronomic Research & UI Design
+- **Singireddy Prabhumitrareddy** ([@prabhumitra123-debug](https://github.com/prabhumitra123-debug)) — Backend Engineering & Cloud Database
 
-*Syngenta Biologicals & ANNAM.AI Hack Core 2026 — Problem Statement 07*
+*Syngenta Biologicals & ANNAM.AI Hack Core 2026 — Problem Statement 07 (Yield Attribution and ROI Predictor)*

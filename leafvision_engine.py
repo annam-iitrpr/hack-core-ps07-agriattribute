@@ -662,9 +662,25 @@ class LeafVisionFoundationModel:
         if latency_ms < 10.0:
             latency_ms = 24.5
 
+        # Step 7: TNAU Agritech Knowledge Integration
+        tnau_disease_info = None
+        tnau_crop_info = None
+        try:
+            import tnau_service
+            tnau_disease_info = tnau_service.search_tnau_disease(patho_match["name"], detected_crop)
+            tnau_crop_info = tnau_service.search_tnau_crop(detected_crop)
+        except Exception:
+            pass
+
+        uncertainty_state = "High Confidence" if conf >= 92.0 else ("Moderate Confidence" if conf >= 80.0 else "Preliminary / Ambiguous")
+
+        statutory_notice = "⚠️ Preliminary AI screening — verify with an accredited agronomist or local Krishi Vigyan Kendra (KVK) expert before applying chemical treatments."
+
         return {
             "status": "Success",
-            "model_engine": "LABA-SNU/LeafVision (Self-Supervised Edge Model)",
+            "model_engine": "Lightweight Vision Classifier & Lesion Geometry Analyzer (Edge CPU)",
+            "uncertainty_state": uncertainty_state,
+            "statutory_notice": statutory_notice,
             "plant_id": plant_id,
             "detected_crop": detected_crop,
             "botanical_name": plant_id["botanical"],
@@ -677,6 +693,8 @@ class LeafVisionFoundationModel:
             "symptoms_observed": patho_match["symptoms"],
             "syngenta_prescription": patho_match["syngenta_prescription"],
             "syngenta_biological_action": patho_match["syngenta_prescription"],
+            "tnau_reference": tnau_disease_info,
+            "tnau_crop_info": tnau_crop_info,
             "potential_loss_pct": patho_match["loss_risk_pct"],
             "lesion_surface_area_pct": lesion_pct,
             "necrotic_area_pct": nec_pct,
@@ -809,6 +827,43 @@ def render_unified_foliar_cockpit_html(res: dict) -> str:
             f"</div>"
         )
         
+    model_engine = res.get('model_engine', 'Lightweight Vision Classifier & Lesion Geometry Analyzer (Edge CPU)')
+    uncertainty_state = res.get('uncertainty_state', 'High Confidence')
+    statutory_notice = res.get('statutory_notice', '⚠️ Preliminary AI screening — verify with an accredited agronomist or local Krishi Vigyan Kendra (KVK) expert before applying chemical treatments.')
+    tnau_ref = res.get('tnau_reference')
+    
+    tnau_html = ""
+    if tnau_ref:
+        bio_ctrl = tnau_ref.get("biological_control", "N/A")
+        chem_ctrl = tnau_ref.get("chemical_control", "N/A")
+        tnau_url = tnau_ref.get("tnau_source_url", "https://agritech.tnau.ac.in/")
+        source_auth = tnau_ref.get("source_authority", "TNAU Agritech Portal")
+        tnau_html = (
+            f"<div style='background:#f8fafc; border:1.5px solid #cbd5e1; border-radius:10px; padding:12px 14px; margin-bottom:10px;'>"
+            f"<div style='display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:6px;'>"
+            f"<div style='font-size:0.85rem; font-weight:800; color:#0f172a; display:flex; align-items:center; gap:6px;'>"
+            f"<span>🏛️</span> <span>Official TNAU Agritech Advisory ({source_auth})</span>"
+            f"</div>"
+            f"<a href='{tnau_url}' target='_blank' style='font-size:0.72rem; font-weight:700; color:#0284c7; text-decoration:none; background:#ffffff; border:1px solid #bae6fd; padding:3px 8px; border-radius:6px;'>TNAU Portal Guide ↗</a>"
+            f"</div>"
+            f"<div style='font-size:0.78rem; color:#334155; margin-bottom:6px;'>"
+            f"<strong style='color:#059669;'>🧪 Biological Control:</strong> {bio_ctrl}"
+            f"</div>"
+            f"<div style='font-size:0.78rem; color:#334155; margin-bottom:6px;'>"
+            f"<strong style='color:#dc2626;'>⚖️ Statutory Chemical Remedy (CIBRC):</strong> {chem_ctrl}"
+            f"</div>"
+            f"<div style='font-size:0.70rem; color:#64748b; font-style:italic;'>"
+            f"Attribution: Tamil Nadu Agricultural University (TNAU) Agritech Portal (agritech.tnau.ac.in)"
+            f"</div>"
+            f"</div>"
+        )
+        
+    statutory_html = (
+        f"<div style='background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:8px 12px; margin-top:10px; font-size:0.74rem; color:#92400e; font-weight:600; display:flex; align-items:center; gap:6px;'>"
+        f"<span>{statutory_notice}</span>"
+        f"</div>"
+    )
+
     html = (
         f"<div style='background:#ffffff; border:1.5px solid {status_border}; border-radius:14px; padding:18px 20px; box-shadow:0 3px 14px rgba(0,0,0,0.05);'>"
         
@@ -817,6 +872,7 @@ def render_unified_foliar_cockpit_html(res: dict) -> str:
         f"<div style='display:flex; align-items:center; gap:8px; flex-wrap:wrap;'>"
         f"<span style='background:#f0fdf4; color:#166534; font-size:0.8rem; font-weight:800; padding:4px 10px; border-radius:8px; border:1px solid #bbf7d0;'>🌱 Auto-Identified: {detected_crop} (<em>{botanical}</em>)</span>"
         f"<span style='background:{badge_bg}; color:{badge_col}; font-size:0.75rem; font-weight:800; padding:4px 10px; border-radius:8px; border:1px solid {status_border};'>{badge_text}</span>"
+        f"<span style='background:#fef3c7; color:#92400e; font-size:0.72rem; font-weight:800; padding:4px 8px; border-radius:6px; border:1px solid #fde68a;'>{uncertainty_state}</span>"
         f"</div>"
         f"<span style='background:#f8fafc; color:#475569; font-size:0.72rem; font-weight:700; padding:3px 8px; border-radius:6px; border:1px solid #e2e8f0;'>⚡ Edge CPU: {lat} ms • 100% Offline</span>"
         f"</div>"
@@ -867,12 +923,18 @@ def render_unified_foliar_cockpit_html(res: dict) -> str:
         f"</div>"
         f"</div>"
         
+        # TNAU Agritech Knowledge Integration Section
+        f"{tnau_html}"
+
         # Validated Field Trial Evidence
         f"<div style='background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:8px 12px; display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; font-weight:700; color:#1e40af; flex-wrap:wrap; gap:6px;'>"
         f"<span>🛡️ Trial Evidence (#{te.get('sample_field_id', 'IND_FIELD_0002')}): Prevents up to {loss_risk}% yield loss</span>"
         f"<span>Avg Field Lift: +{te.get('avg_lift_q', 2.8)} q/acre (+₹{te.get('avg_profit_rs', 12500):,.0f} Net Gain)</span>"
         f"</div>"
         
+        # Statutory agronomic disclaimer
+        f"{statutory_html}"
+
         f"</div>"
     )
     return html

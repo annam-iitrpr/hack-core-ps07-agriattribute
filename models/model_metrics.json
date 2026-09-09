@@ -1,0 +1,13 @@
+{
+  "dataset_type": "Synthetic / Demonstration Dataset",
+  "dataset_path": "data/field_trials.csv",
+  "train_samples": 960,
+  "test_samples": 240,
+  "total_samples": 1200,
+  "features_count": 33,
+  "target": "yield_q_per_acre",
+  "r2": 0.9983,
+  "rmse": 7.38,
+  "mae": 3.14,
+  "disclaimer": "Model trained on synthetic calibrated Indian agronomic dataset; evaluation reflects holdout test split performance."
+}

@@ -8,3 +8,6 @@ scratch/
 *.log
 /model.pkl
 /shap_explainer.pkl
+venv/
+.streamlit/secrets.toml
+

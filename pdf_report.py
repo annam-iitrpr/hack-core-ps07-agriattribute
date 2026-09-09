@@ -67,7 +67,7 @@ def generate_roi_pdf(farm_info, roi_data, forecast_data):
     
     # Section 3: Weather Forecast
     pdf.set_font('helvetica', 'B', 12)
-    pdf.cell(0, 10, '10-Day Agronomic Weather Forecast (Meteoblue API)', ln=True)
+    pdf.cell(0, 10, '5-Day Agro-Meteorological Forecast', ln=True)
     
     # Table Header
     pdf.set_font('helvetica', 'B', 10)
@@ -78,15 +78,15 @@ def generate_roi_pdf(farm_info, roi_data, forecast_data):
         pdf.cell(col_widths[i], 10, h, border=1, align='C', fill=True)
     pdf.ln()
     
-    # Table Rows
+    # Table Rows (up to 5 days)
     pdf.set_font('helvetica', '', 10)
-    for day in forecast_data:
+    for day in (forecast_data or [])[:5]:
         if isinstance(day, dict):
             date_str = str(day.get('date', 'Day'))
             cond_text = str(day.get('condition', day.get('desc', 'Clear')))
             temp_max = day.get('temp_max', 30)
             temp_min = day.get('temp_min', 20)
-            hum_text = str(day.get('humidity_pct', day.get('humidity', day.get('humidity_pct', 60))))
+            hum_text = str(day.get('humidity_pct', day.get('humidity', 60)))
             wind_text = str(day.get('wind_kmh', day.get('wind', 10)))
         else:
             date_str = str(day)
@@ -95,11 +95,19 @@ def generate_roi_pdf(farm_info, roi_data, forecast_data):
             hum_text = "60"
             wind_text = "10"
             
-        pdf.cell(col_widths[0], 10, date_str[:10], border=1, align='C')
-        pdf.cell(col_widths[1], 10, cond_text[:15], border=1, align='C')
+        pdf.cell(col_widths[0], 10, clean_pdf_text(date_str[:10]), border=1, align='C')
+        pdf.cell(col_widths[1], 10, clean_pdf_text(cond_text[:15]), border=1, align='C')
         pdf.cell(col_widths[2], 10, f"{temp_max}/{temp_min} C", border=1, align='C')
         pdf.cell(col_widths[3], 10, f"{hum_text}%", border=1, align='C')
         pdf.cell(col_widths[4], 10, f"{wind_text} km/h", border=1, align='C')
         pdf.ln()
         
-    return pdf.output(dest='S')
+    pdf.ln(8)
+    pdf.set_font('helvetica', 'I', 8)
+    pdf.set_text_color(100, 116, 139)
+    disclaimer_text = clean_pdf_text(
+        "Agronomic & Model Disclaimer: Yield attributions, financial ROI estimates, and weather projections are computed via calibrated machine learning models and official Agmarknet/Soil Health benchmarks. Field responses may vary based on soil microbiology and microclimates. Generated: " + datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+    )
+    pdf.multi_cell(0, 4, disclaimer_text)
+        
+    return pdf.output()

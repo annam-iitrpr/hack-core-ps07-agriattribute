@@ -83,7 +83,25 @@ def train_yield_attribution_model(data_path: str = "data/field_trials.csv"):
     os.makedirs("models", exist_ok=True)
     joblib.dump(model, "models/model.pkl")
     joblib.dump(artifacts, "models/shap_explainer.pkl")
-    print("SUCCESS: Saved models/model.pkl and models/shap_explainer.pkl successfully!")
+
+    import json
+    metrics_info = {
+        "dataset_type": "Synthetic / Demonstration Dataset",
+        "dataset_path": data_path,
+        "train_samples": int(len(X_train)),
+        "test_samples": int(len(X_test)),
+        "total_samples": int(len(X)),
+        "features_count": int(len(encoded_feature_cols)),
+        "target": target_col,
+        "r2": round(float(r2), 4),
+        "rmse": round(float(rmse), 2),
+        "mae": round(float(mae), 2),
+        "disclaimer": "Model trained on synthetic calibrated Indian agronomic dataset; evaluation reflects holdout test split performance."
+    }
+    with open("models/model_metrics.json", "w", encoding="utf-8") as f:
+        json.dump(metrics_info, f, indent=2)
+
+    print("SUCCESS: Saved models/model.pkl, models/shap_explainer.pkl, and models/model_metrics.json successfully!")
 
 
 if __name__ == "__main__":
