@@ -22,6 +22,13 @@ try:
 except ImportError:
     pass
 
+try:
+    import streamlit as st
+    _cache_map = st.cache_data(ttl=300, show_spinner=False)
+except Exception:
+    def _cache_map(f): return f
+
+@_cache_map
 def generate_interactive_weather_map_html(
     lat: float = 21.1458, 
     lon: float = 79.0882, 

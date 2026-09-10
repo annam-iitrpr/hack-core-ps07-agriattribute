@@ -237,6 +237,7 @@ def get_crop_proxy(c_name: str) -> str:
     elif any(x in c for x in ["sunflower", "sesame", "sesamum", "til", "safflower", "copra"]): return "Soybean"
     return "Soybean"
 
+@_cache_pse
 def calculate_algorithmic_market_pricing(crop_name: str, has_bio_treatment: bool = True) -> dict:
     """
     Computes accurate, unconfounded market economics based on:
@@ -387,6 +388,13 @@ REGIONAL_SOIL_HEALTH_CARDS = {
     }
 }
 
+try:
+    import streamlit as _st
+    _cache_pse = _st.cache_data(show_spinner=False)
+except Exception:
+    def _cache_pse(f): return f
+
+@_cache_pse
 def get_regional_soil_health_card(region_name: str, lat: float = None, lon: float = None, location_name: str = "Kopargaon") -> dict:
     """
     Returns official 12-parameter Soil Health Card profile calibrated with 

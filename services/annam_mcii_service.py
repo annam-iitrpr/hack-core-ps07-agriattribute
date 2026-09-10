@@ -287,6 +287,13 @@ def normalize_device_observation(d: Dict[str, Any], default_freshness: str = "LI
     }
 
 
+try:
+    import streamlit as st
+    _cache_mcii = st.cache_data(ttl=300, show_spinner=False)
+except Exception:
+    def _cache_mcii(f): return f
+
+@_cache_mcii
 def get_mcii_stations(state_filter: Optional[str] = None, status_filter: Optional[str] = None) -> List[Dict[str, Any]]:
     """
     Returns all normalized MCII stations with optional state and health filtering.

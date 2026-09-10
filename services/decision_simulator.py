@@ -22,6 +22,12 @@ from typing import Dict, Any, List, Optional, Tuple
 import numpy as np
 from services.field_context import FieldContext
 
+try:
+    import streamlit as _st_ds
+    _cache_ds = _st_ds.cache_data(show_spinner=False)
+except Exception:
+    def _cache_ds(f): return f
+
 
 # Biophysical Yield Ceilings (Biological Potential Y_max in q/acre under non-limiting conditions)
 # Source: ICAR Directorate of Crop Research & Agronomic Handbooks

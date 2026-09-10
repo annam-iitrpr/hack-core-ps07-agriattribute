@@ -942,6 +942,13 @@ def render_unified_foliar_cockpit_html(res: dict) -> str:
 
 _leafvision_instance = None
 
+try:
+    import streamlit as st
+    _cache_res_lv = st.cache_resource
+except Exception:
+    def _cache_res_lv(f): return f
+
+@_cache_res_lv
 def get_leafvision_engine():
     global _leafvision_instance
     if _leafvision_instance is None:

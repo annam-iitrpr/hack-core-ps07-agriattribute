@@ -127,6 +127,7 @@ def load_agmarknet_data() -> pd.DataFrame:
         return renamed
     return pd.DataFrame()
 
+@cache_agmark
 def get_mandi_intelligence_for_crop(crop_name: str, has_biological: bool = True) -> dict:
     """
     Returns full market intelligence, price trends, arrival volume, and MSP comparison
@@ -273,6 +274,7 @@ def get_mandi_intelligence_for_crop(crop_name: str, has_biological: bool = True)
         "disclaimer": "Mandi price data represents official Agmarknet 2.0 wholesale spot reports. Quality auction premium is a modeled estimate based on trial test weight."
     }
 
+@cache_agmark
 def create_mandi_trend_chart(mandi_info: dict) -> go.Figure:
     """
     Creates an interactive dual-axis chart:
