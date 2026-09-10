@@ -989,16 +989,24 @@ def get_human_centric_agronomy_advisory(crop: str, heat_stress: int, temp: float
         "soil_moisture": soil_moisture.get(code, soil_moisture["en"])
     }
 
-def render_soil_health_card_tab(region: str, crop: str, farm_lat: float, farm_lon: float, farm_name: str, lang: str = "English", net_profit: float = 0.0, t = None):
+def render_soil_health_card_tab(region: str = None, crop: str = None, farm_lat: float = None, farm_lon: float = None, farm_name: str = None, lang: str = "English", net_profit: float = 0.0, t = None):
     """
     Renders the complete 12-Parameter Soil Health Card dashboard, NPK Advisor, and Agronomy Cockpit for the 🧪 SOIL tab.
+    Gracefully handles missing data, optional parameters, and defaults.
     """
     import streamlit as st
     if t is None:
         def t(key, lang=None, **kwargs): return key
 
-    shc = get_regional_soil_health_card(region, lat=farm_lat, lon=farm_lon, location_name=farm_name)
-    params = shc["parameters"]
+    reg_name = region or "Maharashtra & Vidarbha (Deccan)"
+    crop_name = crop or "Soybean"
+    lat_val = float(farm_lat) if farm_lat is not None else 18.5204
+    lon_val = float(farm_lon) if farm_lon is not None else 73.8567
+    loc_name = farm_name or "Pune"
+    profit_val = float(net_profit) if net_profit is not None else 0.0
+
+    shc = get_regional_soil_health_card(reg_name, lat=lat_val, lon=lon_val, location_name=loc_name)
+    params = shc.get("parameters", {})
 
     st.markdown(f"""
     <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); border: 1.5px solid #a7f3d0; border-radius: 16px; padding: 18px 22px; margin-bottom: 16px;">
@@ -1018,18 +1026,18 @@ def render_soil_health_card_tab(region: str, crop: str, farm_lat: float, farm_lo
     </div>
     """, unsafe_allow_html=True)
 
-    # Extract nutrient values
-    n_val = params.get("Nitrogen (N)", {}).get("val", 240.0)
-    p_val = params.get("Phosphorus (P)", {}).get("val", 22.0)
-    k_val = params.get("Potassium (K)", {}).get("val", 185.0)
-    zn_val = params.get("Zinc (Zn)", {}).get("val", 0.45)
-    b_val = params.get("Boron (B)", {}).get("val", 0.40)
-    ph_val = params.get("Soil pH", {}).get("val", 7.6)
-    oc_val = params.get("Organic Carbon (OC)", {}).get("val", 4.8)
+    # Extract nutrient values safely
+    n_val = params.get("Nitrogen (N)", {}).get("val", 240.0) if isinstance(params.get("Nitrogen (N)"), dict) else 240.0
+    p_val = params.get("Phosphorus (P)", {}).get("val", 22.0) if isinstance(params.get("Phosphorus (P)"), dict) else 22.0
+    k_val = params.get("Potassium (K)", {}).get("val", 185.0) if isinstance(params.get("Potassium (K)"), dict) else 185.0
+    zn_val = params.get("Zinc (Zn)", {}).get("val", 0.45) if isinstance(params.get("Zinc (Zn)"), dict) else 0.45
+    b_val = params.get("Boron (B)", {}).get("val", 0.40) if isinstance(params.get("Boron (B)"), dict) else 0.40
+    ph_val = params.get("Soil pH", {}).get("val", 7.6) if isinstance(params.get("Soil pH"), dict) else 7.6
+    oc_val = params.get("Organic Carbon (OC)", {}).get("val", 4.8) if isinstance(params.get("Organic Carbon (OC)"), dict) else 4.8
 
     # Render Smart NPK & Agronomy Cockpit
-    st.markdown(render_smart_npk_card(crop, n_val, p_val, k_val), unsafe_allow_html=True)
-    st.markdown(render_actionable_agronomy_cockpit(n_val, p_val, k_val, zn_val, b_val, ph_val, oc_val, net_profit), unsafe_allow_html=True)
+    st.markdown(render_smart_npk_card(crop_name, n_val, p_val, k_val), unsafe_allow_html=True)
+    st.markdown(render_actionable_agronomy_cockpit(n_val, p_val, k_val, zn_val, b_val, ph_val, oc_val, profit_val), unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown("#### 📊 12-Parameter Government Laboratory Soil Testing Gauges")
@@ -1037,11 +1045,13 @@ def render_soil_health_card_tab(region: str, crop: str, farm_lat: float, farm_lo
 
     # 12 parameter donut cards grid
     param_keys = list(params.keys())
-    cols = st.columns(4)
-    for idx, pk in enumerate(param_keys):
-        p_data = params[pk]
-        cfg = get_shc_parameter_card_config(pk, p_data, region)
-        donut_html = render_shc_donut_html(cfg)
-        with cols[idx % 4]:
-            st.markdown(donut_html, unsafe_allow_html=True)
+    if param_keys:
+        cols = st.columns(4)
+        for idx, pk in enumerate(param_keys):
+            p_data = params[pk]
+            cfg = get_shc_parameter_card_config(pk, p_data, reg_name)
+            donut_html = render_shc_donut_html(cfg)
+            with cols[idx % 4]:
+                st.markdown(donut_html, unsafe_allow_html=True)
+
 
