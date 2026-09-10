@@ -1042,6 +1042,67 @@ def render_soil_health_card_tab(region: str = None, crop: str = None, farm_lat: 
     ph_val = params.get("Soil pH", {}).get("val", 7.6) if isinstance(params.get("Soil pH"), dict) else 7.6
     oc_val = params.get("Organic Carbon (OC)", {}).get("val", 4.8) if isinstance(params.get("Organic Carbon (OC)"), dict) else 4.8
 
+    # Integrate Crop-Aware Soil Reference Resolver
+    from services import soil_reference_resolver
+    crop_prof = soil_reference_resolver.get_crop_profile(crop_name, reg_name)
+    eval_n = soil_reference_resolver.evaluate_soil_status("Nitrogen (N)", n_val, crop=crop_name, state=reg_name)
+    eval_p = soil_reference_resolver.evaluate_soil_status("Phosphorus (P)", p_val, crop=crop_name, state=reg_name)
+    eval_k = soil_reference_resolver.evaluate_soil_status("Potassium (K)", k_val, crop=crop_name, state=reg_name)
+    eval_zn = soil_reference_resolver.evaluate_soil_status("Zinc (Zn)", zn_val, crop=crop_name, state=reg_name)
+    fert_rec = soil_reference_resolver.get_fertilizer_recommendation(crop_name, {"N": n_val, "P": p_val, "K": k_val}, reg_name)
+
+    # Render Crop-Aware Resolver Header Card
+    st.markdown(f"""
+    <div style="background: #ffffff; border: 2px solid #10b981; border-radius: 16px; padding: 18px 22px; margin-bottom: 16px; box-shadow: 0 4px 14px rgba(16,185,129,0.08);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
+            <div>
+                <div style="font-size: 1.18rem; font-weight: 900; color: #064e3b; display: flex; align-items: center; gap: 8px;">
+                    🎯 Crop-Aware Soil Resolver • Active Crop: <span style="color: #047857; text-decoration: underline;">{crop_prof['crop']}</span>
+                </div>
+                <div style="font-size: 0.82rem; color: #475569; font-weight: 600; margin-top: 2px;">
+                    Source: {crop_prof['source']} (Confidence: {crop_prof['confidence']})
+                </div>
+            </div>
+            <span style="background: #ecfdf5; border: 1px solid #86efac; color: #047857; font-size: 0.76rem; font-weight: 800; padding: 4px 12px; border-radius: 20px;">
+                ⚙️ Dynamic Crop Resolution
+            </span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; margin-top: 10px;">
+            <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px;">
+                <div style="font-size: 0.72rem; font-weight: 800; color: #475569; text-transform: uppercase;">Nitrogen (N) Status</div>
+                <div style="font-size: 1.15rem; font-weight: 900; color: #0f172a; margin: 2px 0;">{n_val:.0f} kg/ha <span style="font-size: 0.75rem; color: #64748b;">({eval_n['status']})</span></div>
+                <div style="font-size: 0.76rem; color: #047857; font-weight: 700;">Rec: {fert_rec['urea_recommendation_kg_acre']} kg Urea / acre</div>
+            </div>
+            <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px;">
+                <div style="font-size: 0.72rem; font-weight: 800; color: #475569; text-transform: uppercase;">Phosphorus (P) Status</div>
+                <div style="font-size: 1.15rem; font-weight: 900; color: #0f172a; margin: 2px 0;">{p_val:.1f} kg/ha <span style="font-size: 0.75rem; color: #64748b;">({eval_p['status']})</span></div>
+                <div style="font-size: 0.76rem; color: #047857; font-weight: 700;">Rec: {fert_rec['ssp_recommendation_kg_acre']} kg SSP / acre</div>
+            </div>
+            <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px;">
+                <div style="font-size: 0.72rem; font-weight: 800; color: #475569; text-transform: uppercase;">Potassium (K) Status</div>
+                <div style="font-size: 1.15rem; font-weight: 900; color: #0f172a; margin: 2px 0;">{k_val:.0f} kg/ha <span style="font-size: 0.75rem; color: #64748b;">({eval_k['status']})</span></div>
+                <div style="font-size: 0.76rem; color: #047857; font-weight: 700;">Rec: {fert_rec['mop_recommendation_kg_acre']} kg MOP / acre</div>
+            </div>
+            <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px;">
+                <div style="font-size: 0.72rem; font-weight: 800; color: #475569; text-transform: uppercase;">Biological Protocol</div>
+                <div style="font-size: 0.82rem; font-weight: 800; color: #065f46; margin-top: 4px; line-height: 1.35;">{crop_prof['biostimulant_protocol']}</div>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    with st.expander(f"📚 View Crop-Aware Soil Resolver Technical Provenance & References for {crop_prof['crop']}", expanded=False):
+        st.markdown(f"""
+        * **Crop Profile Source:** {crop_prof['source']} ([Official Portal]({crop_prof['source_url']}))
+        * **Nitrogen Management:** {crop_prof['nitrogen_management']}
+        * **Phosphorus Management:** {crop_prof['phosphorus_management']}
+        * **Potassium Management:** {crop_prof['potassium_management']}
+        * **Micronutrient Critical Limit (Zn):** {crop_prof['zn_critical_mg_kg']} mg/kg (DTPA extractable)
+        * **Micronutrient Critical Limit (B):** {crop_prof['b_critical_mg_kg']} mg/kg (Hot-water soluble)
+        * **Methodology:** Official Soil Health Card 12-Parameter Standard (soilhealth.dac.gov.in)
+        """)
+
     # Render Smart NPK & Agronomy Cockpit
     st.markdown(render_smart_npk_card(crop_name, n_val, p_val, k_val), unsafe_allow_html=True)
     st.markdown(render_actionable_agronomy_cockpit(n_val, p_val, k_val, zn_val, b_val, ph_val, oc_val, profit_val), unsafe_allow_html=True)

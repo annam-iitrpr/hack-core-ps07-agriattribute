@@ -1081,7 +1081,6 @@ def main():
     # SECTION 1: 🌱 FIELD (Crop, Variety, Location, Sowing Date & Agmarknet Grid)
     # ═════════════════════════════════════════════════════════════════════════
     with tab_field:
-        st.markdown(f'<div style="background:#ecfdf5; border:1.5px solid #a7f3d0; border-radius:12px; padding:12px 18px; margin-bottom:14px; color:#064e3b; font-size:1.15rem; font-weight:800; display:flex; align-items:center; gap:8px;"><span>❓ {t("q_field", lang)}</span></div>', unsafe_allow_html=True)
         st.markdown("""
         <div style="margin-top: 10px; margin-bottom: 12px;">
             <div style="font-size: 1.35rem; font-weight: 900; color: #064e3b; display: flex; align-items: center; gap: 8px;">
