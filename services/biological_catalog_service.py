@@ -424,7 +424,7 @@ _CANONICAL_PRODUCTS: List[BiologicalProduct] = [
         source_page="Product Label Specification",
         source_url="https://www.syngenta.co.in/isabion",
         image_id="isabion_packshot_01",
-        image_path="assets/biologicals/syngenta/isabion/isabion_packshot_clean.png",
+        image_path="assets/biologicals/syngenta/isabion/isabion_packshot_01.jpg",
         image_type="PACKSHOT",
         trial_results_summary="ICAR field trials report +5.32 q/acre yield lift in Rice (Paddy), +2.94 q/acre in Groundnut, and +73.5 q/acre in Sugarcane with +18% higher chlorophyll SPAD index."
     ),
@@ -465,7 +465,7 @@ _CANONICAL_PRODUCTS: List[BiologicalProduct] = [
         source_page="Technical Sheet",
         source_url="https://www.syngenta.co.in",
         image_id="cropbio_packshot_01",
-        image_path="assets/biologicals/syngenta/cropbio/cropbio_packshot_clean.png",
+        image_path="assets/biologicals/syngenta/cropbio/cropbio_packshot_01.jpg",
         image_type="PACKSHOT",
         trial_results_summary="Multi-location trials in Maharashtra and Telangana demonstrate +28.7 to +47.2 q/acre increase in cane yield and +0.4% higher sucrose CCS recovery."
     ),
@@ -890,10 +890,8 @@ def get_verified_image_path(product: BiologicalProduct) -> str:
     
     # Fallback to organization-level verified packshots
     if "syngenta" in product.organization.lower():
-        if os.path.exists("assets/biologicals/syngenta/quantis/quantis_packshot_clean.png"):
-            return "assets/biologicals/syngenta/quantis/quantis_packshot_clean.png"
-        elif os.path.exists("assets/biologicals/syngenta/megafol/megafol_packshot_01.png"):
-            return "assets/biologicals/syngenta/megafol/megafol_packshot_01.png"
+        if os.path.exists("assets/biologicals/syngenta/quantis/quantis_packshot_01.jpg"):
+            return "assets/biologicals/syngenta/quantis/quantis_packshot_01.jpg"
     elif "kribhco" in product.organization.lower():
         if os.path.exists("assets/biologicals/external/kribhco/kribhco_npk_consortia_packshot.png"):
             return "assets/biologicals/external/kribhco/kribhco_npk_consortia_packshot.png"
@@ -901,7 +899,7 @@ def get_verified_image_path(product: BiologicalProduct) -> str:
         if os.path.exists("assets/biologicals/external/agrigem/taegro_370g_packshot.png"):
             return "assets/biologicals/external/agrigem/taegro_370g_packshot.png"
             
-    return "assets/biologicals/syngenta/quantis/quantis_packshot_clean.png"
+    return "assets/features/feature_2_dosage.jpg"
 
 
 def get_base64_image(image_path: str) -> str:
