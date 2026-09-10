@@ -188,7 +188,7 @@ def generate_domain_expert_fallback(user_query: str, language: str, context_info
         # If farmer selected an Indic language (Gujarati, Tamil, Kannada, Bengali, etc.), translate dynamically via IndicTrans2
         if lang_lower and lang_lower not in ["english", "en"]:
             try:
-                import indictrans_service
+                from services import indictrans_service
                 return indictrans_service.translate_en_to_indic(english_briefing, language)
             except Exception:
                 pass
@@ -259,7 +259,7 @@ def ask_gemini_multimodal(
     is_indic = language and str(language).lower() not in ["english", "en"]
     if is_indic and query_text and query_text.strip():
         try:
-            import indictrans_service
+            from services import indictrans_service
             translated_q = indictrans_service.translate_indic_to_en(query_text.strip(), language)
             if translated_q and translated_q != query_text.strip():
                 canonical_query = translated_q
@@ -302,7 +302,7 @@ def ask_gemini_multimodal(
                     # If target is Indic language but model responded in English, translate via IndicTrans2
                     if is_indic:
                         try:
-                            import indictrans_service
+                            from services import indictrans_service
                             ascii_chars = sum(1 for c in final_reply if ord(c) < 128)
                             if len(final_reply) > 0 and (ascii_chars / len(final_reply)) > 0.85:
                                 translated_reply = indictrans_service.translate_en_to_indic(final_reply, language)
@@ -415,7 +415,7 @@ def get_engine_status() -> dict:
     key = _get_gemini_key()
     indic_status = {}
     try:
-        import indictrans_service
+        from services import indictrans_service
         indic_status = indictrans_service.get_translation_status()
     except Exception:
         pass

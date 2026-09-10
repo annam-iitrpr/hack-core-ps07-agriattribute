@@ -666,7 +666,7 @@ class LeafVisionFoundationModel:
         tnau_disease_info = None
         tnau_crop_info = None
         try:
-            import tnau_service
+            from services import tnau_service
             tnau_disease_info = tnau_service.search_tnau_disease(patho_match["name"], detected_crop)
             tnau_crop_info = tnau_service.search_tnau_crop(detected_crop)
         except Exception:

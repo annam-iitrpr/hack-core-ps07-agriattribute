@@ -16,6 +16,12 @@ Integrates:
 """
 
 import os
+import sys
+# Ensure services directory is in Python path for absolute and bare imports
+_SERVICES_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "services"))
+if _SERVICES_DIR not in sys.path:
+    sys.path.insert(0, _SERVICES_DIR)
+
 import io
 import json
 import joblib
@@ -2925,7 +2931,7 @@ def main():
                 render_commodity_group_cards(["Vegetables", "Others"], "veg")
 
 
-        import annam_mcii_ui
+        from services import annam_mcii_ui
         annam_mcii_ui.render_annam_mcii_tab(lang=lang, active_crop=st.session_state.selected_crop)
 
 

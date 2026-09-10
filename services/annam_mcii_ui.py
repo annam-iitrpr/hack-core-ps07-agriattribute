@@ -368,7 +368,7 @@ def render_annam_mcii_tab(lang: str = "English", active_crop: str = "Soybean"):
     # Dynamic vernacular translation via AI4Bharat IndicTrans2
     if lang and str(lang).lower() not in ["english", "en"]:
         try:
-            import indictrans_service
+            from services import indictrans_service
             spray_simple = indictrans_service.translate_en_to_indic(spray_simple, lang)
             irrig_simple = indictrans_service.translate_en_to_indic(irrig_simple, lang)
             heat_simple = indictrans_service.translate_en_to_indic(heat_simple, lang)
@@ -458,7 +458,7 @@ def render_annam_mcii_tab(lang: str = "English", active_crop: str = "Soybean"):
     # Dynamic vernacular translation via AI4Bharat IndicTrans2
     if lang and str(lang).lower() not in ["english", "en"]:
         try:
-            import indictrans_service
+            from services import indictrans_service
             rec_title = indictrans_service.translate_en_to_indic(rec_title, lang)
             rec_body = indictrans_service.translate_en_to_indic(rec_body, lang)
         except Exception:

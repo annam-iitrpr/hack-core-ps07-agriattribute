@@ -882,7 +882,7 @@ def get_human_centric_agronomy_advisory(crop: str, heat_stress: int, temp: float
     Returns authentic, crop-specific, human-centric agronomic reasoning for the Hero Decision Card.
     Avoids robotic AI bullet points and accurately reflects plant physiology (e.g. bulb development in onion vs boll retention in cotton).
     """
-    from localization import get_lang_code
+    from services.localization import get_lang_code
     code = get_lang_code(lang)
     
     # 1. Crop-Specific Biological Physiology Reasoning
