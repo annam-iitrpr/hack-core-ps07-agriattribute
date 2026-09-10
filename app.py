@@ -1011,44 +1011,8 @@ def main():
 
     st.markdown('<div id="platform_main_tabs"></div>', unsafe_allow_html=True)
     tab_field, tab_soil, tab_weather, tab_management, tab_biologicals, tab_yield, tab_cost, tab_impact, tab_ai = st.tabs(
-        tab_labels,
-        default=default_tab,
-        key=f"main_tab_strip_{tab_nav_ver}",
-        on_change="rerun"
+        tab_labels
     )
-
-    # Sync selection when user clicks a tab directly
-    tab_current_val = st.session_state.get(f"main_tab_strip_{tab_nav_ver}")
-    if tab_current_val in tab_labels:
-        st.session_state.active_tab_idx = tab_labels.index(tab_current_val)
-        st.session_state.tab_selector = tab_current_val
-
-    # Secondary scroll guarantee to position user at the opened tab
-    if st.session_state.get("scroll_to_tabs"):
-        st.session_state.scroll_to_tabs = False
-        import streamlit.components.v1 as _comp
-        _comp.html(
-            f"""
-            <script>
-                (function() {{
-                    function scrollToMainTabs() {{
-                        try {{
-                            var doc = window.parent.document;
-                            if (!doc) return;
-                            var el = doc.getElementById('platform_main_tabs') || doc.querySelector('div[data-testid="stTabs"]');
-                            if (el) {{
-                                el.scrollIntoView({{ behavior: 'smooth', block: 'start' }});
-                            }}
-                        }} catch(e) {{}}
-                    }}
-                    setTimeout(scrollToMainTabs, 80);
-                    setTimeout(scrollToMainTabs, 320);
-                }})();
-            </script>
-            """,
-            height=0,
-            width=0,
-        )
 
     # ─────────────────────────────────────────────────────────────────────────
     # PRECOMPUTE SHARED TELEMETRY & ATTRIBUTION VARIABLES ACROSS TABS
@@ -1104,66 +1068,6 @@ def main():
             </div>
         </div>
         """, unsafe_allow_html=True)
-
-        # Feature Navigation Deck (Direct Click-to-Tab)
-        feature_meta = [
-            {"img": "assets/features/feature_1_decision.jpg", "title": "🌱 FIELD", "sub": "Crop, Sowing & Agmarknet 2.0", "icon": "🌱", "badge": "FIELD"},
-            {"img": "assets/features/feature_2_dosage.jpg", "title": "🧪 SOIL", "sub": "Soil Health Card & NPK Rules", "icon": "🧪", "badge": "SOIL"},
-            {"img": "assets/features/feature_3_disease.jpg", "title": "🌦️ WEATHER", "sub": "Satellite Radar & KALP Advisory", "icon": "🌦️", "badge": "WEATHER"},
-            {"img": "assets/features/feature_4_memory.jpg", "title": "🚜 MANAGEMENT", "sub": "LeafVision Scanner & Ledger", "icon": "🚜", "badge": "MGMT"},
-            {"img": "assets/features/feature_5_proof.jpg", "title": "🧬 BIOLOGICALS", "sub": "Syngenta Stress Priming & Dose", "icon": "🧬", "badge": "BIO"},
-            {"img": "assets/features/feature_7_annam.jpg", "title": "🌾 YIELD", "sub": "ML Predictor & SHAP Explainer", "icon": "🌾", "badge": "YIELD"},
-            {"img": "assets/features/feature_1_decision.jpg", "title": "💰 COST", "sub": "CACP Cost of Cultivation Twin", "icon": "💰", "badge": "COST"},
-            {"img": "assets/features/feature_5_proof.jpg", "title": "📊 IMPACT & ROI", "sub": "PS-07 Decision Card & 5 Scen", "icon": "📊", "badge": "IMPACT"},
-            {"img": "assets/features/feature_6_ai.jpg", "title": "🤖 AI CHAT", "sub": "Gemini Multilingual Agronomist", "icon": "🤖", "badge": "AI CHAT"},
-        ]
-
-        with st.container(border=True):
-            st.markdown(f"""
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
-                <div>
-                    <div style="font-size: 1.20rem; font-weight: 900; color: #064e3b; display: flex; align-items: center; gap: 8px;">
-                        {t('nav_deck_title', lang)}
-                    </div>
-                    <div style="font-size: 0.88rem; color: #475569; font-weight: 600; margin-top: 2px;">
-                        {t('nav_deck_caption', lang)}
-                    </div>
-                </div>
-                <div style="background: #ecfdf5; border: 1.5px solid #10b981; border-radius: 20px; padding: 4px 14px; font-size: 0.85rem; font-weight: 800; color: #047857;">
-                    9 TASK-FIRST SECTIONS ACTIVE
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            f_cols = st.columns(9)
-            for f_idx, feat in enumerate(feature_meta):
-                is_active = (st.session_state.active_tab_idx == f_idx)
-                with f_cols[f_idx]:
-                    card_border = "3px solid #059669; box-shadow: 0 6px 16px rgba(5, 150, 105, 0.25);" if is_active else "1.5px solid #cbd5e1;"
-                    bg_style = "background: #f0fdf4;" if is_active else "background: #ffffff;"
-                    status_pill = f"<span style='background: #059669; color: white; font-size: 0.68rem; font-weight: 800; padding: 2px 6px; border-radius: 8px;'>ACTIVE</span>" if is_active else f"<span style='background: #e2e8f0; color: #334155; font-size: 0.66rem; font-weight: 700; padding: 2px 4px; border-radius: 6px;'>{feat['badge']}</span>"
-                    b64_img = get_base64_image(feat['img'])
-                
-                    st.markdown(f"""
-                    <div style="border-radius: 10px; border: {card_border}; {bg_style} overflow: hidden; margin-bottom: 6px;">
-                        <img src="data:image/jpeg;base64,{b64_img}" alt="{feat['title']}" style="width: 100%; height: 75px; object-fit: cover; display: block;" />
-                        <div style="padding: 6px 4px; text-align: center;">
-                            <div style="display: flex; justify-content: center; margin-bottom: 2px;">{status_pill}</div>
-                            <div style="font-size: 0.82rem; font-weight: 800; color: #0f172a; line-height: 1.2; min-height: 32px; display: flex; align-items: center; justify-content: center;">
-                                {feat['icon']} {feat['title']}
-                            </div>
-                        </div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                
-                    btn_label = feat['title']
-                    btn_type = "primary" if is_active else "secondary"
-                    if st.button(btn_label, key=f"nav_card_btn_{f_idx}", type=btn_type, use_container_width=True):
-                        st.session_state.active_tab_idx = f_idx
-                        st.session_state.tab_selector = tab_labels[f_idx]
-                        st.session_state.tab_nav_version = st.session_state.get('tab_nav_version', 0) + 1
-                        st.session_state.scroll_to_tabs = True
-                        st.rerun()
 
         # Agmarknet 2.0 APMC Marketplace Header
         st.markdown("""

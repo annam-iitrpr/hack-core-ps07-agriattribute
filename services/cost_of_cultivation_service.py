@@ -694,7 +694,7 @@ def render_cost_of_cultivation_tab(field_ctx: Any, model: Any, artifacts: Any, l
                 "cost": (cost_per_acre * 0.95) + bio_cost_val,
                 "net": (((pred_yield_val + bio_delta_val) * 1.10) * sel_price) - ((cost_per_acre * 0.95) + bio_cost_val),
                 "inc_yield": bio_delta_val * 1.10, "inc_net": (((pred_yield_val + bio_delta_val) * 1.10) * sel_price) - ((cost_per_acre * 0.95) + bio_cost_val) - net_return_acre,
-                "roi": ((((pred_yield_val + bio_delta_val) * 1.10) * sel_price) - ((cost_per_acre * 0.95) + bio_cost_val) - net_return_acre) / bio_cost_acre * 100.0 if bio_cost_val > 0 else 0.0
+                "roi": ((((pred_yield_val + bio_delta_val) * 1.10) * sel_price) - ((cost_per_acre * 0.95) + bio_cost_val) - net_return_acre) / bio_cost_val * 100.0 if bio_cost_val > 0 else 0.0
             }
         ]
 
