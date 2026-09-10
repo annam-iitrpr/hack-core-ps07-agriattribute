@@ -1012,6 +1012,14 @@ def render_soil_health_card_tab(region: str = None, crop: str = None, farm_lat: 
     badge_lbl = t('soil_card_govt_badge', lang)
     heading_lbl = t('soil_gauges_heading', lang)
     caption_lbl = t('soil_gauges_caption', lang)
+    # Extract nutrient values safely
+    n_val = params.get("Nitrogen (N)", {}).get("val", 240.0) if isinstance(params.get("Nitrogen (N)"), dict) else 240.0
+    p_val = params.get("Phosphorus (P)", {}).get("val", 22.0) if isinstance(params.get("Phosphorus (P)"), dict) else 22.0
+    k_val = params.get("Potassium (K)", {}).get("val", 185.0) if isinstance(params.get("Potassium (K)"), dict) else 185.0
+    zn_val = params.get("Zinc (Zn)", {}).get("val", 0.45) if isinstance(params.get("Zinc (Zn)"), dict) else 0.45
+    b_val = params.get("Boron (B)", {}).get("val", 0.40) if isinstance(params.get("Boron (B)"), dict) else 0.40
+    ph_val = params.get("Soil pH", {}).get("val", 7.6) if isinstance(params.get("Soil pH"), dict) else 7.6
+    oc_val = params.get("Organic Carbon (OC)", {}).get("val", 4.8) if isinstance(params.get("Organic Carbon (OC)"), dict) else 4.8
 
     # Integrate Crop-Aware Soil Reference Resolver
     from services import soil_reference_resolver
