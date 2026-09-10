@@ -965,6 +965,12 @@ def main():
     net_profit = curr_scen["net_profit_inr"]
     roi_pct = curr_scen["roi_pct"]
     readiness_score = best_cond["readiness_score"]
+
+    # 🔗 Synchronize Authoritative Yield & Price Attributes onto FieldContext
+    field_ctx.predicted_yield_baseline = float(pred_counterfactual)
+    field_ctx.biological_yield_lift = float(yield_delta)
+    field_ctx.treatment_cost = float(product_cost)
+    field_ctx.mandi_price = float(crop_price)
     unc_mae = float(artifacts.get("metrics", {}).get("uncertainty_mae", 3.99))
     pred_low = curr_scen["yield_lower_bound"]
     pred_high = curr_scen["yield_upper_bound"]
