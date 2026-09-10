@@ -404,6 +404,21 @@ def build_field_context(
     msp = float(mandi_info.get("msp", 4892.0))
     delta = float(mandi_info.get("price_vs_msp_delta", 607.0))
     source_status = mandi_info.get("data_source_status", "Agmarknet 2.0 Official Daily APMC")
+    DEFAULT_CROP_STAGES = {
+        "Wheat": "Heading / Flag Leaf",
+        "Rice (Paddy)": "Tillering / Panicle Initiation",
+        "Sugarcane": "Grand Growth / Formative Phase",
+        "Cotton": "Squaring / Boll Formation",
+        "Soybean": "Flowering / Pod Formation",
+        "Tomato": "Flowering & Fruit Set",
+        "Onion": "Bulb Enlargement",
+        "Maize": "Silking & Tassel Emergence",
+        "Chickpea (Gram / Chana)": "Pod Development",
+        "Tur / Pigeon Pea (Arhar)": "Flower Initiation & Pod Set",
+        "Groundnut (Peanut)": "Pegging & Pod Filling",
+        "Mustard / Rapeseed": "Siliqua Formation & Flowering"
+    }
+    resolved_stage = DEFAULT_CROP_STAGES.get(proxy_crop, DEFAULT_CROP_STAGES.get(crop, crop_stage))
 
     return FieldContext(
         region=region,
@@ -413,7 +428,7 @@ def build_field_context(
         crop=crop,
         proxy_crop=proxy_crop,
         season="Kharif" if crop in ["Soybean", "Cotton", "Rice (Paddy)", "Maize", "Tur / Pigeon Pea (Arhar)"] else "Rabi",
-        crop_stage=crop_stage,
+        crop_stage=resolved_stage,
         soc=round(soc_pct, 2),
         ph=round(ph, 2),
         nitrogen=round(nitrogen, 1),

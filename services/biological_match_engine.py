@@ -293,7 +293,7 @@ def render_biologicals_section_ui(
     t_func: Any = None
 ) -> None:
     """
-    Renders the complete, authentic Farmer Decision Biologicals Intelligence Layer.
+    Renders the complete, authentic Farmer Decision Biologicals Intelligence Layer with 2-way Field Sync.
     """
     t = t_func if t_func is not None else (lambda k, l, **kwargs: k)
     
@@ -303,53 +303,28 @@ def render_biologicals_section_ui(
     heat_stress_days = int(getattr(field_ctx, 'heat_stress_days', 2))
     wind_kmh = float(getattr(field_ctx, 'wind_speed_kmh', 10.5))
     
-    # 1. FIELD CONTEXT & TELEMETRY HEADER BAR
-    st.markdown(textwrap.dedent(f"""
-    <div style="background: linear-gradient(135deg, #064e3b 0%, #047857 100%); border-radius: 14px; padding: 18px 22px; color: white; margin-bottom: 18px; box-shadow: 0 4px 14px rgba(4,120,87,0.25);">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
-            <div>
-                <div style="font-size: 1.35rem; font-weight: 900; display: flex; align-items: center; gap: 8px;">
-                    🧬 Biologicals Intelligence & Evidence-Matched Protocol
-                </div>
-                <div style="font-size: 0.85rem; color: #a7f3d0; font-weight: 550; margin-top: 3px;">
-                    Authentic Syngenta Biologicals Product Dossiers, Causal Attribution & KRIBHCO / Third-Party Benchmarks
-                </div>
-            </div>
-            <div style="background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.3); border-radius: 10px; padding: 6px 14px; text-align: right;">
-                <div style="font-size: 0.70rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 800; color: #d1fae5;">ACTIVE FIELD STATE</div>
-                <div style="font-size: 1.15rem; font-weight: 900; color: #ffffff;">{crop_name} • {crop_stage}</div>
-            </div>
-        </div>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 12px;">
-            <div style="background: rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 8px;">
-                <div style="font-size: 0.72rem; color: #a7f3d0; font-weight: 700;">🌡️ AMBIENT TEMPERATURE</div>
-                <div style="font-size: 0.95rem; font-weight: 800; margin-top: 2px;">{temp_c:.1f}°C ({heat_stress_days}d Heat Stress)</div>
-            </div>
-            <div style="background: rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 8px;">
-                <div style="font-size: 0.72rem; color: #a7f3d0; font-weight: 700;">💨 WIND & SPRAY WINDOW</div>
-                <div style="font-size: 0.95rem; font-weight: 800; margin-top: 2px;">{wind_kmh:.1f} km/h ({"Optimal" if wind_kmh < 15 else "Moderate"})</div>
-            </div>
-            <div style="background: rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 8px;">
-                <div style="font-size: 0.72rem; color: #a7f3d0; font-weight: 700;">🛡️ FOLIAR DISEASE RISK</div>
-                <div style="font-size: 0.95rem; font-weight: 800; margin-top: 2px;">{disease_risk_pct:.0f}% Risk (LeafVision)</div>
-            </div>
-            <div style="background: rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 8px;">
-                <div style="font-size: 0.72rem; color: #a7f3d0; font-weight: 700;">⚖️ PROVENANCE SEPARATION</div>
-                <div style="font-size: 0.95rem; font-weight: 800; margin-top: 2px;">Official Evidence Separated</div>
-            </div>
-        </div>
-    </div>
-    """), unsafe_allow_html=True)
+    # Header & Live Context Bar
+    st.markdown("### 🧬 Biologicals Intelligence & Evidence-Matched Protocol")
+    st.caption("Authentic Syngenta Biologicals Product Dossiers, Causal Attribution & KRIBHCO / Third-Party Benchmarks")
+
+    # Dynamic Field Context Synchronization Bar
+    with st.container(border=True):
+        col_ctx1, col_ctx2, col_ctx3, col_ctx4 = st.columns([1.2, 1.1, 1.1, 1.1])
+        with col_ctx1:
+            st.markdown(f"🌾 **Active Field Crop**  \n### {crop_name}")
+            st.caption(f"Phenology: **{crop_stage}**")
+        with col_ctx2:
+            st.metric(label="🌡️ Ambient Temp", value=f"{temp_c:.1f}°C", delta=f"{heat_stress_days}d Heat Stress", delta_color="inverse")
+        with col_ctx3:
+            st.metric(label="💨 Wind & Spray", value=f"{wind_kmh:.1f} km/h", delta="Optimal Window" if wind_kmh < 15 else "Moderate Drift", delta_color="normal" if wind_kmh < 15 else "off")
+        with col_ctx4:
+            st.metric(label="🛡️ Foliar Disease Risk", value=f"{disease_risk_pct:.0f}%", delta="Bio-barrier Active" if disease_risk_pct > 35 else "Low Pressure", delta_color="inverse" if disease_risk_pct > 35 else "normal")
+
+    st.markdown("<br>", unsafe_allow_html=True)
 
     # 2. FEATURED EVIDENCE MATCHES (TOP 3)
-    st.markdown(textwrap.dedent("""
-    <div style="font-size: 1.22rem; font-weight: 900; color: #064e3b; margin-bottom: 4px;">
-        🌟 Best Evidence Matches for Your Active Field
-    </div>
-    <div style="font-size: 0.88rem; color: #475569; margin-bottom: 16px;">
-        Ranked using verifiable multi-factor compatibility (Crop fit, Growth stage, Thermal/Drought stress, Spray window, and Official technical sheets):
-    </div>
-    """), unsafe_allow_html=True)
+    st.subheader("🌟 Best Evidence Matches for Active Field")
+    st.caption("Ranked using verifiable multi-factor compatibility (Crop fit, Growth stage, Thermal/Drought stress, Spray window, and Official technical sheets):")
 
     top_matches = get_top_field_matches(field_ctx, ow_live, disease_risk_pct, top_n=3)
     
@@ -357,71 +332,41 @@ def render_biologicals_section_ui(
     for idx, match_res in enumerate(top_matches):
         p = match_res.product
         with top_cols[idx]:
-            img_path = get_verified_image_path(p)
-            
-            # Badge styles based on organization
-            if "syngenta" in p.organization.lower():
-                org_bg = "#ecfdf5"; org_color = "#047857"; org_border = "#86efac"; org_label = "SYNGENTA BIOLOGICALS"
-            elif "agrigem" in p.organization.lower():
-                org_bg = "#f0f9ff"; org_color = "#0284c7"; org_border = "#bae6fd"; org_label = "THIRD-PARTY DISTRIBUTOR"
-            else:
-                org_bg = "#fffbeb"; org_color = "#b45309"; org_border = "#fef3c7"; org_label = "KRIBHCO BENCHMARK"
-
-            header_badge_html = textwrap.dedent(f"""
-            <div style="background: #ffffff; border: 1.5px solid {match_res.compatibility_color}; border-radius: 12px; padding: 10px; margin-bottom: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); text-align: center;">
-                <div style="display: flex; flex-direction: column; gap: 4px; align-items: center;">
-                    <span style="background: {org_bg}; color: {org_color}; border: 1px solid {org_border}; font-size: 0.65rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; display: inline-block;">{org_label}</span>
-                    <span style="background: {match_res.compatibility_color}; color: white; font-size: 0.65rem; font-weight: 800; padding: 2px 8px; border-radius: 4px; display: inline-block;">{match_res.compatibility_badge}</span>
-                </div>
-            </div>
-            """)
-            st.markdown(header_badge_html, unsafe_allow_html=True)
-            
-            # Real Product Packshot
-            if os.path.exists(img_path):
-                st.image(img_path, caption=f"Packshot: {p.product_name}", use_container_width=True)
-            
-            reasons_list_html = "".join([f"<div style='margin-top:3px;'>{r}</div>" for r in match_res.reasons[:2]])
-            card_body_html = textwrap.dedent(f"""
-            <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 12px; padding: 12px; margin-top: 4px; margin-bottom: 10px;">
-                <div style="font-weight: 900; font-size: 1.10rem; color: #0f172a; margin-bottom: 2px;">{p.product_name}</div>
-                <div style="font-size: 0.76rem; font-weight: 700; color: #059669; margin-bottom: 8px;">{p.product_category} • {p.biological_class}</div>
+            with st.container(border=True):
+                # Badge headers
+                org_tag = p.organization.upper()
+                st.markdown(f"**:{'green' if 'syngenta' in p.organization.lower() else 'blue' if 'agrigem' in p.organization.lower() else 'orange'}[{org_tag}]**")
+                st.markdown(f"**:{'green' if match_res.compatibility_score >= 75 else 'orange'}[{match_res.compatibility_badge}]**")
                 
-                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 10px; font-size: 0.76rem; margin-bottom: 8px;">
-                    <div><b>Documented Rate:</b> <span style="color:#047857; font-weight:800;">{p.application_rate}</span></div>
-                    <div style="margin-top:2px;"><b>Application Timing:</b> {p.application_stage}</div>
-                </div>
-
-                <div style="font-size: 0.76rem; color: #334155; line-height: 1.4; margin-bottom: 8px;">
-                    <b>Why this product:</b>
-                    {reasons_list_html}
-                </div>
-
-                <div style="font-size: 0.70rem; color: #64748b; border-top: 1px dashed #cbd5e1; padding-top: 6px;">
-                    <b>Source:</b> {p.source_document} ({p.source_page})
-                </div>
-            </div>
-            """)
-            st.markdown(card_body_html, unsafe_allow_html=True)
-            
-            # Action button to select for decision & sync
-            if st.button(f"🎯 Select {p.product_name.split()[0]} as Active Treatment", key=f"btn_sel_bio_{p.product_id}", use_container_width=True):
-                st.session_state["selected_bio_product"] = p.product_name
-                st.session_state["whatif_dosage"] = p.application_rate_num
-                st.toast(f"Selected {p.product_name} ({p.application_rate}) for Causal Attribution!", icon="🧬")
-                st.rerun()
+                img_path = get_verified_image_path(p)
+                if os.path.exists(img_path):
+                    st.image(img_path, caption=f"Packshot: {p.product_name}", use_container_width=True)
+                
+                st.markdown(f"### {p.product_name}")
+                st.caption(f"{p.product_category} • {p.biological_class}")
+                
+                st.markdown(f"**Documented Rate:** :green[{p.application_rate}]  \n**Application Timing:** {p.application_stage}")
+                
+                st.markdown("**Why this product:**")
+                for r in match_res.reasons[:2]:
+                    st.markdown(f"- {r}", unsafe_allow_html=True)
+                    
+                st.caption(f"**Source:** {p.source_document} ({p.source_page})")
+                
+                # Action button to select for decision & sync
+                if st.button(f"🎯 Select {p.product_name.split()[0]} as Active Treatment", key=f"btn_sel_bio_{p.product_id}", use_container_width=True, type="primary" if idx == 0 else "secondary"):
+                    st.session_state["selected_bio_product"] = p.product_name
+                    st.session_state["s_dosage"] = p.application_rate_num
+                    st.session_state["whatif_dosage"] = p.application_rate_num
+                    st.session_state["_compute_key"] = None
+                    st.toast(f"Selected {p.product_name} ({p.application_rate}) for Causal Attribution!", icon="🧬")
+                    st.rerun()
 
     st.markdown("---")
 
     # 3. INTERACTIVE SEARCH & FULL PRODUCT CATALOGUE WITH FILTERING
-    st.markdown(textwrap.dedent("""
-    <div style="font-size: 1.22rem; font-weight: 900; color: #064e3b; margin-bottom: 4px;">
-        📚 Complete Verified Biologicals Product Catalogue (19 Products)
-    </div>
-    <div style="font-size: 0.88rem; color: #475569; margin-bottom: 14px;">
-        Filter by Organization, Biological Class, or Crop Compatibility. Every product features authentic technical documentation and packshots:
-    </div>
-    """), unsafe_allow_html=True)
+    st.subheader("📚 Complete Verified Biologicals Product Catalogue (19 Products)")
+    st.caption("Filter by Organization, Biological Class, or Crop Compatibility. Every product features authentic technical documentation and packshots:")
 
     col_flt1, col_flt2, col_flt3 = st.columns([1.2, 1.2, 1.4])
     with col_flt1:
@@ -487,14 +432,8 @@ def render_biologicals_section_ui(
     st.markdown("---")
 
     # 4. FIELD APPLICATION LOGGER & CAUSAL INTEGRATION BRIDGE
-    st.markdown(textwrap.dedent("""
-    <div style="font-size: 1.15rem; font-weight: 900; color: #064e3b; margin-bottom: 4px;">
-        📝 Field Treatment Record & Closed-Loop Attribution Bridge
-    </div>
-    <div style="font-size: 0.86rem; color: #475569; margin-bottom: 12px;">
-        Record the verified biological application for this field. Synchronizes with <b>Yield Predictor</b>, <b>Cost of Cultivation</b>, and <b>Farm Memory</b>:
-    </div>
-    """), unsafe_allow_html=True)
+    st.subheader("📝 Field Treatment Record & Closed-Loop Attribution Bridge")
+    st.caption("Record the verified biological application for this field. Synchronizes with Yield Predictor, Cost of Cultivation, and Farm Memory:")
 
     with st.form("bio_app_log_form"):
         col_log1, col_log2, col_log3 = st.columns(3)
@@ -518,7 +457,9 @@ def render_biologicals_section_ui(
         submit_app = st.form_submit_button("💾 Save Application to Farm Context & Ledger", use_container_width=True)
         if submit_app:
             st.session_state["selected_bio_product"] = log_prod
+            st.session_state["s_dosage"] = log_dose
             st.session_state["whatif_dosage"] = log_dose
+            st.session_state["_compute_key"] = None
             st.session_state["bio_logged_record"] = {
                 "product": log_prod,
                 "dosage": log_dose,
@@ -533,60 +474,42 @@ def render_biologicals_section_ui(
 
 
 def _render_detailed_product_card(match_res: ProductMatchResult, lang: str, t: Any) -> None:
-    """Renders a structured, high-contrast product card with authentic packshot."""
+    """Renders a structured, high-contrast product card with native Streamlit container."""
     p = match_res.product
     img_path = get_verified_image_path(p)
     
-    if "syngenta" in p.organization.lower():
-        org_badge = "<span style='background:#ecfdf5; color:#047857; border:1px solid #86efac; font-size:0.68rem; font-weight:800; padding:2px 8px; border-radius:6px;'>SYNGENTA BIOLOGICALS</span>"
-    elif "agrigem" in p.organization.lower():
-        org_badge = "<span style='background:#f0f9ff; color:#0284c7; border:1px solid #bae6fd; font-size:0.68rem; font-weight:800; padding:2px 8px; border-radius:6px;'>THIRD-PARTY DISTRIBUTOR</span>"
-    else:
-        org_badge = "<span style='background:#fffbeb; color:#b45309; border:1px solid #fef3c7; font-size:0.68rem; font-weight:800; padding:2px 8px; border-radius:6px;'>KRIBHCO BENCHMARK</span>"
-
-    card_header_html = textwrap.dedent(f"""
-    <div style="background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 14px; padding: 14px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 4px;">
-            {org_badge}
-            <span style="background: {match_res.compatibility_color}; color: white; font-size: 0.68rem; font-weight: 800; padding: 2px 8px; border-radius: 6px;">{match_res.compatibility_badge}</span>
-        </div>
-        <div style="font-weight: 900; font-size: 1.20rem; color: #0f172a; margin-bottom: 2px;">{p.product_name}</div>
-        <div style="font-size: 0.80rem; font-weight: 700; color: #047857; margin-bottom: 10px;">{p.product_category} • {p.biological_class}</div>
-    </div>
-    """)
-    st.markdown(card_header_html, unsafe_allow_html=True)
-    
-    col_card_img, col_card_info = st.columns([1, 1.4])
-    with col_card_img:
-        if os.path.exists(img_path):
-            st.image(img_path, caption=f"Packshot: {p.product_name}", use_container_width=True)
-        else:
-            st.info("Product Packshot Loading...")
+    with st.container(border=True):
+        col_hdr1, col_hdr2 = st.columns([1.5, 1])
+        with col_hdr1:
+            org_tag = p.organization.upper()
+            st.markdown(f"**:{'green' if 'syngenta' in p.organization.lower() else 'blue' if 'agrigem' in p.organization.lower() else 'orange'}[{org_tag}]**")
+        with col_hdr2:
+            st.markdown(f"**:{'green' if match_res.compatibility_score >= 75 else 'orange'}[{match_res.compatibility_badge}]**")
             
-    with col_card_info:
-        card_info_html = textwrap.dedent(f"""
-        <div style="font-size: 0.80rem; color: #1e293b; line-height: 1.45;">
-            <div><b>Active Components:</b><br><span style="color:#475569;">{p.active_components}</span></div>
-            <div style="margin-top: 6px;"><b>Documented Rate:</b> <span style="color:#047857; font-weight:800;">{p.application_rate}</span></div>
-            <div style="margin-top: 4px;"><b>Application Timing:</b> <span style="color:#334155;">{p.application_stage}</span></div>
-            <div style="margin-top: 4px;"><b>Target Crops:</b> <span style="color:#64748b;">{', '.join(p.target_crops[:4])}</span></div>
-            <div style="margin-top: 4px;"><b>Target Stress:</b> <span style="color:#b45309; font-weight:600;">{', '.join(p.target_stress[:2])}</span></div>
-        </div>
-        """)
-        st.markdown(card_info_html, unsafe_allow_html=True)
+        st.markdown(f"### {p.product_name}")
+        st.caption(f"{p.product_category} • {p.biological_class}")
         
-    with st.expander(f"📖 View Official Evidence: {p.product_name} ({p.source_document})", expanded=False):
-        expander_details_html = textwrap.dedent(f"""
-        <div style="font-size: 0.82rem; color: #1e293b; line-height: 1.5; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px;">
-            <div style="color: #047857; font-weight: 800; font-size: 0.90rem; margin-bottom: 6px;">🏛️ Official Document Citation & Trial Metadata</div>
-            <div><b>Source Document:</b> <code>{p.source_document}</code> ({p.source_page})</div>
-            <div><b>Source Type:</b> {p.source_type}</div>
-            <div><b>Market / Registration:</b> {p.registration_status} ({p.country})</div>
-            <div style="margin-top: 6px;"><b>Documented Mode of Action:</b><br>{p.mode_of_action}</div>
-            <div style="margin-top: 6px;"><b>Documented Field Trial Results:</b><br><span style="color:#065f46; font-weight:600;">{p.trial_results_summary}</span></div>
-            <div style="margin-top: 6px;"><b>Tank Mix & Compatibility:</b><br>{p.tank_mix_information}</div>
-            <div style="margin-top: 6px;"><b>Official Reference URL:</b> <a href="{p.source_url}" target="_blank">{p.source_url}</a></div>
-        </div>
-        """)
-        st.markdown(expander_details_html, unsafe_allow_html=True)
+        col_card_img, col_card_info = st.columns([1, 1.4])
+        with col_card_img:
+            if os.path.exists(img_path):
+                st.image(img_path, caption=f"Packshot: {p.product_name}", use_container_width=True)
+            else:
+                st.info("Product Packshot Loading...")
+                
+        with col_card_info:
+            st.markdown(f"**Active Components:**  \n{p.active_components}")
+            st.markdown(f"**Documented Rate:** :green[{p.application_rate}]")
+            st.markdown(f"**Application Timing:** {p.application_stage}")
+            st.markdown(f"**Target Crops:** {', '.join(p.target_crops[:4])}")
+            st.markdown(f"**Target Stress:** {', '.join(p.target_stress[:2])}")
+            
+        with st.expander(f"📖 View Official Evidence: {p.product_name} ({p.source_document})", expanded=False):
+            st.markdown(f"**Source Document:** `{p.source_document}` ({p.source_page})")
+            st.markdown(f"**Source Type:** {p.source_type}")
+            st.markdown(f"**Market / Registration:** {p.registration_status} ({p.country})")
+            st.markdown(f"**Documented Mode of Action:**  \n{p.mode_of_action}")
+            st.markdown(f"**Documented Field Trial Results:**  \n:green[{p.trial_results_summary}]")
+            st.markdown(f"**Tank Mix & Compatibility:**  \n{p.tank_mix_information}")
+            st.markdown(f"**Official Reference URL:** [{p.source_url}]({p.source_url})")
+
 
