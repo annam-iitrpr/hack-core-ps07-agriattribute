@@ -279,6 +279,13 @@ def get_top_field_matches(
     return all_matches[:top_n]
 
 
+import textwrap
+
+def _html(raw_str: str) -> str:
+    """Strips leading indentation to prevent markdown from interpreting HTML as code blocks."""
+    return textwrap.dedent(raw_str).strip()
+
+
 # ============================================================================
 # STREAMLIT UI RENDERER: BIOLOGICALS INTELLIGENCE LAYER
 # ============================================================================
@@ -303,7 +310,7 @@ def render_biologicals_section_ui(
     wind_kmh = float(getattr(field_ctx, 'wind_speed_kmh', 10.5))
     
     # 1. FIELD CONTEXT & TELEMETRY HEADER BAR
-    st.markdown(f"""
+    st.markdown(_html(f"""
     <div style="background: linear-gradient(135deg, #064e3b 0%, #047857 100%); border-radius: 14px; padding: 18px 22px; color: white; margin-bottom: 18px; box-shadow: 0 4px 14px rgba(4,120,87,0.25);">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
             <div>
@@ -338,17 +345,17 @@ def render_biologicals_section_ui(
             </div>
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    """), unsafe_allow_html=True)
 
     # 2. FEATURED EVIDENCE MATCHES (TOP 3)
-    st.markdown("""
+    st.markdown(_html("""
     <div style="font-size: 1.22rem; font-weight: 900; color: #064e3b; margin-bottom: 4px;">
         🌟 Best Evidence Matches for Your Active Field
     </div>
     <div style="font-size: 0.88rem; color: #475569; margin-bottom: 16px;">
         Ranked using verifiable multi-factor compatibility (Crop fit, Growth stage, Thermal/Drought stress, Spray window, and Official technical sheets):
     </div>
-    """, unsafe_allow_html=True)
+    """), unsafe_allow_html=True)
 
     top_matches = get_top_field_matches(field_ctx, ow_live, disease_risk_pct, top_n=3)
     
@@ -366,21 +373,22 @@ def render_biologicals_section_ui(
             else:
                 org_bg = "#fffbeb"; org_color = "#b45309"; org_border = "#fef3c7"
 
-            st.markdown(f"""
-            <div style="background: #ffffff; border: 2px solid {match_res.compatibility_color}; border-radius: 14px; padding: 14px; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); text-align: center;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                    <span style="background: {org_bg}; color: {org_color}; border: 1px solid {org_border}; font-size: 0.68rem; font-weight: 800; padding: 2px 8px; border-radius: 6px;">{p.organization.upper()}</span>
-                    <span style="background: {match_res.compatibility_color}; color: white; font-size: 0.68rem; font-weight: 800; padding: 2px 8px; border-radius: 6px;">{match_res.compatibility_badge}</span>
-                </div>
+            # Top Header Card
+            st.markdown(_html(f"""
+            <div style="background: #ffffff; border: 2px solid {match_res.compatibility_color}; border-radius: 12px; padding: 10px 14px; margin-bottom: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;">
+                <span style="background: {org_bg}; color: {org_color}; border: 1px solid {org_border}; font-size: 0.68rem; font-weight: 800; padding: 2px 8px; border-radius: 6px;">{p.organization.upper()}</span>
+                <span style="background: {match_res.compatibility_color}; color: white; font-size: 0.68rem; font-weight: 800; padding: 2px 8px; border-radius: 6px;">{match_res.compatibility_badge}</span>
             </div>
-            """, unsafe_allow_html=True)
+            """), unsafe_allow_html=True)
             
             # Real Product Packshot
             if os.path.exists(img_path):
-                st.image(img_path, caption=f"Actual Product Packshot: {p.product_name}", use_container_width=True)
+                st.image(img_path, caption=f"Product Packshot: {p.product_name}", use_container_width=True)
             
-            st.markdown(f"""
-            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-top: -8px; margin-bottom: 12px; text-align: left;">
+            # Specs & Reasons Body
+            reasons_html = "".join([f"<div style='margin-bottom: 4px;'>{r}</div>" for r in match_res.reasons[:2]])
+            st.markdown(_html(f"""
+            <div style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-bottom: 12px; text-align: left; box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
                 <div style="font-weight: 900; font-size: 1.15rem; color: #0f172a; margin-bottom: 2px;">{p.product_name}</div>
                 <div style="font-size: 0.78rem; font-weight: 700; color: #059669; margin-bottom: 8px;">{p.product_category} • {p.biological_class}</div>
                 
@@ -390,15 +398,15 @@ def render_biologicals_section_ui(
                 </div>
 
                 <div style="font-size: 0.78rem; color: #334155; line-height: 1.4; margin-bottom: 8px;">
-                    <b>Why this product:</b><br>
-                    {'<br>'.join(match_res.reasons[:2])}
+                    <div style="font-weight: 800; color: #0f172a; margin-bottom: 4px;">Why this product:</div>
+                    {reasons_html}
                 </div>
 
                 <div style="font-size: 0.72rem; color: #64748b; border-top: 1px dashed #cbd5e1; padding-top: 6px;">
                     <b>Source:</b> {p.source_document} ({p.source_page})
                 </div>
             </div>
-            """, unsafe_allow_html=True)
+            """), unsafe_allow_html=True)
             
             # Action button to select for decision & sync
             if st.button(f"🎯 Select {p.product_name.split()[0]} as Active Treatment", key=f"btn_sel_bio_{p.product_id}", use_container_width=True):
@@ -410,14 +418,14 @@ def render_biologicals_section_ui(
     st.markdown("---")
 
     # 3. INTERACTIVE SEARCH & FULL PRODUCT CATALOGUE WITH FILTERING
-    st.markdown("""
+    st.markdown(_html("""
     <div style="font-size: 1.22rem; font-weight: 900; color: #064e3b; margin-bottom: 4px;">
         📚 Complete Verified Biologicals Product Catalogue (19 Products)
     </div>
     <div style="font-size: 0.88rem; color: #475569; margin-bottom: 14px;">
         Filter by Organization, Biological Class, or Crop Compatibility. Every product features authentic technical documentation and packshots:
     </div>
-    """, unsafe_allow_html=True)
+    """), unsafe_allow_html=True)
 
     col_flt1, col_flt2, col_flt3 = st.columns([1.2, 1.2, 1.4])
     with col_flt1:
@@ -483,14 +491,14 @@ def render_biologicals_section_ui(
     st.markdown("---")
 
     # 4. FIELD APPLICATION LOGGER & CAUSAL INTEGRATION BRIDGE
-    st.markdown("""
+    st.markdown(_html("""
     <div style="font-size: 1.15rem; font-weight: 900; color: #064e3b; margin-bottom: 4px;">
         📝 Field Treatment Record & Closed-Loop Attribution Bridge
     </div>
     <div style="font-size: 0.86rem; color: #475569; margin-bottom: 12px;">
         Record the verified biological application for this field. Synchronizes with <b>Yield Predictor</b>, <b>Cost of Cultivation</b>, and <b>Farm Memory</b>:
     </div>
-    """, unsafe_allow_html=True)
+    """), unsafe_allow_html=True)
 
     with st.form("bio_app_log_form"):
         col_log1, col_log2, col_log3 = st.columns(3)
@@ -540,16 +548,16 @@ def _render_detailed_product_card(match_res: ProductMatchResult, lang: str, t: A
     else:
         org_badge = "<span style='background:#fffbeb; color:#b45309; border:1px solid #fef3c7; font-size:0.68rem; font-weight:800; padding:2px 8px; border-radius:6px;'>KRIBHCO COOPERATIVE BENCHMARK</span>"
 
-    st.markdown(f"""
-    <div style="background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 14px; padding: 16px; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+    st.markdown(_html(f"""
+    <div style="background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 14px; padding: 14px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
             {org_badge}
             <span style="background: {match_res.compatibility_color}; color: white; font-size: 0.68rem; font-weight: 800; padding: 2px 8px; border-radius: 6px;">{match_res.compatibility_badge}</span>
         </div>
-        <div style="font-weight: 900; font-size: 1.20rem; color: #0f172a; margin-bottom: 2px;">{p.product_name}</div>
-        <div style="font-size: 0.80rem; font-weight: 700; color: #047857; margin-bottom: 10px;">{p.product_category} • {p.biological_class}</div>
+        <div style="font-weight: 900; font-size: 1.18rem; color: #0f172a; margin-bottom: 2px;">{p.product_name}</div>
+        <div style="font-size: 0.78rem; font-weight: 700; color: #047857;">{p.product_category} • {p.biological_class}</div>
     </div>
-    """, unsafe_allow_html=True)
+    """), unsafe_allow_html=True)
     
     col_card_img, col_card_info = st.columns([1, 1.4])
     with col_card_img:
@@ -559,18 +567,18 @@ def _render_detailed_product_card(match_res: ProductMatchResult, lang: str, t: A
             st.info("Product Packshot Loading...")
             
     with col_card_info:
-        st.markdown(f"""
-        <div style="font-size: 0.80rem; color: #1e293b; line-height: 1.45;">
+        st.markdown(_html(f"""
+        <div style="font-size: 0.80rem; color: #1e293b; line-height: 1.45; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px;">
             <div><b>Active Components:</b><br><span style="color:#475569;">{p.active_components}</span></div>
             <div style="margin-top: 6px;"><b>Documented Rate:</b> <span style="color:#047857; font-weight:800;">{p.application_rate}</span></div>
             <div style="margin-top: 4px;"><b>Application Timing:</b> <span style="color:#334155;">{p.application_stage}</span></div>
             <div style="margin-top: 4px;"><b>Target Crops:</b> <span style="color:#64748b;">{', '.join(p.target_crops[:4])}</span></div>
             <div style="margin-top: 4px;"><b>Target Stress:</b> <span style="color:#b45309; font-weight:600;">{', '.join(p.target_stress[:2])}</span></div>
         </div>
-        """, unsafe_allow_html=True)
+        """), unsafe_allow_html=True)
         
     with st.expander(f"📖 View Official Evidence: {p.product_name} ({p.source_document})", expanded=False):
-        st.markdown(f"""
+        st.markdown(_html(f"""
         <div style="font-size: 0.82rem; color: #1e293b; line-height: 1.5; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px;">
             <div style="color: #047857; font-weight: 800; font-size: 0.90rem; margin-bottom: 6px;">🏛️ Official Document Citation & Trial Metadata</div>
             <div><b>Source Document:</b> <code>{p.source_document}</code> ({p.source_page})</div>
@@ -581,4 +589,4 @@ def _render_detailed_product_card(match_res: ProductMatchResult, lang: str, t: A
             <div style="margin-top: 6px;"><b>Tank Mix & Compatibility:</b><br>{p.tank_mix_information}</div>
             <div style="margin-top: 6px;"><b>Official Reference URL:</b> <a href="{p.source_url}" target="_blank">{p.source_url}</a></div>
         </div>
-        """, unsafe_allow_html=True)
+        """), unsafe_allow_html=True)

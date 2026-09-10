@@ -49,6 +49,17 @@ CROP_TAXONOMY_MAP = {
     "Wheat": "Wheat"
 }
 
+def get_crop_proxy(c_name: str) -> str:
+    """Resolves arbitrary crop strings to canonical 12 crop taxonomy."""
+    c_str = str(c_name).strip()
+    if c_str in CROP_TAXONOMY_MAP:
+        return CROP_TAXONOMY_MAP[c_str]
+    c_low = c_str.lower()
+    for k, v in CROP_TAXONOMY_MAP.items():
+        if k.lower() in c_low or c_low in k.lower():
+            return v
+    return "Soybean"
+
 # Regional One-Hot Alignment
 REGION_ONE_HOT_MAP = {
     "Maharashtra & Vidarbha (Deccan)": "region_Maharashtra & Vidarbha (Deccan)",
