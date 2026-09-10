@@ -352,6 +352,9 @@ def render_cost_of_cultivation_tab(field_ctx: Any, model: Any, artifacts: Any, l
     bio_cost_val = float(getattr(field_ctx, 'treatment_cost', getattr(field_ctx, 'product_cost_per_ha', 1200.0)))
     bio_delta_val = float(getattr(field_ctx, 'biological_yield_lift', 3.8))
 
+    from services.localization import t
+    st.markdown(f'<div style="background:#ecfdf5; border:1.5px solid #a7f3d0; border-radius:12px; padding:12px 18px; margin-bottom:14px; color:#064e3b; font-size:1.15rem; font-weight:800; display:flex; align-items:center; gap:8px;"><span>❓ {t("q_cost", lang)}</span></div>', unsafe_allow_html=True)
+
     st.markdown("""
     <div style="background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 16px; padding: 18px 24px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.04);">
         <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
@@ -513,10 +516,12 @@ def render_cost_of_cultivation_tab(field_ctx: Any, model: Any, artifacts: Any, l
 
     st.markdown("<hr style='margin-top:14px; margin-bottom:14px;'>", unsafe_allow_html=True)
     
+    from services.localization import t
+
     # Total Cost Rows Display
     t_col1, t_col2, t_col3, t_col4 = st.columns([2.2, 1.4, 1.4, 1.6])
     with t_col1:
-        st.markdown("<div style='font-size:1.08rem; font-weight:900; color:#064e3b;'>TOTAL FARM CULTIVATION COST (C2)</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='font-size:1.08rem; font-weight:900; color:#064e3b;'>{t('cost_c2_total', lang)}</div>", unsafe_allow_html=True)
     with t_col2:
         st.markdown(f"<div style='font-size:1.15rem; font-weight:900; color:#047857;'>₹{farmer_concepts['cost_c2']:,.0f}</div>", unsafe_allow_html=True)
     with t_col3:
@@ -553,7 +558,7 @@ def render_cost_of_cultivation_tab(field_ctx: Any, model: Any, artifacts: Any, l
     st.markdown("""
     <div style="background: linear-gradient(135deg, #ffffff 0%, #ecfdf5 100%); border: 2px solid #059669; border-radius: 18px; padding: 22px 26px; margin-bottom: 22px; box-shadow: 0 10px 25px -5px rgba(5,150,105,0.12);">
         <div style="font-size: 0.82rem; font-weight: 900; color: #047857; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">
-            📢 Executive Verdict & Synchronized Economics
+            {verdict_title}
         </div>
         <div style="font-size: 1.30rem; font-weight: 800; color: #0f172a; line-height: 1.45; margin-bottom: 12px;">
             Your cultivation cost is <span style="color: #047857; font-weight: 900;">₹{cost_acre:,.0f} / acre</span> (₹{cost_ha:,.0f} / ha; total ₹{total_farm:,.0f} for {acres} acres).
@@ -561,11 +566,13 @@ def render_cost_of_cultivation_tab(field_ctx: Any, model: Any, artifacts: Any, l
             and expected net return is <span style="color: #059669; font-weight: 900;">₹{net_return:,.0f} / acre</span>.
         </div>
         <div style="background: #ffffff; border: 1px solid #a7f3d0; border-radius: 12px; padding: 12px 16px; font-size: 0.95rem; color: #065f46; font-weight: 650;">
-            🔬 <b>Biological Attribution:</b> Syngenta Quantis / Biostimulant is estimated to add <b>+{bio_delta:.2f} qtl/acre</b> yield boost, equivalent to <b>+₹{add_rev:,.0f}</b> additional revenue. 
+            🔬 <b>{bio_attr_lbl}</b> Syngenta Quantis / Biostimulant is estimated to add <b>+{bio_delta:.2f} qtl/acre</b> yield boost, equivalent to <b>+₹{add_rev:,.0f}</b> additional revenue. 
             After biological treatment cost of <b>₹{bio_cost:,.0f}</b>, estimated incremental benefit is <b>+₹{inc_net:,.0f} / acre (Biological ROI: {roi:.0f}%)</b>.
         </div>
     </div>
     """.format(
+        verdict_title=t('cost_exec_verdict', lang),
+        bio_attr_lbl=t('cost_bio_attr', lang),
         cost_acre=cost_per_acre,
         cost_ha=cost_per_ha,
         total_farm=total_farm_cost_all_acres,
@@ -584,9 +591,9 @@ def render_cost_of_cultivation_tab(field_ctx: Any, model: Any, artifacts: Any, l
     # ══════════════════════════════════════════════════════════════════════
     # 📊 CACP BENCHMARK VS MY FARM ANALYSIS & COST DRIVERS
     # ══════════════════════════════════════════════════════════════════════
-    st.markdown("""
+    st.markdown(f"""
     <div style="font-size: 1.15rem; font-weight: 900; color: #064e3b; margin-bottom: 12px;">
-        📊 CACP Benchmark vs My Farm Cost Driver Analysis
+        {t('cost_driver_analysis', lang)}
     </div>
     """, unsafe_allow_html=True)
 

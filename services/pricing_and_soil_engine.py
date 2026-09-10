@@ -1008,19 +1008,26 @@ def render_soil_health_card_tab(region: str = None, crop: str = None, farm_lat: 
     shc = get_regional_soil_health_card(reg_name, lat=lat_val, lon=lon_val, location_name=loc_name)
     params = shc.get("parameters", {})
 
+    title_lbl = t('soil_card_main_title', lang)
+    badge_lbl = t('soil_card_govt_badge', lang)
+    heading_lbl = t('soil_gauges_heading', lang)
+    caption_lbl = t('soil_gauges_caption', lang)
+
+    st.markdown(f'<div style="background:#ecfdf5; border:1.5px solid #a7f3d0; border-radius:12px; padding:12px 18px; margin-bottom:14px; color:#064e3b; font-size:1.15rem; font-weight:800; display:flex; align-items:center; gap:8px;"><span>❓ {t("q_soil", lang)}</span></div>', unsafe_allow_html=True)
+
     st.markdown(f"""
     <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); border: 1.5px solid #a7f3d0; border-radius: 16px; padding: 18px 22px; margin-bottom: 16px;">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
             <div>
                 <div style="font-size: 1.25rem; font-weight: 900; color: #064e3b; display: flex; align-items: center; gap: 8px;">
-                    🧪 12-Parameter National Soil Health Card (soilhealth.dac.gov.in)
+                    {title_lbl}
                 </div>
                 <div style="font-size: 0.85rem; color: #166534; font-weight: 600; margin-top: 3px;">
                     Sample ID: <code>{shc.get('sample_id', 'SHC/2026/REG')}</code> • {shc.get('testing_lab', 'Soil Testing Lab')}
                 </div>
             </div>
             <span style="background: #ecfdf5; border: 1px solid #86efac; color: #047857; font-size: 0.75rem; font-weight: 800; padding: 4px 12px; border-radius: 20px;">
-                🏛️ Ministry of Agriculture Standard
+                {badge_lbl}
             </span>
         </div>
     </div>
@@ -1040,8 +1047,8 @@ def render_soil_health_card_tab(region: str = None, crop: str = None, farm_lat: 
     st.markdown(render_actionable_agronomy_cockpit(n_val, p_val, k_val, zn_val, b_val, ph_val, oc_val, profit_val), unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("#### 📊 12-Parameter Government Laboratory Soil Testing Gauges")
-    st.caption("Official Soil Health Card (soilhealth.dac.gov.in) percentage distribution across High, Medium, Deficient soil samples in selected agro-ecological zone:")
+    st.markdown(f"#### {heading_lbl}")
+    st.caption(caption_lbl)
 
     # 12 parameter donut cards grid
     param_keys = list(params.keys())

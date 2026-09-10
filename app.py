@@ -263,13 +263,13 @@ if not st.session_state.get('_main_css_injected'):
     .stTabs [data-baseweb="tab-list"],
     div[data-testid="stTabs"] [data-baseweb="tab-list"],
     div[role="tablist"] {
-        gap: 10px !important;
+        gap: 8px !important;
         background-color: #f1f5f9 !important;
         padding: 8px 10px !important;
-        border-radius: 16px !important;
+        border-radius: 14px !important;
         border: 2px solid #cbd5e1 !important;
-        margin-bottom: 24px !important;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06) !important;
+        margin-bottom: 20px !important;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05) !important;
         overflow-x: auto !important;
         -webkit-overflow-scrolling: touch !important;
         display: flex !important;
@@ -282,14 +282,14 @@ if not st.session_state.get('_main_css_injected'):
     button[role="tab"] {
         background-color: #ffffff !important;
         border: 2px solid #cbd5e1 !important;
-        border-radius: 12px !important;
-        padding: 12px 22px !important;
-        min-height: 52px !important;
-        font-weight: 700 !important;
-        font-size: 1.02rem !important;
-        color: #1e293b !important;
-        transition: all 0.18s ease-in-out !important;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06) !important;
+        border-radius: 10px !important;
+        padding: 10px 18px !important;
+        min-height: 48px !important;
+        font-weight: 800 !important;
+        font-size: 1.05rem !important;
+        color: #0f172a !important;
+        transition: all 0.15s ease-in-out !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04) !important;
         white-space: nowrap !important;
         display: inline-flex !important;
         align-items: center !important;
@@ -298,38 +298,61 @@ if not st.session_state.get('_main_css_injected'):
         flex-shrink: 0 !important;
     }
 
+    /* Target inner text elements (p, span, div) inside tab buttons to prevent Streamlit default 14px override */
+    .stTabs [data-baseweb="tab"] *,
+    button[data-baseweb="tab"] *,
+    div[data-testid="stTabs"] button[role="tab"] *,
+    div[data-testid="stTabs"] button[role="tab"] p,
+    div[data-testid="stTabs"] button[role="tab"] span,
+    div[data-testid="stTabs"] button[role="tab"] div,
+    button[role="tab"] *,
+    button[role="tab"] p,
+    button[role="tab"] span,
+    button[role="tab"] div {
+        font-size: 1.05rem !important;
+        font-weight: 800 !important;
+        color: #0f172a !important;
+        line-height: 1.25 !important;
+        letter-spacing: 0.01em !important;
+    }
+
     .stTabs [data-baseweb="tab"]:hover,
     button[data-baseweb="tab"]:hover,
     button[role="tab"]:hover {
         background-color: #f8fafc !important;
         border-color: #047857 !important;
-        color: #047857 !important;
-        transform: translateY(-2px) !important;
         box-shadow: 0 4px 10px rgba(4, 120, 87, 0.15) !important;
     }
 
     .stTabs [data-baseweb="tab"][aria-selected="true"],
     button[data-baseweb="tab"][aria-selected="true"],
-    button[role="tab"][aria-selected="true"] {
-        background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
-        border: 2px solid #065f46 !important;
-        box-shadow: 0 4px 14px rgba(4, 120, 87, 0.4) !important;
+    button[role="tab"][aria-selected="true"],
+    div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] {
+        background: #059669 !important;
+        border: 2px solid #047857 !important;
+        box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35) !important;
     }
 
     .stTabs [data-baseweb="tab"][aria-selected="true"] *,
     button[data-baseweb="tab"][aria-selected="true"] *,
-    button[role="tab"][aria-selected="true"] * {
+    button[role="tab"][aria-selected="true"] *,
+    div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] p,
+    div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] span,
+    div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] div {
         color: #ffffff !important;
-        font-weight: 800 !important;
-        font-size: 1.02rem !important;
+        font-weight: 900 !important;
+        font-size: 1.05rem !important;
     }
 
     .stTabs [data-baseweb="tab"][aria-selected="false"] *,
     button[data-baseweb="tab"][aria-selected="false"] *,
-    button[role="tab"][aria-selected="false"] * {
-        color: #1e293b !important;
-        font-weight: 700 !important;
-        font-size: 1.02rem !important;
+    button[role="tab"][aria-selected="false"] *,
+    div[data-testid="stTabs"] button[role="tab"][aria-selected="false"] p,
+    div[data-testid="stTabs"] button[role="tab"][aria-selected="false"] span,
+    div[data-testid="stTabs"] button[role="tab"][aria-selected="false"] div {
+        color: #0f172a !important;
+        font-weight: 800 !important;
+        font-size: 1.05rem !important;
     }
 
     .stTabs [data-baseweb="tab-highlight"],
@@ -1058,6 +1081,7 @@ def main():
     # SECTION 1: 🌱 FIELD (Crop, Variety, Location, Sowing Date & Agmarknet Grid)
     # ═════════════════════════════════════════════════════════════════════════
     with tab_field:
+        st.markdown(f'<div style="background:#ecfdf5; border:1.5px solid #a7f3d0; border-radius:12px; padding:12px 18px; margin-bottom:14px; color:#064e3b; font-size:1.15rem; font-weight:800; display:flex; align-items:center; gap:8px;"><span>❓ {t("q_field", lang)}</span></div>', unsafe_allow_html=True)
         st.markdown("""
         <div style="margin-top: 10px; margin-bottom: 12px;">
             <div style="font-size: 1.35rem; font-weight: 900; color: #064e3b; display: flex; align-items: center; gap: 8px;">
@@ -1227,6 +1251,7 @@ def main():
     # SECTION 3: 🌦️ WEATHER & CLIMATE (OpenWeather, Satellite Radar & KALP)
     # ═════════════════════════════════════════════════════════════════════════
     with tab_weather:
+        st.markdown(f'<div style="background:#ecfdf5; border:1.5px solid #a7f3d0; border-radius:12px; padding:12px 18px; margin-bottom:14px; color:#064e3b; font-size:1.15rem; font-weight:800; display:flex; align-items:center; gap:8px;"><span>❓ {t("q_weather", lang)}</span></div>', unsafe_allow_html=True)
         st.subheader(t("tab1_heading", lang))
         st.markdown(f"""
         <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 12px; padding: 12px 16px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
@@ -1398,6 +1423,7 @@ def main():
     # SECTION 4: 🚜 MANAGEMENT (LeafVision Scanner & Farm Ledger)
     # ═════════════════════════════════════════════════════════════════════════
     with tab_management:
+        st.markdown(f'<div style="background:#ecfdf5; border:1.5px solid #a7f3d0; border-radius:12px; padding:12px 18px; margin-bottom:14px; color:#064e3b; font-size:1.15rem; font-weight:800; display:flex; align-items:center; gap:8px;"><span>❓ {t("q_management", lang)}</span></div>', unsafe_allow_html=True)
         st.markdown("### 🚜 Agronomic Management Cockpit & Foliar Pathology")
         
         # Management Practice Controls
@@ -1631,6 +1657,7 @@ def main():
     # SECTION 5: 🧬 BIOLOGICALS (Syngenta Quantis Protocol & Stress Priming)
     # ═════════════════════════════════════════════════════════════════════════
     with tab_biologicals:
+        st.markdown(f'<div style="background:#ecfdf5; border:1.5px solid #a7f3d0; border-radius:12px; padding:12px 18px; margin-bottom:14px; color:#064e3b; font-size:1.15rem; font-weight:800; display:flex; align-items:center; gap:8px;"><span>❓ {t("q_biologicals", lang)}</span></div>', unsafe_allow_html=True)
         st.markdown(f"### 🧬 Syngenta Biologicals & Abiotic Stress Priming")
         
         col_b1, col_b2 = st.columns(2)
@@ -1667,6 +1694,7 @@ def main():
     # SECTION 6: 🌾 YIELD & ATTRIBUTES (ML Predictor & SHAP Attribution)
     # ═════════════════════════════════════════════════════════════════════════
     with tab_yield:
+        st.markdown(f'<div style="background:#ecfdf5; border:1.5px solid #a7f3d0; border-radius:12px; padding:12px 18px; margin-bottom:14px; color:#064e3b; font-size:1.15rem; font-weight:800; display:flex; align-items:center; gap:8px;"><span>❓ {t("q_yield", lang)}</span></div>', unsafe_allow_html=True)
         st.subheader(t("tab2_heading", lang))
         st.caption(t("tab2_caption", lang))
 
@@ -1780,6 +1808,7 @@ def main():
     # SECTION 8: 📊 IMPACT & ROI (Central PS-07 Decision Card & 5 Scenarios)
     # ═════════════════════════════════════════════════════════════════════════
     with tab_impact:
+        st.markdown(f'<div style="background:#ecfdf5; border:1.5px solid #a7f3d0; border-radius:12px; padding:12px 18px; margin-bottom:14px; color:#064e3b; font-size:1.15rem; font-weight:800; display:flex; align-items:center; gap:8px;"><span>❓ {t("q_impact", lang)}</span></div>', unsafe_allow_html=True)
         col_hero1, col_hero2 = st.columns([1.6, 1.4])
         with col_hero1:
             st.markdown(f'<div class="decision-title">{t("decision_field_title", lang, region=localized_reg, crop=localized_active_crop)}</div>', unsafe_allow_html=True)
@@ -1915,6 +1944,7 @@ def main():
     # SECTION 9: 🤖 AI CHAT (Gemini 2.5 Flash Multilingual Agronomist)
     # ═════════════════════════════════════════════════════════════════════════
     with tab_ai:
+        st.markdown(f'<div style="background:#ecfdf5; border:1.5px solid #a7f3d0; border-radius:12px; padding:12px 18px; margin-bottom:14px; color:#064e3b; font-size:1.15rem; font-weight:800; display:flex; align-items:center; gap:8px;"><span>❓ {t("q_ai", lang)}</span></div>', unsafe_allow_html=True)
         gemini_service.render_gemini_chat_interface(
             lang=lang, crop=crop, region=region, ow_live=ow_live,
             mandi_info=mandi_info, pred_actual=pred_actual, yield_delta=yield_delta,
