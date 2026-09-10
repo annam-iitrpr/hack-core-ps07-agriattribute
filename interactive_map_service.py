@@ -29,6 +29,8 @@ def generate_interactive_weather_map_html(
     active_crop: str = "Soybean",
     weather_info: dict = None,
     lang: str = "en",
+    location_name: str = None,
+    zoom: int = 11,
     *args, 
     **kwargs
 ) -> str:
@@ -54,6 +56,7 @@ def generate_interactive_weather_map_html(
     clouds = w.get("cloud_cover_pct", 15)
     desc = w.get("description", "Partly Cloudy")
     wind_deg = w.get("wind_deg", 120)
+    loc_display = location_name if location_name else region_name
 
     # Multilingual button labels
     labels = {
@@ -334,7 +337,7 @@ def generate_interactive_weather_map_html(
 </head>
 <body>
     <div class="map-banner">
-        <div id="mapBannerTitle">🛰️ <b>Live Doppler Radar, Cloud Cover & Wind Drift Engine</b> — {region_name}</div>
+        <div id="mapBannerTitle">🛰️ <b>Live Doppler Radar & Farm Telemetry</b> — {loc_display} ({region_name})</div>
         <div style="background:rgba(255,255,255,0.22); padding:3px 10px; border-radius:12px; font-size:0.75rem;">
             {t_ui['banner_sub']}
         </div>
@@ -344,7 +347,7 @@ def generate_interactive_weather_map_html(
         <!-- Floating Live Weather & Wind HUD -->
         <div class="weather-hud" id="weatherHud">
             <div style="font-weight: 800; font-size: 0.85rem; color: #a7f3d0; margin-bottom: 6px; display:flex; justify-content:space-between; align-items:center;">
-                <span id="hudLocationTitle">📍 {t_ui['live_field']}: {region_name.upper()}</span>
+                <span id="hudLocationTitle">📍 {t_ui['live_field']}: {loc_display.upper()}</span>
                 <span id="hudTemp" style="font-size: 1.15rem; color: #ffffff;">{temp}°C</span>
             </div>
             <div class="hud-row">
@@ -390,7 +393,7 @@ def generate_interactive_weather_map_html(
         var apiKey = "{api_key}";
         var map = L.map('map', {{
             center: [{lat}, {lon}],
-            zoom: 7,
+            zoom: {zoom},
             zoomControl: true
         }});
 

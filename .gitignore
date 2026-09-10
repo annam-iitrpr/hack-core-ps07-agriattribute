@@ -11,3 +11,5 @@ scratch/
 venv/
 .streamlit/secrets.toml
 
+
+.venv/

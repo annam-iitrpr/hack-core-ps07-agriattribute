@@ -79,8 +79,9 @@ try:
     import streamlit as st
     cache_agmark = st.cache_data(ttl=600, show_spinner=False)
 except Exception:
-    def cache_agmark(f):
-        return f
+    import streamlit as st
+def cache_agmark(f):
+    return st.cache_data(ttl=3600)(f)
 
 
 def _safe_float(val, fallback=0.0):

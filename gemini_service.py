@@ -293,7 +293,7 @@ def ask_gemini_multimodal(
     if api_key:
         endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
         try:
-            res = requests.post(endpoint, json=payload, headers=headers, timeout=10)
+            res = requests.post(endpoint, json=payload, headers=headers, timeout=30)
             if res.status_code == 200:
                 data = res.json()
                 reply = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")

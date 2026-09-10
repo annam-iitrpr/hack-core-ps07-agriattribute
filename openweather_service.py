@@ -53,8 +53,9 @@ try:
     import streamlit as st
     cache_weather = st.cache_data(ttl=300, show_spinner=False)
 except Exception:
-    def cache_weather(f):
-        return f
+    import streamlit as st
+def cache_weather(f):
+    return st.cache_data(ttl=900)(f)
 
 
 @cache_weather

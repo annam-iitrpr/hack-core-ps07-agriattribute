@@ -5,15 +5,15 @@
 > **Team:** Team 15 BHOOMI  
 > **Members:** Soham Kadu ([@soham0777](https://github.com/soham0777)), Bhakti Ajay Kadam ([@Bhakti2709](https://github.com/Bhakti2709)), Singireddy Prabhumitrareddy ([@prabhumitra123-debug](https://github.com/prabhumitra123-debug))  
 > **Target Organization:** [annam-iitrpr](https://github.com/annam-iitrpr)  
-> **Current Repository:** [soham0777/hack-core-ps07-agriattribute](https://github.com/soham0777/hack-core-ps07-agriattribute)  
+> **Current Repository:** [annam-iitrpr/hack-core-ps07-agriattribute](https://github.com/annam-iitrpr/hack-core-ps07-agriattribute)  
 
-[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/deploy?repository=soham0777/hack-core-ps07-agriattribute&branch=main&mainModule=app.py)
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/deploy?repository=annam-iitrpr/hack-core-ps07-agriattribute&branch=main&mainModule=app.py)
 
 ---
 
 ### 🚀 Zero-Setup Live Cloud Access
 The platform is 100% cloud-ready. You do not need to install Python, configure environments, or run local servers:
-- **1-Click Streamlit Cloud Launch:** [Launch AgriAttribute on Streamlit Cloud](https://share.streamlit.io/deploy?repository=soham0777/hack-core-ps07-agriattribute&branch=main&mainModule=app.py)
+- **1-Click Streamlit Cloud Launch:** [Launch AgriAttribute on Streamlit Cloud](https://share.streamlit.io/deploy?repository=annam-iitrpr/hack-core-ps07-agriattribute&branch=main&mainModule=app.py)
 - **Live Interactive Demo:** Anyone can access the full interactive suite in real-time. All AI attribution, disease diagnosis, Agmarknet 2.0 telemetry, and live weather run instantly in the browser.
 
 ## The Problem We Wanted to Solve
@@ -44,7 +44,7 @@ Traditional agricultural apps either give generic advice or dump raw statistical
 - **Plain-Language Financials:** Calculates gross revenue gain, product cost, net profit (₹/acre), and ROI percentage.
 - **1-Click WhatsApp Sharing & PDF:** Farmers can share their ROI summary directly on WhatsApp with local farmer groups or download a printable A4 advisory report.
 
-### 3. Agmarknet 2.0 Mandi Prices & MSP Tracker
+### 3. ANNAM.AI MCII Integrated Agmarknet 2.0 Marketplace
 - **Live APMC Spot Prices:** Real wholesale prices across 24 major Indian commodities (Soybean, Cotton, Paddy, Wheat, Mustard, Onion, etc.).
 - **Government MSP Comparison:** Flags whether current mandi prices are trading at a premium or discount relative to the official CACP 2024–25 Minimum Support Price.
 - **Sell vs. Hold Recommendations:** Evaluates 72-hour price momentum to help farmers decide whether to sell at the local mandi immediately or hold stock under warehouse receipts.
@@ -112,10 +112,11 @@ hack-core-ps07-agriattribute/
 ├── pricing_and_soil_engine.py     # Soil Health Card 12-parameter fertilizer calculator
 ├── interactive_map_service.py     # Interactive Leaflet weather & crop map
 ├── supabase_client.py             # Cloud database connection & Excel ledger exporter
-├── pdf_report.py                  # Downloadable printable A4 advisory PDF generator
-├── retrain_pipeline.py            # Drag-and-drop CSV model retraining pipeline
-├── train_model.py                 # Initial XGBoost and SHAP model training script
-├── data_generator.py              # Calibrated 12-crop Indian agricultural trial dataset
+├── tnau_service.py                # TNAU Agritech portal knowledge base loader
+├── annam_mcii_ui.py               # Agmarknet 2.0 UI components
+├── annam_mcii_service.py          # Agmarknet 2.0 API interaction and logic
+├── field_context.py               # Live location and field state management
+├── decision_simulator.py          # Level 3 Agronomic 5-Scenario Simulator
 ├── requirements.txt               # Pinned Python dependencies
 ├── .env.example                   # Template for API keys
 ├── README.md                      # This file
@@ -136,7 +137,7 @@ hack-core-ps07-agriattribute/
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/soham0777/hack-core-ps07-agriattribute.git
+git clone https://github.com/annam-iitrpr/hack-core-ps07-agriattribute.git
 cd hack-core-ps07-agriattribute
 ```
 
