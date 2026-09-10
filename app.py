@@ -51,6 +51,7 @@ from services import annam_mcii_ui
 from services import annam_mcii_service
 from services import field_context
 from services import decision_simulator
+from services import cost_of_cultivation_service
 
 # Centralized Localization Architecture
 from services.localization import (
@@ -970,9 +971,9 @@ def main():
 
     # ══════════════════════════════════════════════════════════════════════
     # HUMAN-CENTRIC NAVIGATION TABS (100% Localized & Synchronized)
-    tab_keys = ["tab_decision", "tab_annam", "tab_counter", "tab_disease", "tab_memory", "tab_prove", "tab_ai"]
+    tab_keys = ["tab_decision", "tab_annam", "tab_cost", "tab_counter", "tab_disease", "tab_memory", "tab_prove", "tab_ai"]
     # Amazon-style layout overrides localization for the top bar specifically (AI Chat placed at last)
-    tab_labels = ["☰ All", "Agmarknet 2.0", "Yield Predictor", "Disease Scanner", "Farm Ledger", "Attribution Proof", "💬 AI Chat"]
+    tab_labels = ["☰ All", "Agmarknet 2.0", "Cost of Cultivation", "Yield Predictor", "Disease Scanner", "Farm Ledger", "Attribution Proof", "💬 AI Chat"]
 
     curr_tab_idx = st.session_state.get('active_tab_idx', 0)
     if not (0 <= curr_tab_idx < len(tab_labels)):
@@ -983,7 +984,7 @@ def main():
     tab_nav_ver = st.session_state.get('tab_nav_version', 0)
 
     st.markdown('<div id="platform_main_tabs"></div>', unsafe_allow_html=True)
-    tab_decision, tab_annam, tab_counter, tab_disease, tab_memory, tab_prove, tab_ai = st.tabs(
+    tab_decision, tab_annam, tab_cost, tab_counter, tab_disease, tab_memory, tab_prove, tab_ai = st.tabs(
         tab_labels,
         default=default_tab,
         key=f"main_tab_strip_{tab_nav_ver}",
@@ -1316,6 +1317,10 @@ def main():
         )
         encoded_w_wa = urllib.parse.quote(weather_wa_text.encode('utf-8'))
         st.markdown(f'<a href="https://wa.me/?text={encoded_w_wa}" target="_blank" class="wa-button" style="width: 100%;">{t("share_weather_wa_btn", lang)}</a>', unsafe_allow_html=True)
+
+    # NEW ISOLATED MODULE: COST OF CULTIVATION (CACP BENCHMARKS & FARM ECONOMICS TWIN)
+    with tab_cost:
+        cost_of_cultivation_service.render_cost_of_cultivation_tab(field_ctx, model, artifacts, lang=lang)
 
     # TAB 2: COUNTERFACTUAL (ACT VS DO NOTHING)
     with tab_counter:
