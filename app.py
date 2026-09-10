@@ -1631,40 +1631,19 @@ def main():
             except Exception as e: st.info(f"Schema file: {e}")
 
     # ═════════════════════════════════════════════════════════════════════════
-    # SECTION 5: 🧬 BIOLOGICALS (Syngenta Quantis Protocol & Stress Priming)
+    # SECTION 5: 🧬 BIOLOGICALS (Authentic Dossiers & Evidence-Matched Protocol)
     # ═════════════════════════════════════════════════════════════════════════
     with tab_biologicals:
-        st.markdown(f"### 🧬 Syngenta Biologicals & Abiotic Stress Priming")
-        
-        col_b1, col_b2 = st.columns(2)
-        with col_b1:
-            st.markdown(f"""
-            <div style="background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%); border: 2px solid #10b981; border-radius: 18px; padding: 22px; box-shadow: 0 4px 16px rgba(16,185,129,0.12);">
-                <div style="font-size: 0.8rem; text-transform: uppercase; font-weight: 800; color: #047857;">Recommended Biostimulant Protocol</div>
-                <div style="font-size: 2.1rem; font-weight: 900; color: #047857; margin: 6px 0;">{bio_product}</div>
-                <div style="font-size: 1.1rem; font-weight: 700; color: #065f46;">Dosage: <strong>{dosage} L/acre</strong> (2.0 L/ha)</div>
-                <div style="margin-top: 14px; background: #ffffff; border-left: 3px solid #059669; padding: 10px 12px; border-radius: 8px; font-size: 0.82rem; color: #1e293b;">
-                    🧬 <strong>Mode of Action:</strong> Amino acids, peptides & osmolytes prime crop cellular pathways against thermal heat stress ({heat_stress} days forecast) and drought shocks.
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-            
-        with col_b2:
-            st.markdown(pricing_and_soil_engine.render_disease_risk_card(
-                dis_risk, heat_stress, rainfall, ndvi, localized_active_crop
-            ), unsafe_allow_html=True)
+        from services import biological_match_engine
+        biological_match_engine.render_biologicals_section_ui(
+            field_ctx=field_ctx,
+            ow_live=ow_live,
+            ow_5day=ow_5day,
+            disease_risk_pct=dis_risk,
+            lang=lang,
+            t_func=t
+        )
 
-        st.markdown("<br>", unsafe_allow_html=True)
-        st.markdown(f"""
-        <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 14px; padding: 18px;">
-            <h4 style="color: #047857; margin-bottom: 8px;">🛡️ Spray Window Verification</h4>
-            <div style="font-size: 0.90rem; color: #334155; line-height: 1.5;">
-                Wind speed is <strong>{ow_live['wind_speed_kmh']} km/h</strong> ({t("wind_optimal", lang) if float(ow_live.get('wind_speed_kmh', 10)) < 15 else t("wind_moderate", lang)}).
-                24h rain probability is <strong>{ow_5day[0]['rain_prob']}%</strong>.
-                Ideal foliar absorption window is active.
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
 
     # ═════════════════════════════════════════════════════════════════════════
     # SECTION 6: 🌾 YIELD & ATTRIBUTES (ML Predictor & SHAP Attribution)
