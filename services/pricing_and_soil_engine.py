@@ -988,3 +988,60 @@ def get_human_centric_agronomy_advisory(crop: str, heat_stress: int, temp: float
         "canopy_absorption": canopy_absorption.get(code, canopy_absorption["en"]),
         "soil_moisture": soil_moisture.get(code, soil_moisture["en"])
     }
+
+def render_soil_health_card_tab(region: str, crop: str, farm_lat: float, farm_lon: float, farm_name: str, lang: str = "English", net_profit: float = 0.0, t = None):
+    """
+    Renders the complete 12-Parameter Soil Health Card dashboard, NPK Advisor, and Agronomy Cockpit for the 🧪 SOIL tab.
+    """
+    import streamlit as st
+    if t is None:
+        def t(key, lang=None, **kwargs): return key
+
+    shc = get_regional_soil_health_card(region, lat=farm_lat, lon=farm_lon, location_name=farm_name)
+    params = shc["parameters"]
+
+    st.markdown(f"""
+    <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); border: 1.5px solid #a7f3d0; border-radius: 16px; padding: 18px 22px; margin-bottom: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div>
+                <div style="font-size: 1.25rem; font-weight: 900; color: #064e3b; display: flex; align-items: center; gap: 8px;">
+                    🧪 12-Parameter National Soil Health Card (soilhealth.dac.gov.in)
+                </div>
+                <div style="font-size: 0.85rem; color: #166534; font-weight: 600; margin-top: 3px;">
+                    Sample ID: <code>{shc.get('sample_id', 'SHC/2026/REG')}</code> • {shc.get('testing_lab', 'Soil Testing Lab')}
+                </div>
+            </div>
+            <span style="background: #ecfdf5; border: 1px solid #86efac; color: #047857; font-size: 0.75rem; font-weight: 800; padding: 4px 12px; border-radius: 20px;">
+                🏛️ Ministry of Agriculture Standard
+            </span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Extract nutrient values
+    n_val = params.get("Nitrogen (N)", {}).get("val", 240.0)
+    p_val = params.get("Phosphorus (P)", {}).get("val", 22.0)
+    k_val = params.get("Potassium (K)", {}).get("val", 185.0)
+    zn_val = params.get("Zinc (Zn)", {}).get("val", 0.45)
+    b_val = params.get("Boron (B)", {}).get("val", 0.40)
+    ph_val = params.get("Soil pH", {}).get("val", 7.6)
+    oc_val = params.get("Organic Carbon (OC)", {}).get("val", 4.8)
+
+    # Render Smart NPK & Agronomy Cockpit
+    st.markdown(render_smart_npk_card(crop, n_val, p_val, k_val), unsafe_allow_html=True)
+    st.markdown(render_actionable_agronomy_cockpit(n_val, p_val, k_val, zn_val, b_val, ph_val, oc_val, net_profit), unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("#### 📊 12-Parameter Government Laboratory Soil Testing Gauges")
+    st.caption("Official Soil Health Card (soilhealth.dac.gov.in) percentage distribution across High, Medium, Deficient soil samples in selected agro-ecological zone:")
+
+    # 12 parameter donut cards grid
+    param_keys = list(params.keys())
+    cols = st.columns(4)
+    for idx, pk in enumerate(param_keys):
+        p_data = params[pk]
+        cfg = get_shc_parameter_card_config(pk, p_data, region)
+        donut_html = render_shc_donut_html(cfg)
+        with cols[idx % 4]:
+            st.markdown(donut_html, unsafe_allow_html=True)
+
