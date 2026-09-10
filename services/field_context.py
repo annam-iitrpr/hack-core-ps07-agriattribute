@@ -145,6 +145,16 @@ class FieldContext:
     irrigation_type: str = "Drip / Micro-irrigation" # "Rainfed", "Canal / Flood", "Drip / Micro-irrigation"
     treatment_timing: str = "Optimal (Early Morning / High Humidity)"
     disease_pressure: str = "Low / Monitored"
+    irrigation_frequency_days: int = 7
+    irrigation_adequacy: str = "Optimal (Adequate Moisture)"
+    fertilizer_npk_ratio_pct: int = 100
+    organic_manure_t_acre: float = 2.5
+    crop_protection_status: str = "Prophylactic / Early Threshold"
+    sowing_date_str: str = "2026-06-25"
+    seed_variety_type: str = "High-Yielding Certified Hybrid"
+    tillage_practice: str = "Minimum Tillage (1 Plough + 1 Rotavator)"
+    management_score: int = 88
+    management_profile: Optional[Dict[str, Any]] = None
 
     # 8. Biological Intervention Protocol
     bio_applied: bool = True
@@ -176,6 +186,12 @@ class FieldContext:
             return getattr(self, "product_cost_per_ha", 1200.0)
         elif name == "mandi_price":
             return getattr(self, "crop_price", 5499.0)
+        elif name == "irrigation_method":
+            return getattr(self, "irrigation_type", "Drip / Micro-irrigation")
+        elif name == "management_score":
+            return 88
+        elif name == "fertilizer_npk_ratio_pct":
+            return 100
         return None
 
     def to_feature_dataframe(
@@ -308,7 +324,8 @@ def build_field_context(
     bio_dosage: float = 2.0,
     management_quality: str = "Good",
     irrigation_type: str = "Drip / Micro-irrigation",
-    crop_stage: str = "Flowering / Pod Formation"
+    crop_stage: str = "Flowering / Pod Formation",
+    **kwargs
 ) -> FieldContext:
     """
     Factory function to construct a unified FieldContext from modular data providers.
@@ -432,5 +449,6 @@ def build_field_context(
         price_vs_msp_delta=delta,
         product_cost_per_ha=1200.0,
         fertilizer_cost_per_kg=6.50,
-        market_source=str(source_status)
+        market_source=str(source_status),
+        **kwargs
     )

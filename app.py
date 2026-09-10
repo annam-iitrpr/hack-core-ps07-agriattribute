@@ -1421,33 +1421,13 @@ def main():
     # SECTION 4: 🚜 MANAGEMENT (LeafVision Scanner & Farm Ledger)
     # ═════════════════════════════════════════════════════════════════════════
     with tab_management:
-        st.markdown("### 🚜 Agronomic Management Cockpit & Foliar Pathology")
-        
-        # Management Practice Controls
-        w_c1, w_c2, w_c3 = st.columns(3)
-        with w_c1:
-            st.session_state.whatif_mgt = st.selectbox(
-                "Management Quality Level",
-                options=["Standard", "Good", "Precision"],
-                index=["Standard", "Good", "Precision"].index(st.session_state.get('whatif_mgt', 'Good')),
-                key="mgmt_sb_mgt"
-            )
-        with w_c2:
-            st.session_state.whatif_irrig = st.selectbox(
-                "Irrigation Infrastructure",
-                options=["Rainfed", "Canal / Flood", "Drip / Micro-irrigation"],
-                index=["Rainfed", "Canal / Flood", "Drip / Micro-irrigation"].index(st.session_state.get('whatif_irrig', 'Drip / Micro-irrigation')),
-                key="mgmt_sb_irrig"
-            )
-        with w_c3:
-            st.session_state.whatif_fert_ratio = st.slider(
-                "Fertilizer Level (% Rec. NPK)",
-                min_value=50, max_value=150,
-                value=int(st.session_state.get('whatif_fert_ratio', 100)), step=10,
-                key="mgmt_sl_fert"
-            )
-
-        st.markdown("---")
+        from services import management_engine
+        management_engine.render_management_tab_ui(
+            field_ctx=field_ctx,
+            lang=lang,
+            t_func=t,
+            localized_crop_name=localized_active_crop
+        )
 
         # LeafVision Scanner
         st.markdown("""
