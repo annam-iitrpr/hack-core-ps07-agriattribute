@@ -12,9 +12,22 @@
 ---
 
 ### 🚀 Zero-Setup Live Cloud Access
-The platform is 100% cloud-ready. You do not need to install Python, configure environments, or run local servers:
-- **1-Click Streamlit Cloud Launch:** [Launch AgriAttribute on Streamlit Cloud](https://share.streamlit.io/deploy?repository=annam-iitrpr/hack-core-ps07-agriattribute&branch=main&mainModule=app.py)
-- **Live Interactive Demo:** Anyone can access the full interactive suite in real-time. All AI attribution, disease diagnosis, Agmarknet 2.0 telemetry, and live weather run instantly in the browser.
+The platform is 100% cloud-ready and deployed as a stable production application. You do not need to install Python, configure environments, or run local servers:
+
+- **Official Public Live Demo:** [https://agriattribute-ai.streamlit.app](https://agriattribute-ai.streamlit.app)
+- **Deploy Your Own Instance:** [![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/deploy?repository=annam-iitrpr/hack-core-ps07-agriattribute&branch=main&mainModule=app.py)
+
+#### 🔐 Streamlit Cloud Secrets Configuration
+If deploying your own instance, add the following to your Streamlit App Advanced Settings (Secrets):
+```toml
+# AgriAttribute AI - Production Secrets
+GEMINI_API_KEY = "your_gemini_api_key_here"
+OPENWEATHER_API_KEY = "your_openweather_api_key_here"
+OPENWEATHER_MAPS_KEY = "your_openweather_api_key_here"
+SUPABASE_URL = "your_supabase_url_here"
+SUPABASE_PUB_KEY = "your_supabase_anon_key_here"
+```
+*(Note: If API keys are omitted, the platform falls back to cached telemetry without crashing.)*
 
 ## The Problem We Wanted to Solve
 
