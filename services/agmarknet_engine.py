@@ -20,7 +20,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 # Dataset location
-DATA_PATH = os.path.join(os.path.dirname(__file__), "data", "agmarknet_daily_report.csv")
+DATA_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data", "agmarknet_daily_report.csv"))
 
 # Crop Mapping from AgriAttribute UI to Agmarknet 2.0 Commodities (24 Official Commodities)
 CROP_TO_AGMARKNET = {
@@ -177,6 +177,8 @@ def get_mandi_intelligence_for_crop(crop_name: str, has_biological: bool = True)
             "date_latest": date_latest,
             "date_d1": date_d1,
             "date_d2": date_d2,
+            "price_change_3d": 70.0,
+            "momentum_tag": "📈 Bullish (+₹70/q in 72h)",
             "latest_arrival_mt": 1250.0,
             "arrival_d1": 1400.0,
             "arrival_d2": 900.0,

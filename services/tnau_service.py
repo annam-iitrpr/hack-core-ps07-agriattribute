@@ -11,7 +11,7 @@ import os
 import json
 from typing import Dict, List, Optional, Any
 
-TNAU_DATA_DIR = os.path.join(os.path.dirname(__file__), "data", "tnau")
+TNAU_DATA_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data", "tnau"))
 TNAU_ATTRIBUTION_NOTICE = "Source: Tamil Nadu Agricultural University (TNAU) Agritech Portal (https://agritech.tnau.ac.in/)"
 
 import streamlit as st

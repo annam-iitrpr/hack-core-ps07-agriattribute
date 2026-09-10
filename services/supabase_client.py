@@ -54,7 +54,7 @@ SUPABASE_SECRET_KEY = _get_supa_config("SUPABASE_SECRET_KEY")
 ACTIVE_KEY = SUPABASE_SECRET_KEY if SUPABASE_SECRET_KEY else SUPABASE_PUB_KEY
 
 # Persistent local fallback paths (guarantees zero data loss)
-SCRATCH_DIR = os.path.join(os.path.dirname(__file__), "scratch")
+SCRATCH_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "scratch"))
 LOCAL_JOURNAL_FILE = os.path.join(SCRATCH_DIR, "farm_memory_records.json")
 LOCAL_TELEMETRY_FILE = os.path.join(SCRATCH_DIR, "telemetry_snapshots.json")
 

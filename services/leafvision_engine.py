@@ -274,7 +274,7 @@ def get_field_trial_stats():
         return _FIELD_TRIAL_STATS_CACHE
     
     stats = {}
-    csv_path = os.path.join(os.path.dirname(__file__), "data", "field_trials.csv")
+    csv_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data", "field_trials.csv"))
     if not os.path.exists(csv_path):
         csv_path = "data/field_trials.csv"
         
