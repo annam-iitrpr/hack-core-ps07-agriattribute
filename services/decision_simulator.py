@@ -23,6 +23,11 @@ import numpy as np
 from services.field_context import FieldContext
 
 try:
+    from services.management_engine import safe_float, safe_int
+except (ImportError, ModuleNotFoundError):
+    from management_engine import safe_float, safe_int
+
+try:
     import streamlit as _st_ds
     _cache_ds = _st_ds.cache_data(show_spinner=False)
 except Exception:
@@ -214,7 +219,7 @@ def evaluate_best_conditions(field_ctx: FieldContext) -> Dict[str, Any]:
         })
 
     # Clamp readiness score
-    readiness_score = int(np.clip(readiness_score, 15, 98))
+    readiness_score = safe_int(np.clip(readiness_score, 15, 98), 50)
 
     if readiness_score >= 75:
         suitability_verdict = "HIGHLY FAVORABLE"
@@ -271,7 +276,7 @@ def calculate_practical_agronomic_optimum(
 
     # 1. Base prediction under current field parameters
     df_current = field_ctx.to_feature_dataframe()
-    curr_yield = float(model.predict(df_current)[0])
+    curr_yield = safe_float(model.predict(df_current)[0], 24.0)
 
     # 2. Fetch ICAR recommended benchmarks
     icar_rec = ICAR_RECOMMENDED_NPK.get(crop, {"N": 120.0, "P": 60.0, "K": 40.0})
@@ -303,7 +308,7 @@ def calculate_practical_agronomic_optimum(
             phosphorus_override=rec_p,
             potassium_override=rec_k
         )
-        pred_y = float(model.predict(df_test)[0])
+        pred_y = safe_float(model.predict(df_test)[0], curr_yield)
         
         # Enforce biological and management ceiling
         pred_y = min(pred_y, mgt_limited)
@@ -389,14 +394,14 @@ def simulate_5_scenarios(
 
     # SCENARIO 2: WITHOUT BIOLOGICAL (Counterfactual Untreated Baseline)
     df_untreated = field_ctx.to_feature_dataframe(bio_applied_override=False, bio_dosage_override=0.0)
-    y_untreated = float(model.predict(df_untreated)[0])
+    y_untreated = safe_float(model.predict(df_untreated)[0], 20.0)
 
     # SCENARIO 1: CURRENT PRACTICE
     df_current = field_ctx.to_feature_dataframe(
         bio_applied_override=field_ctx.bio_applied,
         bio_dosage_override=bio_dose
     )
-    y_current = float(model.predict(df_current)[0])
+    y_current = safe_float(model.predict(df_current)[0], 24.0)
 
     # SCENARIO 3: BIOLOGICAL + GOOD MANAGEMENT (+12% nutrient efficiency & optimal timing)
     # Modeled via balanced uptake efficiency and optimal timing
@@ -406,7 +411,7 @@ def simulate_5_scenarios(
         nitrogen_override=field_ctx.nitrogen * 1.08,
         temp_override=min(field_ctx.temp_c, 30.0) # Buffered thermal profile from microclimate
     )
-    y_bio_mgt = min(float(model.predict(df_bio_mgt)[0]) * 1.03, mgt_ceiling)
+    y_bio_mgt = min(safe_float(model.predict(df_bio_mgt)[0], 26.0) * 1.03, mgt_ceiling)
 
     # SCENARIO 4: OPTIMIZED FERTILIZER (SHC Balanced NPK + Current Biological)
     df_opt_fert = field_ctx.to_feature_dataframe(
@@ -416,7 +421,7 @@ def simulate_5_scenarios(
         phosphorus_override=icar_rec["P"],
         potassium_override=icar_rec["K"]
     )
-    y_opt_fert = min(float(model.predict(df_opt_fert)[0]), mgt_ceiling)
+    y_opt_fert = min(safe_float(model.predict(df_opt_fert)[0], 28.0), mgt_ceiling)
 
     # SCENARIO 5: BEST REALISTIC PRACTICE (Balanced NPK + Optimal Biological + Good Management)
     df_best = field_ctx.to_feature_dataframe(
@@ -427,7 +432,7 @@ def simulate_5_scenarios(
         potassium_override=icar_rec["K"],
         temp_override=min(field_ctx.temp_c, 30.0)
     )
-    y_best = min(float(model.predict(df_best)[0]) * 1.04, mgt_ceiling)
+    y_best = min(safe_float(model.predict(df_best)[0], 30.0) * 1.04, mgt_ceiling)
 
     # Helper to calculate financial metrics
     def calc_metrics(y_val, has_bio, bio_cost_val, n_applied, p_applied, k_applied, label, desc):

@@ -18,11 +18,104 @@ Key Modules:
 """
 
 import os
+import re
 from dataclasses import dataclass, field, asdict
 from typing import Dict, Any, List, Optional, Tuple
 import pandas as pd
 import numpy as np
 import streamlit as st
+
+
+# ============================================================================
+# SAFE NUMERIC EXTRACTION HELPERS
+# Distinguish numeric agronomic values embedded in categorical description strings.
+# These helpers NEVER raise ValueError — always return (numeric, description) tuple
+# so callers can separate numeric geometry from categorical suffixes.
+# ============================================================================
+
+_NUMERIC_PATTERN = re.compile(r'(\d+(?:\.\d+)?)')
+
+def _preprocess_numeric_string(s: str) -> str:
+    """Strip formatting characters that break numeric extraction:
+    thousand separators (,), currency symbols (₹$€£), units and whitespace.
+    """
+    # Remove thousand separators and common currency / price formatting
+    s = s.replace(',', '').replace('₹', '').replace('$', '').replace('€', '').replace('£', '')
+    # Remove /per, /q, /ha, /acre unit divisors that follow numbers
+    s = re.sub(r'/\s*\w+', '', s)
+    return s.strip()
+
+def safe_float(value: Any, default: float = 0.0) -> float:
+    """Convert any value to float without raising ValueError.
+
+    Handles bare numbers, numeric strings, and strings where the first
+    numeric token is extracted (e.g. '30 (Wide-Row)' -> 30.0).
+    Also handles formatted prices: '₹5,200 / q' -> 5200.0"""
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        s = str(value).strip()
+        if not s:
+            return default
+        # Preprocess first: strip commas, currency, units — this catches formatted prices
+        s2 = _preprocess_numeric_string(s)
+        if s2 != s:
+            try:
+                return float(s2)
+            except (TypeError, ValueError):
+                m2 = _NUMERIC_PATTERN.search(s2)
+                if m2:
+                    try:
+                        return float(m2.group(1))
+                    except (TypeError, ValueError):
+                        pass
+        # Fall back to raw string extraction for categorical agronomic strings
+        m = _NUMERIC_PATTERN.search(s)
+        if m:
+            try:
+                return float(m.group(1))
+            except (TypeError, ValueError):
+                return default
+        return default
+
+
+def safe_int(value: Any, default: int = 0) -> int:
+    """Safe integer conversion — see safe_float."""
+    return int(round(safe_float(value, float(default))))
+
+
+def parse_spacing_cm(spacing_str: Any, default_row: float = 45.0, default_plant: float = 10.0) -> Tuple[float, float, str]:
+    """Parse an agronomic spacing description such as:
+      '120 x 30 cm (Wide-Row)'
+      '90 x 60 cm (or 120 x 45 cm for Bt Hybrid)'
+      '45 x 5 cm'
+    Returns (row_spacing_cm, plant_spacing_cm, categorical_description).
+    NEVER raises ValueError.
+    """
+    raw = str(spacing_str).strip() if spacing_str is not None else ''
+    m = re.search(r'(\d+(?:\.\d+)?)\s*[xX×]\s*(\d+(?:\.\d+)?)', raw)
+    if m:
+        row_v = float(m.group(1))
+        plant_v = float(m.group(2))
+    else:
+        row_v, plant_v = default_row, default_plant
+    description = raw
+    return row_v, plant_v, description
+
+
+def parse_npk_value(npk_value: Any, default_n: float = 0.0, default_p: float = 0.0, default_k: float = 0.0) -> Dict[str, float]:
+    """Parse NPK ratio dict or string safely."""
+    if isinstance(npk_value, dict):
+        return {
+            "N": safe_float(npk_value.get("N", default_n), default_n),
+            "P": safe_float(npk_value.get("P", default_p), default_p),
+            "K": safe_float(npk_value.get("K", default_k), default_k),
+        }
+    if isinstance(npk_value, (list, tuple)) and len(npk_value) >= 3:
+        return {"N": safe_float(npk_value[0], default_n),
+                "P": safe_float(npk_value[1], default_p),
+                "K": safe_float(npk_value[2], default_k)}
+    return {"N": default_n, "P": default_p, "K": default_k}
 
 
 # ============================================================================
@@ -779,18 +872,15 @@ def render_management_tab_ui(
                 del st.session_state[k]
         
         active_bio = st.session_state.get("selected_bio_product", b_defaults.get("recommended_bio_product", "Syngenta Quantis"))
-        active_bio_dose = float(st.session_state.get("whatif_dosage", b_defaults.get("recommended_bio_dose_l_acre", 2.0)))
-        
-        # Robust regex extraction of row and plant spacing from agronomic descriptions (e.g., '120 x 30 cm (Wide-Row)', '90 x 60 cm (or 120 x 45 cm for Bt Hybrid)')
-        import re
-        raw_sp = str(b_defaults.get("ideal_spacing_cm", "45 x 5 cm"))
-        m_sp = re.search(r'(\d+(?:\.\d+)?)\s*x\s*(\d+(?:\.\d+)?)', raw_sp)
-        if m_sp:
-            def_row_sp = float(m_sp.group(1))
-            def_plant_sp = float(m_sp.group(2))
-        else:
-            def_row_sp = 45.0
-            def_plant_sp = 10.0
+        active_bio_dose = safe_float(
+            st.session_state.get("whatif_dosage", b_defaults.get("recommended_bio_dose_l_acre", 2.0)),
+            2.0
+        )
+
+        safe_npk = parse_npk_value(rec_npk, 48.0, 24.0, 16.0)
+        def_row_sp, def_plant_sp, _sp_desc = parse_spacing_cm(
+            b_defaults.get("ideal_spacing_cm", "45 x 5 cm"), 45.0, 10.0
+        )
 
         st.session_state["mgmt_profile"] = ManagementProfile(
             field_id=f"IND_FIELD_{abs(hash(location_name + crop_name)) % 9000 + 1000:04d}",
@@ -801,12 +891,12 @@ def render_management_tab_ui(
             irrigation_frequency_days=7 if crop_name not in ["Sugarcane", "Rice (Paddy)"] else 4,
             last_irrigation_days_ago=2,
             irrigation_adequacy="Optimal (Adequate Moisture)",
-            fertilizer_npk_ratio_pct=int(st.session_state.get("whatif_fert_ratio", 100)),
-            n_applied_kg_acre=float(rec_npk.get("N", 40.0)),
-            p_applied_kg_acre=float(rec_npk.get("P", 20.0)),
-            k_applied_kg_acre=float(rec_npk.get("K", 20.0)),
+            fertilizer_npk_ratio_pct=safe_int(st.session_state.get("whatif_fert_ratio", 100), 100),
+            n_applied_kg_acre=safe_npk["N"],
+            p_applied_kg_acre=safe_npk["P"],
+            k_applied_kg_acre=safe_npk["K"],
             fertilizer_timing="Split (50% Basal + 50% Topdressing at Vegetative/Flowering)",
-            organic_manure_t_acre=float(b_defaults.get("rec_fym_t_acre", 2.5)),
+            organic_manure_t_acre=safe_float(b_defaults.get("rec_fym_t_acre", 2.5), 2.5),
             organic_manure_type="Farmyard Manure (FYM)",
             protection_practice="Integrated Pest Management (IPM) + Timely Foliar",
             pesticide_applied=True,
@@ -815,7 +905,7 @@ def render_management_tab_ui(
             target_pest_disease=b_defaults.get("target_diseases", ["Foliar Leaf Blight"])[0] if b_defaults.get("target_diseases") else "Foliar Leaf Blight",
             sowing_date_str="2026-06-25" if season_name == "Kharif" else "2025-11-10",
             seed_variety_type="High-Yielding Certified Hybrid",
-            seed_rate_kg_acre=float(b_defaults.get("seed_rate_kg_acre", 25.0)),
+            seed_rate_kg_acre=safe_float(b_defaults.get("seed_rate_kg_acre", 25.0), 25.0),
             row_spacing_cm=def_row_sp,
             plant_spacing_cm=def_plant_sp,
             establishment_method="Direct Sowing (Ridge & Furrow)",
@@ -891,11 +981,11 @@ def render_management_tab_ui(
     """, unsafe_allow_html=True)
 
     # Synchronized Soil & Weather Intelligence
-    soil_n = float(getattr(field_ctx, 'nitrogen', 140.0))
-    soil_p = float(getattr(field_ctx, 'phosphorus', 16.4))
-    soil_k = float(getattr(field_ctx, 'potassium', 300.0))
-    temp_c = float(getattr(field_ctx, 'temp_c', 28.5))
-    heat_days = int(getattr(field_ctx, 'heat_stress_days', 2))
+    soil_n = safe_float(getattr(field_ctx, 'nitrogen', 140.0), 140.0)
+    soil_p = safe_float(getattr(field_ctx, 'phosphorus', 16.4), 16.4)
+    soil_k = safe_float(getattr(field_ctx, 'potassium', 300.0), 300.0)
+    temp_c = safe_float(getattr(field_ctx, 'temp_c', 28.5), 28.5)
+    heat_days = safe_int(getattr(field_ctx, 'heat_stress_days', 2), 2)
     
     sync_banner_html = (
         f'<div style="background:#f0fdf4; border:1.5px solid #86efac; border-radius:12px; padding:14px 18px; margin-bottom:16px;">'
@@ -964,9 +1054,9 @@ def render_management_tab_ui(
             )
             b_bench = get_crop_management_defaults(crop_name)
             npk_ref = b_bench.get("rec_npk_kg_acre", {"N": 40.0, "P": 20.0, "K": 20.0})
-            rec_n = float(npk_ref.get("N", 40.0)) * (profile.fertilizer_npk_ratio_pct / 100.0)
-            rec_p = float(npk_ref.get("P", 20.0)) * (profile.fertilizer_npk_ratio_pct / 100.0)
-            rec_k = float(npk_ref.get("K", 20.0)) * (profile.fertilizer_npk_ratio_pct / 100.0)
+            rec_n = safe_float(npk_ref.get("N", 40.0), 40.0) * (profile.fertilizer_npk_ratio_pct / 100.0)
+            rec_p = safe_float(npk_ref.get("P", 20.0), 20.0) * (profile.fertilizer_npk_ratio_pct / 100.0)
+            rec_k = safe_float(npk_ref.get("K", 20.0), 20.0) * (profile.fertilizer_npk_ratio_pct / 100.0)
             profile.n_applied_kg_acre = rec_n
             profile.p_applied_kg_acre = rec_p
             profile.k_applied_kg_acre = rec_k

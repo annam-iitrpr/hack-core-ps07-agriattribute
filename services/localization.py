@@ -14,6 +14,11 @@ Supports 9 Comprehensive Indian Agricultural Languages:
 9. Bengali / বাংলা (bn)
 """
 
+try:
+    from services.management_engine import safe_float as _sf_loc
+except (ImportError, ModuleNotFoundError):
+    from management_engine import safe_float as _sf_loc
+
 # Language key mapping
 LANG_MAP = {
     "English": "en",
@@ -132,7 +137,7 @@ def generate_whatsapp_briefing(
     loc_crop = t_crop(crop_name, lang)
     
     rain_risk_24h = ow_5day[0].get('rain_prob', 10) if ow_5day else 10
-    wind_kmh = float(ow_live.get('wind_speed_kmh', 10))
+    wind_kmh = _sf_loc(ow_live.get('wind_speed_kmh', 10), 10)
     is_safe = (rain_risk_24h < 30 and wind_kmh < 20)
     spray_status = t("wa_spray_open", lang) if is_safe else t("wa_spray_delay", lang)
     

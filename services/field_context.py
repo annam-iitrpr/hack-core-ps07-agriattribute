@@ -18,6 +18,11 @@ from dataclasses import dataclass, field
 from typing import Dict, Any, Optional, Tuple, List
 import pandas as pd
 
+try:
+    from services.management_engine import safe_float, safe_int
+except (ImportError, ModuleNotFoundError):
+    from management_engine import safe_float, safe_int
+
 
 # Canonical 12 Crop Taxonomy mapping
 CROP_TAXONOMY_MAP = {
@@ -264,28 +269,28 @@ class FieldContext:
         r_val = self.cumulative_rainfall_mm if rainfall_override is None else rainfall_override
 
         row = {
-            "soil_organic_carbon": float(self.soc),
-            "soil_ph": float(self.ph),
-            "nitrogen_kgha": float(n_val),
-            "phosphorus_kgha": float(p_val),
-            "potassium_kgha": float(k_val),
-            "clay_content_pct": float(self.clay_content_pct),
-            "sulphur_ppm": float(self.sulphur_ppm),
-            "zinc_ppm": float(self.zinc_ppm),
-            "boron_ppm": float(self.boron_ppm),
-            "cumulative_rainfall_mm": float(r_val),
-            "growing_degree_days": float(self.gdd),
-            "avg_temperature_c": float(t_val),
-            "heat_stress_days": float(self.heat_stress_days),
-            "peak_ndvi": float(self.peak_ndvi),
+            "soil_organic_carbon": safe_float(self.soc, 0.65),
+            "soil_ph": safe_float(self.ph, 6.8),
+            "nitrogen_kgha": safe_float(n_val, 120.0),
+            "phosphorus_kgha": safe_float(p_val, 60.0),
+            "potassium_kgha": safe_float(k_val, 40.0),
+            "clay_content_pct": safe_float(self.clay_content_pct, 30.0),
+            "sulphur_ppm": safe_float(self.sulphur_ppm, 20.0),
+            "zinc_ppm": safe_float(self.zinc_ppm, 1.2),
+            "boron_ppm": safe_float(self.boron_ppm, 0.8),
+            "cumulative_rainfall_mm": safe_float(r_val, 450.0),
+            "growing_degree_days": safe_float(self.gdd, 1800.0),
+            "avg_temperature_c": safe_float(t_val, 26.0),
+            "heat_stress_days": safe_float(self.heat_stress_days, 5.0),
+            "peak_ndvi": safe_float(self.peak_ndvi, 0.78),
             "bio_applied": 1.0 if bio_app else 0.0,
-            "bio_dosage_l_ha": float(bio_dos)
+            "bio_dosage_l_ha": safe_float(bio_dos, 0.0)
         }
 
         series = pd.Series(0.0, index=ENCODED_COLUMNS)
         for k, v in row.items():
             if k in series.index:
-                series[k] = float(v)
+                series[k] = safe_float(v, 0.0)
 
         crop_col = f"crop_type_{self.proxy_crop}"
         if crop_col in series.index:
@@ -387,19 +392,24 @@ def build_field_context(
     proxy_crop = resolve_proxy(crop)
 
     params = shc_data.get("parameters", {}) if isinstance(shc_data, dict) else {}
-    soc_raw = float(params.get("Organic Carbon (OC)", {}).get("val", 5.2))
+    oc_raw = params.get("Organic Carbon (OC)", {}) if isinstance(params.get("Organic Carbon (OC)", {}), dict) else {}
+    ph_raw = params.get("Soil pH", {}) if isinstance(params.get("Soil pH", {}), dict) else {}
+    n_raw = params.get("Nitrogen (N)", {}) if isinstance(params.get("Nitrogen (N)", {}), dict) else {}
+    p_raw = params.get("Phosphorus (P)", {}) if isinstance(params.get("Phosphorus (P)", {}), dict) else {}
+    k_raw = params.get("Potassium (K)", {}) if isinstance(params.get("Potassium (K)", {}), dict) else {}
+    soc_raw = safe_float(oc_raw.get("val", 5.2), 5.2)
     soc_pct = soc_raw / 10.0 if soc_raw > 1.5 else soc_raw
-    ph = float(params.get("Soil pH", {}).get("val", 7.2))
-    nitrogen = float(params.get("Nitrogen (N)", {}).get("val", 140.0))
-    phosphorus = float(params.get("Phosphorus (P)", {}).get("val", 16.4))
-    potassium = float(params.get("Potassium (K)", {}).get("val", 300.0))
+    ph = safe_float(ph_raw.get("val", 7.2), 7.2)
+    nitrogen = safe_float(n_raw.get("val", 140.0), 140.0)
+    phosphorus = safe_float(p_raw.get("val", 16.4), 16.4)
+    potassium = safe_float(k_raw.get("val", 300.0), 300.0)
 
-    temp_c = float(ow_live.get("temp_c", 28.5))
-    feels_like_c = float(ow_live.get("feels_like_c", temp_c + 1.2))
-    humidity_pct = int(ow_live.get("humidity_pct", 65))
-    wind_kmh = float(ow_live.get("wind_speed_kmh", 10.5))
-    rain_mm = float(ow_live.get("rain_mm", 0.0))
-    cloud_pct = int(ow_live.get("cloud_cover_pct", 20))
+    temp_c = safe_float(ow_live.get("temp_c", 28.5), 28.5)
+    feels_like_c = safe_float(ow_live.get("feels_like_c", temp_c + 1.2), temp_c + 1.2)
+    humidity_pct = safe_int(ow_live.get("humidity_pct", 65), 65)
+    wind_kmh = safe_float(ow_live.get("wind_speed_kmh", 10.5), 10.5)
+    rain_mm = safe_float(ow_live.get("rain_mm", 0.0), 0.0)
+    cloud_pct = safe_int(ow_live.get("cloud_cover_pct", 20), 20)
     w_desc = str(ow_live.get("description", "Partly Cloudy"))
     w_source = str(ow_live.get("telemetry_source", "OpenWeatherMap Live Satellite"))
     is_live = (ow_live.get("status") == "LIVE")
@@ -428,14 +438,14 @@ def build_field_context(
         mcii_active = True
         station_id = st0.get("station_id", station_id)
         station_name = st0.get("station_name", st0.get("name", station_name))
-        soil_moist = float(st0.get("soil_moisture") or st0.get("soil_moisture_pct") or soil_moist)
-        soil_temp = float(st0.get("soil_temperature") or st0.get("soil_temp_c") or soil_temp)
-        solar_rad = float(st0.get("solar_radiation") or st0.get("solar_radiation_wm2") or solar_rad)
-        leaf_wet = float(st0.get("leaf_wetness") or st0.get("leaf_wetness_pct") or leaf_wet)
+        soil_moist = safe_float(st0.get("soil_moisture") or st0.get("soil_moisture_pct") or soil_moist, soil_moist)
+        soil_temp = safe_float(st0.get("soil_temperature") or st0.get("soil_temp_c") or soil_temp, soil_temp)
+        solar_rad = safe_float(st0.get("solar_radiation") or st0.get("solar_radiation_wm2") or solar_rad, solar_rad)
+        leaf_wet = safe_float(st0.get("leaf_wetness") or st0.get("leaf_wetness_pct") or leaf_wet, leaf_wet)
 
-    real_price = float(mandi_info.get("realizable_price", 5499.0))
-    msp = float(mandi_info.get("msp", 4892.0))
-    delta = float(mandi_info.get("price_vs_msp_delta", 607.0))
+    real_price = safe_float(mandi_info.get("realizable_price", 5499.0), 5499.0)
+    msp = safe_float(mandi_info.get("msp", 4892.0), 4892.0)
+    delta = safe_float(mandi_info.get("price_vs_msp_delta", 607.0), 607.0)
     source_status = mandi_info.get("data_source_status", "Agmarknet 2.0 Official Daily APMC")
     resolved_stage = get_default_crop_stage(proxy_crop) if proxy_crop in DEFAULT_CROP_STAGES else get_default_crop_stage(crop)
 

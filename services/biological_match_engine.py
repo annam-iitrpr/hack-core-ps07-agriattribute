@@ -14,6 +14,11 @@ from dataclasses import dataclass, field
 from typing import Dict, Any, List, Optional, Tuple
 import streamlit as st
 
+try:
+    from services.management_engine import safe_float, safe_int
+except (ImportError, ModuleNotFoundError):
+    from management_engine import safe_float, safe_int
+
 from services.biological_catalog_service import (
     BiologicalProduct,
     get_all_products,
@@ -66,17 +71,17 @@ def evaluate_product_match(
     """
     crop_name = getattr(field_ctx, 'crop', 'Soybean')
     crop_stage = getattr(field_ctx, 'crop_stage', 'Flowering / Pod Formation')
-    temp_c = float(getattr(field_ctx, 'temp_c', 28.5))
-    heat_stress_days = int(getattr(field_ctx, 'heat_stress_days', 2))
-    wind_kmh = float(getattr(field_ctx, 'wind_speed_kmh', 10.5))
-    rain_prob = int(getattr(field_ctx, 'rain_mm', 0))
+    temp_c = safe_float(getattr(field_ctx, 'temp_c', 28.5), 28.5)
+    heat_stress_days = safe_int(getattr(field_ctx, 'heat_stress_days', 2), 2)
+    wind_kmh = safe_float(getattr(field_ctx, 'wind_speed_kmh', 10.5), 10.5)
+    rain_prob = safe_int(getattr(field_ctx, 'rain_mm', 0), 0)
     if ow_live:
-        temp_c = float(ow_live.get('temp_c', temp_c))
-        wind_kmh = float(ow_live.get('wind_speed_kmh', wind_kmh))
-        rain_prob = int(ow_live.get('rain_prob_pct', 10))
+        temp_c = safe_float(ow_live.get('temp_c', temp_c), temp_c)
+        wind_kmh = safe_float(ow_live.get('wind_speed_kmh', wind_kmh), wind_kmh)
+        rain_prob = safe_int(ow_live.get('rain_prob_pct', 10), 10)
         
-    soil_ph = float(getattr(field_ctx, 'ph', 7.2))
-    soc = float(getattr(field_ctx, 'soc', 0.52))
+    soil_ph = safe_float(getattr(field_ctx, 'ph', 7.2), 7.2)
+    soc = safe_float(getattr(field_ctx, 'soc', 0.52), 0.52)
 
     reasons = []
     score = 0
@@ -299,9 +304,9 @@ def render_biologicals_section_ui(
     
     crop_name = getattr(field_ctx, 'crop', 'Soybean')
     crop_stage = getattr(field_ctx, 'crop_stage', 'Flowering / Pod Formation')
-    temp_c = float(getattr(field_ctx, 'temp_c', 28.5))
-    heat_stress_days = int(getattr(field_ctx, 'heat_stress_days', 2))
-    wind_kmh = float(getattr(field_ctx, 'wind_speed_kmh', 10.5))
+    temp_c = safe_float(getattr(field_ctx, 'temp_c', 28.5), 28.5)
+    heat_stress_days = safe_int(getattr(field_ctx, 'heat_stress_days', 2), 2)
+    wind_kmh = safe_float(getattr(field_ctx, 'wind_speed_kmh', 10.5), 10.5)
     
     # Header & Live Context Bar
     st.markdown("### 🧬 Biologicals Intelligence & Evidence-Matched Protocol")
@@ -444,7 +449,7 @@ def render_biologicals_section_ui(
             log_prod = st.selectbox("Selected Biological Product", options=all_names, index=def_idx)
         with col_log2:
             matched_prod_obj = next((p for p in get_all_products() if p.product_name == log_prod), top_matches[0].product)
-            log_dose = st.number_input(f"Applied Dosage ({matched_prod_obj.application_rate_unit})", value=float(matched_prod_obj.application_rate_num), step=0.25)
+            log_dose = st.number_input(f"Applied Dosage ({matched_prod_obj.application_rate_unit})", value=safe_float(matched_prod_obj.application_rate_num, 1.0), step=0.25)
         with col_log3:
             log_stage = st.selectbox("Growth Stage at Application", options=["Vegetative / Tillering", "Flower Initiation / Bloom", "Pod / Grain Development", "Post-Stress Recovery"], index=1)
             
@@ -516,8 +521,8 @@ def _render_detailed_product_card(match_res: ProductMatchResult, lang: str, t: A
         btn_label = f"✅ Active Field Biological" if is_selected else f"🎯 Apply {p.product_name} to Field Context"
         if st.button(btn_label, key=f"btn_pick_bio_{abs(hash(p.product_name))}", type="primary" if is_selected else "secondary", use_container_width=True):
             st.session_state["selected_bio_product"] = p.product_name
-            st.session_state["s_dosage"] = float(p.application_rate_num)
-            st.session_state["whatif_dosage"] = float(p.application_rate_num)
+            st.session_state["s_dosage"] = safe_float(p.application_rate_num, 1.0)
+            st.session_state["whatif_dosage"] = safe_float(p.application_rate_num, 1.0)
             st.session_state["_compute_key"] = None
             st.toast(f"Synchronized {p.product_name} across Yield, Cost, and ROI!", icon="🧬")
             st.rerun()

@@ -28,10 +28,14 @@ Primary Sources & Methodology:
 
 import os
 import math
+import re
 import pandas as pd
 import numpy as np
 from typing import Dict, Any, List, Optional, Tuple
 import streamlit as st
+
+# Import safe numeric extraction helpers from management_engine for consistency
+from services.management_engine import safe_float, safe_int, parse_spacing_cm, parse_npk_value
 
 HA_TO_ACRE = 2.47105
 
@@ -264,33 +268,43 @@ def get_cacp_itemized_benchmark(season: str, crop: str, region: str, unit: str =
     Retrieves itemized CACP benchmark cost dict converted to specified unit ('acre' or 'ha').
     Returns (itemized_costs_dict, metadata_dict, is_available_flag).
     """
-    season_db = CACP_ITEMIZED_DATASET.get(season, CACP_ITEMIZED_DATASET["2026-27"])
-    
+    try:
+        season_db = CACP_ITEMIZED_DATASET.get(season, CACP_ITEMIZED_DATASET["2026-27"])
+    except Exception:
+        season_db = CACP_ITEMIZED_DATASET["2026-27"]
+
     # Try exact match, then fuzzy match
     matched_crop_key = None
     c_low = str(crop).strip().lower()
     for k in season_db.keys():
-        if k.lower() == c_low or k.lower() in c_low or c_low in k.lower():
-            matched_crop_key = k
-            break
-            
+        try:
+            k_low = k.lower()
+            if k_low == c_low or k_low in c_low or c_low in k_low:
+                matched_crop_key = k
+                break
+        except Exception:
+            continue
+
     is_available = True
     if matched_crop_key and matched_crop_key != "DEFAULT":
         crop_db = season_db[matched_crop_key]
     else:
         crop_db = season_db.get("DEFAULT", {})
         is_available = False
-        
-    bench_ha = crop_db.get(region, crop_db.get("DEFAULT"))
-    
+
+    bench_ha = crop_db.get(region, crop_db.get("DEFAULT", {}))
+    if bench_ha is None:
+        bench_ha = crop_db.get("DEFAULT", {})
+        is_available = False
+
     scale_factor = 1.0 if unit == "ha" else (1.0 / HA_TO_ACRE)
-    
+
     itemized_bench = {}
     for cat in CACP_COST_HIERARCHY:
         for itm in cat["items"]:
             k = itm["key"]
-            itemized_bench[k] = float(bench_ha.get(k, 0.0)) * scale_factor
-            
+            itemized_bench[k] = safe_float(bench_ha.get(k, 0.0), 0.0) * scale_factor
+
     meta = {
         "season": season,
         "crop": crop,
@@ -298,12 +312,14 @@ def get_cacp_itemized_benchmark(season: str, crop: str, region: str, unit: str =
         "state": bench_ha.get("state", "All-India Weighted"),
         "table_ref": bench_ha.get("table_ref", "Table 5.1 & Table 5.5"),
         "page_ref": bench_ha.get("page_ref", "Page 126"),
-        "yield_q_ha": bench_ha.get("yield_q_ha", 10.4),
-        "yield_q_acre": bench_ha.get("yield_q_ha", 10.4) / HA_TO_ACRE,
-        "msp_q": bench_ha.get("msp_q", 5300.0),
-        "unit": unit
+        "yield_q_ha": safe_float(bench_ha.get("yield_q_ha", 10.4), 10.4),
+        "yield_q_acre": safe_float(bench_ha.get("yield_q_ha", 10.4), 10.4) / HA_TO_ACRE,
+        "msp_q": safe_float(bench_ha.get("msp_q", 5300.0), 5300.0),
+        "unit": unit,
+        "matched_crop_key": matched_crop_key,
+        "is_explicit_crop": is_available
     }
-    
+
     return itemized_bench, meta, is_available
 
 
@@ -344,13 +360,22 @@ def render_cost_of_cultivation_tab(field_ctx: Any, model: Any, artifacts: Any, l
     Renders the human-centric, CACP-compliant Cost of Cultivation module.
     Inherits active crop context from Agmarknet 2.0.
     """
-    # Safe defensive extraction of field context attributes
+    # Safe defensive extraction of field context attributes — NEVER crash
     crop_name = getattr(field_ctx, 'crop', 'Soybean')
     region_name = getattr(field_ctx, 'region', 'Maharashtra & Vidarbha (Deccan)')
-    pred_yield_val = float(getattr(field_ctx, 'predicted_yield_baseline', getattr(field_ctx, 'predicted_yield', 24.0)))
-    mandi_price_val = float(getattr(field_ctx, 'mandi_price', getattr(field_ctx, 'crop_price', 5499.0)))
-    bio_cost_val = float(getattr(field_ctx, 'treatment_cost', getattr(field_ctx, 'product_cost_per_ha', 1200.0)))
-    bio_delta_val = float(getattr(field_ctx, 'biological_yield_lift', 3.8))
+    pred_yield_val = safe_float(
+        getattr(field_ctx, 'predicted_yield_baseline', getattr(field_ctx, 'predicted_yield', 24.0)),
+        24.0
+    )
+    mandi_price_val = safe_float(
+        getattr(field_ctx, 'mandi_price', getattr(field_ctx, 'crop_price', 5499.0)),
+        5499.0
+    )
+    bio_cost_val = safe_float(
+        getattr(field_ctx, 'treatment_cost', getattr(field_ctx, 'product_cost_per_ha', 1200.0)),
+        1200.0
+    )
+    bio_delta_val = safe_float(getattr(field_ctx, 'biological_yield_lift', 3.8), 3.8)
 
     from services.localization import t
 
@@ -405,7 +430,7 @@ def render_cost_of_cultivation_tab(field_ctx: Any, model: Any, artifacts: Any, l
             f"Farm Holding ({'Acres' if unit_key=='acre' else 'Hectares'})",
             min_value=0.25,
             max_value=100.0,
-            value=float(st.session_state.get('farm_acres', 1.0)),
+            value=safe_float(st.session_state.get('farm_acres', 1.0), 1.0),
             step=0.5
         )
         st.session_state['farm_acres'] = farm_acres
@@ -414,16 +439,17 @@ def render_cost_of_cultivation_tab(field_ctx: Any, model: Any, artifacts: Any, l
             "Selling Price (₹/q)",
             min_value=500.0,
             max_value=25000.0,
-            value=float(round(mandi_price_val, 1)),
+            value=safe_float(round(mandi_price_val, 1), 5499.0),
             step=50.0,
             help="Synchronized from Agmarknet 2.0 live APMC spot rate or statutory MSP baseline."
         )
 
     # Fetch CACP Benchmark for active crop, region, and season
     cacp_bench_dict, cacp_meta, is_bench_avail = get_cacp_itemized_benchmark(cacp_season, crop_name, region_name, unit=unit_key)
-    
+
     if not is_bench_avail:
-        st.warning(f"⚠️ CACP benchmark unavailable for crop '{crop_name}' in season '{cacp_season}'. Using generalized regional benchmark baseline.")
+        st.info(f"📋 Data not available for this crop — '{crop_name}'. Using generalized All-India weighted CACP benchmark as a reference baseline. Enter your actual farm costs below for accurate economic analysis.")
+        st.warning(f"⚠️ Official CACP itemized benchmark for '{crop_name}' is not yet integrated in this release. Figures shown in the CACP Benchmark column are indicative generic baselines and should not be treated as Government of India / CACP statutory figures for this crop.")
 
     # Yield predictor verification
     if pred_yield_val <= 0:
@@ -480,7 +506,7 @@ def render_cost_of_cultivation_tab(field_ctx: Any, model: Any, artifacts: Any, l
             with c1:
                 st.markdown(f"<div style='font-size:0.92rem; font-weight:600; color:#1e293b; padding-top:8px;'>{label}</div>", unsafe_allow_html=True)
             with c2:
-                init_val = float(st.session_state[state_key_prefix].get(k, bench_val))
+                init_val = safe_float(st.session_state[state_key_prefix].get(k, bench_val), safe_float(bench_val, 0.0))
                 farm_val = st.number_input(
                     label=f"input_{k}",
                     min_value=0.0,

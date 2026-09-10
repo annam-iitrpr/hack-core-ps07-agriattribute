@@ -12,6 +12,11 @@ import math
 import copy
 
 try:
+    from services.management_engine import safe_float as _sf_pse
+except (ImportError, ModuleNotFoundError):
+    from management_engine import safe_float as _sf_pse
+
+try:
     import streamlit as _st
     _cache_pse = _st.cache_data(show_spinner=False)
 except Exception:
@@ -1000,10 +1005,10 @@ def render_soil_health_card_tab(region: str = None, crop: str = None, farm_lat: 
 
     reg_name = region or "Maharashtra & Vidarbha (Deccan)"
     crop_name = crop or "Soybean"
-    lat_val = float(farm_lat) if farm_lat is not None else 18.5204
-    lon_val = float(farm_lon) if farm_lon is not None else 73.8567
+    lat_val = _sf_pse(farm_lat, 18.5204) if farm_lat is not None else 18.5204
+    lon_val = _sf_pse(farm_lon, 73.8567) if farm_lon is not None else 73.8567
     loc_name = farm_name or "Pune"
-    profit_val = float(net_profit) if net_profit is not None else 0.0
+    profit_val = _sf_pse(net_profit, 0.0) if net_profit is not None else 0.0
 
     shc = get_regional_soil_health_card(reg_name, lat=lat_val, lon=lon_val, location_name=loc_name)
     params = shc.get("parameters", {})

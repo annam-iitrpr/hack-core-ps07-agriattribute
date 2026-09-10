@@ -15,6 +15,11 @@ import json
 import time
 from typing import Dict, Any, List, Optional, Tuple
 
+try:
+    from services.management_engine import safe_float as _sf_srr
+except (ImportError, ModuleNotFoundError):
+    from management_engine import safe_float as _sf_srr
+
 # Official 12-Parameter Soil Health Card (DAC&FW / ICAR-IISS)
 OFFICIAL_SHC_12_PARAMS = {
     "Nitrogen (N)": {"unit": "kg/ha", "category": "Macro", "icon": "🌿"},
@@ -362,7 +367,7 @@ def evaluate_soil_status(parameter: str, value: float, reference: Optional[Dict[
     """
     Evaluates measured soil value against crop-aware reference and computes status, gap, recommended action, and provenance.
     """
-    val = float(value) if value is not None else 0.0
+    val = _sf_srr(value, 0.0) if value is not None else 0.0
     ref = reference or get_parameter_reference(parameter, crop, state)
     
     p_name = ref.get("parameter", parameter)
@@ -504,9 +509,9 @@ def get_fertilizer_recommendation(crop: str, soil_values: Dict[str, float], stat
     crop_key = _normalize_crop_key(crop)
     profile = get_crop_profile(crop_key, state)
     
-    n_val = float(soil_values.get("N", soil_values.get("Nitrogen", 280.0)))
-    p_val = float(soil_values.get("P", soil_values.get("Phosphorus", 18.0)))
-    k_val = float(soil_values.get("K", soil_values.get("Potassium", 210.0)))
+    n_val = _sf_srr(soil_values.get("N", soil_values.get("Nitrogen", 280.0)), 280.0)
+    p_val = _sf_srr(soil_values.get("P", soil_values.get("Phosphorus", 18.0)), 18.0)
+    k_val = _sf_srr(soil_values.get("K", soil_values.get("Potassium", 210.0)), 210.0)
     
     # Calculate fertilizer requirement in kg/acre
     n_req_ha = profile["n_recommendation_kg_ha"]

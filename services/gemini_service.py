@@ -22,6 +22,11 @@ try:
 except ImportError:
     pass
 
+try:
+    from services.management_engine import safe_float, safe_int
+except (ImportError, ModuleNotFoundError):
+    from management_engine import safe_float, safe_int
+
 def _clean_gemini_key(k: str) -> str:
     if not k or not isinstance(k, str):
         return ""
@@ -497,23 +502,23 @@ def render_gemini_chat_interface(
         "region": region,
         "crop": crop,
         "product": bio_product,
-        "temp_max": float(ow.get("temp_c", 28.5)),
-        "temp_min": float(ow.get("feels_like_c", 25.0)),
-        "humidity": float(ow.get("humidity_pct", 65)),
-        "wind_speed": float(ow.get("wind_speed_kmh", 10.0)),
-        "rainfall": float(rainfall),
-        "heat_stress": int(heat_stress),
-        "nitrogen": float(n_val),
-        "phosphorus": float(p_val),
-        "potassium": float(k_val),
-        "ph": float(ph),
-        "soc": float(soc),
-        "mandi_spot": float(mandi.get("realizable_price", 5200.0)),
-        "mandi_msp": float(mandi.get("msp", 4892.0)),
-        "predicted_yield": float(pred_actual),
-        "yield_delta": float(yield_delta),
-        "net_profit": float(net_profit),
-        "roi_pct": float(roi_pct)
+        "temp_max": safe_float(ow.get("temp_c", 28.5), 28.5),
+        "temp_min": safe_float(ow.get("feels_like_c", 25.0), 25.0),
+        "humidity": safe_float(ow.get("humidity_pct", 65), 65.0),
+        "wind_speed": safe_float(ow.get("wind_speed_kmh", 10.0), 10.0),
+        "rainfall": safe_float(rainfall, 0.0),
+        "heat_stress": safe_int(heat_stress, 0),
+        "nitrogen": safe_float(n_val, 120.0),
+        "phosphorus": safe_float(p_val, 60.0),
+        "potassium": safe_float(k_val, 40.0),
+        "ph": safe_float(ph, 6.8),
+        "soc": safe_float(soc, 0.65),
+        "mandi_spot": safe_float(mandi.get("realizable_price", 5200.0), 5200.0),
+        "mandi_msp": safe_float(mandi.get("msp", 4892.0), 4892.0),
+        "predicted_yield": safe_float(pred_actual, 24.0),
+        "yield_delta": safe_float(yield_delta, 0.0),
+        "net_profit": safe_float(net_profit, 0.0),
+        "roi_pct": safe_float(roi_pct, 0.0)
     }
 
     # Preset Quick Prompts

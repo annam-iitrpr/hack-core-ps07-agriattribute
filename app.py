@@ -54,6 +54,7 @@ from services import decision_simulator
 from services import cost_of_cultivation_service
 from services import biological_match_engine
 from services import biological_catalog_service
+from services.management_engine import safe_float, safe_int, parse_spacing_cm, parse_npk_value
 
 # Centralized Localization Architecture
 from services.localization import (
@@ -513,7 +514,7 @@ def build_growth_divergence_timeline(days=120, base_yield=24.0, bio_boost=3.8, h
     
     divergence_day = 42
     annotation_text = f"<b>{t('chart_annotation', lang)}</b>"
-    fig.add_annotation(x=divergence_day, y=float(curve_bio_final[divergence_day-1]), text=annotation_text, showarrow=True, arrowhead=2, arrowcolor="#d97706", ax=45, ay=-50, font=dict(size=11, color="#d97706"), bgcolor="rgba(255, 255, 255, 0.95)", bordercolor="#d97706")
+    fig.add_annotation(x=divergence_day, y=safe_float(curve_bio_final[divergence_day-1], 20.0), text=annotation_text, showarrow=True, arrowhead=2, arrowcolor="#d97706", ax=45, ay=-50, font=dict(size=11, color="#d97706"), bgcolor="rgba(255, 255, 255, 0.95)", bordercolor="#d97706")
     
     fig.update_layout(title=dict(text=f"<b>{t('chart_title', lang)}</b>", font=dict(size=16, color="#0f172a")), xaxis=dict(title=t("chart_xaxis", lang), gridcolor="#f1f5f9"), yaxis=dict(title=t("chart_yaxis", lang), gridcolor="#f1f5f9"), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1), margin=dict(l=30, r=30, t=50, b=30), hovermode="x unified")
     return fig
@@ -747,8 +748,10 @@ def main():
     qp = st.query_params
     if "lat" in qp and "lon" in qp:
         try:
-            q_lat = float(qp["lat"])
-            q_lon = float(qp["lon"])
+            q_lat = safe_float(qp["lat"], None)
+            q_lon = safe_float(qp["lon"], None)
+            if q_lat is None or q_lon is None:
+                raise ValueError("Invalid GPS in query params")
             st.session_state.farm_lat = q_lat
             st.session_state.farm_lon = q_lon
             if "place" in qp:
@@ -814,8 +817,8 @@ def main():
                     if r1.status_code == 200:
                         d1 = r1.json()
                         if d1.get("success"):
-                            det_lat = float(d1.get("latitude"))
-                            det_lon = float(d1.get("longitude"))
+                            det_lat = safe_float(d1.get("latitude"), 30.9690)
+                            det_lon = safe_float(d1.get("longitude"), 76.5210)
                             det_city = d1.get("city", "Live Location")
                 except Exception:
                     pass
@@ -827,8 +830,8 @@ def main():
                         if r2.status_code == 200:
                             d2 = r2.json()
                             if d2.get("status") == "success":
-                                det_lat = float(d2.get("lat"))
-                                det_lon = float(d2.get("lon"))
+                                det_lat = safe_float(d2.get("lat"), 30.9690)
+                                det_lon = safe_float(d2.get("lon"), 76.5210)
                                 det_city = d2.get("city", "Live Location")
                     except Exception:
                         pass
@@ -891,13 +894,13 @@ def main():
     # ── Real-Time Calibrated Farm State (Data Driven — No Synthetic Sliders) ──
     reg_shc = pricing_and_soil_engine.get_regional_soil_health_card(region)
     shc_params = reg_shc.get("parameters", {})
-    nitrogen = float(shc_params.get("Nitrogen (N)", {}).get("val", 140.0))
-    phosphorus = float(shc_params.get("Phosphorus (P)", {}).get("val", 16.4))
-    potassium = float(shc_params.get("Potassium (K)", {}).get("val", 300.0))
-    soc = float(shc_params.get("Organic Carbon (OC)", {}).get("val", 5.2)) / 10.0
-    ph = float(shc_params.get("Soil pH", {}).get("val", 7.2))
+    nitrogen = safe_float(shc_params.get("Nitrogen (N)", {}).get("val", 140.0), 140.0)
+    phosphorus = safe_float(shc_params.get("Phosphorus (P)", {}).get("val", 16.4), 16.4)
+    potassium = safe_float(shc_params.get("Potassium (K)", {}).get("val", 300.0), 300.0)
+    soc = safe_float(shc_params.get("Organic Carbon (OC)", {}).get("val", 5.2), 5.2) / 10.0
+    ph = safe_float(shc_params.get("Soil pH", {}).get("val", 7.2), 7.2)
 
-    curr_temp = ow_live.get("temp_c", 28.5)
+    curr_temp = safe_float(ow_live.get("temp_c", 28.5), 28.5)
     heat_stress = 6 if curr_temp > 35 else (4 if curr_temp > 32 else 2)
     rainfall = 780.0
     gdd = 2350.0
@@ -905,13 +908,16 @@ def main():
 
     bio_toggle = True
     bio_product = "Syngenta Quantis (Biostimulant)"
-    dosage = float(st.session_state.get('s_dosage', 2.0))
+    dosage = safe_float(st.session_state.get('s_dosage', 2.0), 2.0)
 
     # Real-time Agmarknet 2.0 Mandi intelligence & CACP economics
     mandi_info = agmarknet_engine.get_mandi_intelligence_for_crop(crop, bio_toggle)
     algo_pricing = pricing_and_soil_engine.calculate_algorithmic_market_pricing(crop, bio_toggle)
-    crop_price = float(mandi_info["realizable_price"]) if mandi_info.get("realizable_price", 0) > 0 else float(algo_pricing.get("predicted_mandi_price", 2500.0))
-    product_cost = float(algo_pricing.get("total_product_cost", 1200.0))
+    crop_price = safe_float(
+        mandi_info["realizable_price"] if mandi_info.get("realizable_price", 0) > 0 else algo_pricing.get("predicted_mandi_price", 2500.0),
+        2500.0
+    )
+    product_cost = safe_float(algo_pricing.get("total_product_cost", 1200.0), 1200.0)
 
     # ── PS-07 CENTRAL SYNCHRONIZER: COMMON FIELD CONTEXT ──
     mcii_stations = annam_mcii_service.get_mcii_stations()
@@ -929,8 +935,8 @@ def main():
         round(dosage, 2),
         st.session_state.get('whatif_mgt', 'Good'),
         st.session_state.get('whatif_irrig', 'Drip / Micro-irrigation'),
-        round(float(st.session_state.get('whatif_dosage', dosage)), 2),
-        round(float(st.session_state.get('whatif_fert_ratio', 100.0)), 1),
+        round(safe_float(st.session_state.get('whatif_dosage', dosage), dosage), 2),
+        round(safe_float(st.session_state.get('whatif_fert_ratio', 100.0), 100.0), 1),
         round(st.session_state.farm_lat, 4),
         round(st.session_state.farm_lon, 4),
     )
@@ -959,8 +965,8 @@ def main():
             field_ctx,
             model,
             management_override=st.session_state.get('whatif_mgt', 'Good'),
-            dosage_override=float(st.session_state.get('whatif_dosage', dosage)),
-            fertilizer_ratio_override=float(st.session_state.get('whatif_fert_ratio', 100.0)) / 100.0
+            dosage_override=safe_float(st.session_state.get('whatif_dosage', dosage), dosage),
+            fertilizer_ratio_override=safe_float(st.session_state.get('whatif_fert_ratio', 100.0), 100.0) / 100.0
         )
         explainer_obj = artifacts.get("explainer") if isinstance(artifacts, dict) else artifacts
         factor_explanations = decision_simulator.explain_attribution(field_ctx, model, explainer=explainer_obj)
@@ -992,11 +998,11 @@ def main():
     readiness_score = best_cond["readiness_score"]
 
     # 🔗 Synchronize Authoritative Yield & Price Attributes onto FieldContext
-    field_ctx.predicted_yield_baseline = float(pred_counterfactual)
-    field_ctx.biological_yield_lift = float(yield_delta)
-    field_ctx.treatment_cost = float(product_cost)
-    field_ctx.mandi_price = float(crop_price)
-    unc_mae = float(artifacts.get("metrics", {}).get("uncertainty_mae", 3.99))
+    field_ctx.predicted_yield_baseline = safe_float(pred_counterfactual, 24.0)
+    field_ctx.biological_yield_lift = safe_float(yield_delta, 3.8)
+    field_ctx.treatment_cost = safe_float(product_cost, 1200.0)
+    field_ctx.mandi_price = safe_float(crop_price, 5499.0)
+    unc_mae = safe_float(artifacts.get("metrics", {}).get("uncertainty_mae", 3.99), 3.99)
     pred_low = curr_scen["yield_lower_bound"]
     pred_high = curr_scen["yield_upper_bound"]
 
@@ -1042,18 +1048,19 @@ def main():
     # ─────────────────────────────────────────────────────────────────────────
     # PRECOMPUTE SHARED TELEMETRY & ATTRIBUTION VARIABLES ACROSS TABS
     # ─────────────────────────────────────────────────────────────────────────
-    dis_risk = min(95.0, max(12.0, (heat_stress * 4.5) + (rainfall / 35.0) + (1.0 - ndvi) * 20.0))
-    farm_lat = float(st.session_state.get('farm_lat', 18.5204))
-    farm_lon = float(st.session_state.get('farm_lon', 73.8567))
+    dis_risk = min(95.0, max(12.0, (safe_int(heat_stress, 2) * 4.5) + (safe_float(rainfall, 780.0) / 35.0) + (1.0 - safe_float(ndvi, 0.76)) * 20.0))
+    farm_lat = safe_float(st.session_state.get('farm_lat', 18.5204), 18.5204)
+    farm_lon = safe_float(st.session_state.get('farm_lon', 73.8567), 73.8567)
     farm_name = st.session_state.get('farm_location_name', 'Pune')
     shc_data = pricing_and_soil_engine.get_regional_soil_health_card(region, lat=farm_lat, lon=farm_lon, location_name=farm_name)
-    n_curr = shc_data['parameters']['Nitrogen (N)']['val']
-    p_curr = shc_data['parameters']['Phosphorus (P)']['val']
-    k_curr = shc_data['parameters']['Potassium (K)']['val']
-    zn_curr = shc_data['parameters']['Zinc (Zn)']['val']
-    b_curr = shc_data['parameters']['Boron (B)']['val']
-    ph_curr = shc_data['parameters']['Soil pH']['val']
-    oc_curr = shc_data['parameters']['Organic Carbon (OC)']['val']
+    shc_params_curr = shc_data.get('parameters', {})
+    n_curr = safe_float(shc_params_curr.get('Nitrogen (N)', {}).get('val', 140.0), 140.0)
+    p_curr = safe_float(shc_params_curr.get('Phosphorus (P)', {}).get('val', 16.4), 16.4)
+    k_curr = safe_float(shc_params_curr.get('Potassium (K)', {}).get('val', 300.0), 300.0)
+    zn_curr = safe_float(shc_params_curr.get('Zinc (Zn)', {}).get('val', 1.2), 1.2)
+    b_curr = safe_float(shc_params_curr.get('Boron (B)', {}).get('val', 0.8), 0.8)
+    ph_curr = safe_float(shc_params_curr.get('Soil pH', {}).get('val', 7.2), 7.2)
+    oc_curr = safe_float(shc_params_curr.get('Organic Carbon (OC)', {}).get('val', 5.2), 5.2) / 10.0
 
     factors_cards_html = ""
     for f in factor_explanations:
@@ -1127,7 +1134,7 @@ def main():
             border_style = "2.5px solid #059669; background: #ecfdf5; box-shadow: 0 4px 14px rgba(5, 150, 105, 0.2);" if is_selected else "1px solid #e2e8f0; background: #ffffff;"
             badge_html = f"<span style='background:#059669; color:white; font-size:0.82rem; font-weight:800; padding:3px 10px; border-radius:12px;'>★ {t('active_field_badge', lang)}</span>" if is_selected else ""
             c_mandi = agmarknet_engine.get_mandi_intelligence_for_crop(c_name, True)
-            c_price = float(c_mandi["realizable_price"]) if c_mandi.get("realizable_price", 0) > 0 else 2500.0
+            c_price = safe_float(c_mandi.get("realizable_price", 0), 2500.0) if safe_float(c_mandi.get("realizable_price", 0), 0) > 0 else 2500.0
         
             with crop_card_cols[c_idx]:
                 card_html = (
@@ -1173,10 +1180,10 @@ def main():
                 for i, (_, row) in enumerate(g_df.iterrows()):
                     c_name_raw = row["commodity"]
                     c_name_display = t_commodity(c_name_raw, lang)
-                    msp_val = float(row.get("msp_2026_27", 0))
-                    p_01 = float(row.get("price_01_sep", 0))
-                    p_30 = float(row.get("price_30_aug", 0))
-                    arr_01 = float(row.get("arrival_01_sep", 0))
+                    msp_val = safe_float(row.get("msp_2026_27", 0), 0.0)
+                    p_01 = safe_float(row.get("price_01_sep", 0), 0.0)
+                    p_30 = safe_float(row.get("price_30_aug", 0), 0.0)
+                    arr_01 = safe_float(row.get("arrival_01_sep", 0), 0.0)
                     delta = p_01 - msp_val if msp_val > 0 else 0
                     trend_delta = p_01 - p_30
                     trend_sym = f"+₹{trend_delta:,.0f}" if trend_delta >= 0 else f"-₹{abs(trend_delta):,.0f}"
@@ -1295,8 +1302,8 @@ def main():
 
         # Wind Speed & Cloud Safety Meters
         w_c1, w_c2 = st.columns(2)
-        wind_speed_num = float(ow_live.get('wind_speed_kmh', 10.8))
-        cloud_pct_num = int(ow_live.get('cloud_cover_pct', 15))
+        wind_speed_num = safe_float(ow_live.get('wind_speed_kmh', 10.8), 10.8)
+        cloud_pct_num = safe_int(ow_live.get('cloud_cover_pct', 15), 15)
         
         with w_c1:
             if wind_speed_num < 15.0:
@@ -1466,8 +1473,18 @@ def main():
 
         leaf_file = st.file_uploader(t("leafvision_uploader_label", lang), help=t("help_leaf_upload", lang), type=["jpg", "jpeg", "png", "webp"], key="leafvision_uploader_m")
         
-        soil_telemetry_pkg = {"n": float(n_curr), "p": float(p_curr), "k": float(k_curr), "zn": float(zn_curr), "b": float(b_curr), "ph": float(ph_curr), "oc": float(oc_curr)}
-        weather_telemetry_pkg = {"temp_c": float(ow_live.get("temp_c", 28.5)), "humidity_pct": int(ow_live.get("humidity_pct", 65)), "wind_speed_kmh": float(ow_live.get("wind_speed_kmh", 8.0)), "rain_prob_pct": int(ow_live.get("rain_prob_pct", 10)), "heat_stress_days": int(heat_stress)}
+        soil_telemetry_pkg = {
+            "n": safe_float(n_curr, 140.0), "p": safe_float(p_curr, 16.4), "k": safe_float(k_curr, 300.0),
+            "zn": safe_float(zn_curr, 1.2), "b": safe_float(b_curr, 0.8),
+            "ph": safe_float(ph_curr, 7.2), "oc": safe_float(oc_curr, 0.52)
+        }
+        weather_telemetry_pkg = {
+            "temp_c": safe_float(ow_live.get("temp_c", 28.5), 28.5),
+            "humidity_pct": safe_int(ow_live.get("humidity_pct", 65), 65),
+            "wind_speed_kmh": safe_float(ow_live.get("wind_speed_kmh", 8.0), 8.0),
+            "rain_prob_pct": safe_int(ow_live.get("rain_prob_pct", 10), 10),
+            "heat_stress_days": safe_int(heat_stress, 2)
+        }
         
         active_sample_data = st.session_state.get("lv_active_sample", None)
         current_source_id = None; raw_input_data = None; forced_crop_hint = None
@@ -1535,12 +1552,21 @@ def main():
         with l_c4: st.metric(t("mem_farm_calib", lang), analytics.get("calibration_index", "104% (High Response)"))
         
         current_telemetry_pkg = {
-            "region": region, "latitude": float(farm_lat), "longitude": float(farm_lon), "crop_type": crop,
-            "temperature_c": float(ow_live.get("temp_c", 28.5)), "humidity_pct": int(ow_live.get("humidity_pct", 65)),
-            "rain_probability_pct": int(ow_live.get("rain_prob_pct", 10)), "heat_stress_days": int(heat_stress),
-            "soil_n_kg_ha": float(n_curr), "soil_p_kg_ha": float(p_curr), "soil_k_kg_ha": float(k_curr), "soil_ph": float(ph_curr),
-            "disease_risk_score": float(dis_risk), "recommended_product": f"{bio_product} ({dosage} L/acre)",
-            "spray_window_status": "Optimal Spray Window" if ow_live.get("rain_prob_pct", 0) <= 20 else "Sub-Optimal (Rain Risk)"
+            "region": region,
+            "latitude": safe_float(farm_lat, 18.5204),
+            "longitude": safe_float(farm_lon, 73.8567),
+            "crop_type": crop,
+            "temperature_c": safe_float(ow_live.get("temp_c", 28.5), 28.5),
+            "humidity_pct": safe_int(ow_live.get("humidity_pct", 65), 65),
+            "rain_probability_pct": safe_int(ow_live.get("rain_prob_pct", 10), 10),
+            "heat_stress_days": safe_int(heat_stress, 2),
+            "soil_n_kg_ha": safe_float(n_curr, 140.0),
+            "soil_p_kg_ha": safe_float(p_curr, 16.4),
+            "soil_k_kg_ha": safe_float(k_curr, 300.0),
+            "soil_ph": safe_float(ph_curr, 7.2),
+            "disease_risk_score": safe_float(dis_risk, 35.0),
+            "recommended_product": f"{bio_product} ({dosage} L/acre)",
+            "spray_window_status": "Optimal Spray Window" if safe_int(ow_live.get("rain_prob_pct", 10), 10) <= 20 else "Sub-Optimal (Rain Risk)"
         }
 
         now_dt = datetime.now()
@@ -1575,9 +1601,9 @@ def main():
             with col_f1:
                 log_crop = st.text_input(t("mem_field_name", lang), value=f"{localized_active_crop} - Field #1")
                 log_product = st.selectbox(t("mem_product", lang), ["Syngenta Quantis", "Syngenta Isabion", "Syngenta CropBio+"])
-                log_dosage = st.number_input(t("mem_dosage", lang), value=float(dosage))
+                log_dosage = st.number_input(t("mem_dosage", lang), value=safe_float(dosage, 1.0))
             with col_f2:
-                log_yield = st.number_input(t("mem_observed_yield", lang), value=float(np.round(pred_actual, 2)))
+                log_yield = st.number_input(t("mem_observed_yield", lang), value=safe_float(np.round(pred_actual, 2) if pred_actual is not None else 24.0, 24.0))
                 log_notes = st.text_area(t("mem_notes", lang), value=t("mem_notes_default", lang))
             
             submit_log = st.form_submit_button(t("mem_save_btn", lang))
@@ -1720,8 +1746,8 @@ def main():
 
         # Model Governance Card
         m_metrics = artifacts.get("metrics", {})
-        m_r2 = float(m_metrics.get("r2", 0.9944)); m_rmse = float(m_metrics.get("rmse", 8.18)); m_mae = float(m_metrics.get("mae", 3.99))
-        m_cv = float(m_metrics.get("cv_mean_r2", 0.9931)); m_train = int(m_metrics.get("train_samples", 1374)); m_test = int(m_metrics.get("test_samples", 226))
+        m_r2 = safe_float(m_metrics.get("r2", 0.9944), 0.9944); m_rmse = safe_float(m_metrics.get("rmse", 8.18), 8.18); m_mae = safe_float(m_metrics.get("mae", 3.99), 3.99)
+        m_cv = safe_float(m_metrics.get("cv_mean_r2", 0.9931), 0.9931); m_train = safe_int(m_metrics.get("train_samples", 1374), 1374); m_test = safe_int(m_metrics.get("test_samples", 226), 226)
         ver_str = artifacts.get("version", {}).get("model_version", "yield-xgb-v2.1")
 
         st.markdown(f"""
