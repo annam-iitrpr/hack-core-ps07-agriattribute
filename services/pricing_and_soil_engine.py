@@ -11,6 +11,13 @@ Citations:
 import math
 import copy
 
+try:
+    import streamlit as _st
+    _cache_pse = _st.cache_data(show_spinner=False)
+except Exception:
+    def _cache_pse(f): return f
+
+
 # Official CACP 2024-25 MSP Benchmarks (₹/Quintal) & Syngenta CE Hub Dosage Economics
 CROPS_DATABASE = {
     "Soybean": {
