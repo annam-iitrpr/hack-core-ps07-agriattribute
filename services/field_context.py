@@ -95,20 +95,47 @@ ENCODED_COLUMNS = [
 ]
 
 
+# Default Crop Stages
+DEFAULT_CROP_STAGES = {
+    "Wheat": "Heading / Flag Leaf",
+    "Rice (Paddy)": "Tillering / Panicle Initiation",
+    "Sugarcane": "Grand Growth / Formative Phase",
+    "Cotton": "Squaring / Boll Formation",
+    "Soybean": "Flowering / Pod Formation",
+    "Tomato": "Flowering & Fruit Set",
+    "Onion": "Bulb Enlargement",
+    "Maize": "Silking & Tassel Emergence",
+    "Chickpea (Gram / Chana)": "Pod Development",
+    "Tur / Pigeon Pea (Arhar)": "Flower Initiation & Pod Set",
+    "Groundnut (Peanut)": "Pegging & Pod Filling",
+    "Mustard / Rapeseed": "Siliqua Formation & Flowering"
+}
+
+
+def get_default_crop_stage(crop_name: str) -> str:
+    """Retrieve canonical phenological stage for any crop."""
+    if not crop_name:
+        return "Flowering / Pod Formation"
+    for k, v in DEFAULT_CROP_STAGES.items():
+        if k.lower() in crop_name.lower() or crop_name.lower() in k.lower():
+            return v
+    return "Flowering / Pod Formation"
+
+
 @dataclass
 class FieldContext:
     """Unified agronomic field context object."""
     # 1. Geography & Spatial Context
-    region: str
-    location_name: str
-    lat: float
-    lon: float
+    region: str = "Punjab & Haryana (Indo-Gangetic)"
+    location_name: str = "Ludhiana, Punjab"
+    lat: float = 30.9010
+    lon: float = 75.8573
 
     # 2. Crop & Phenology
-    crop: str
-    proxy_crop: str
-    season: str
-    crop_stage: str = "Flowering / Pod Formation"
+    crop: str = "Wheat"
+    proxy_crop: str = "Wheat"
+    season: str = "Rabi"
+    crop_stage: str = "Heading / Flag Leaf"
 
     # 3. Soil Parameters (Govt Soil Health Card DAC&FW Standards)
     soc: float = 0.52
@@ -186,6 +213,12 @@ class FieldContext:
     biological_yield_lift: Optional[float] = 3.8
     treatment_cost: Optional[float] = 1200.0
     mandi_price: Optional[float] = 5499.0
+
+    def __post_init__(self):
+        if self.proxy_crop == "Wheat" and self.crop != "Wheat":
+            self.proxy_crop = self.crop
+        if not self.crop_stage or (self.crop != "Wheat" and self.crop_stage == "Heading / Flag Leaf"):
+            self.crop_stage = get_default_crop_stage(self.crop)
 
     def __getattr__(self, name: str) -> Any:
         """Defensive validation: prevents AttributeError on missing optional/dynamic attributes."""
@@ -404,21 +437,7 @@ def build_field_context(
     msp = float(mandi_info.get("msp", 4892.0))
     delta = float(mandi_info.get("price_vs_msp_delta", 607.0))
     source_status = mandi_info.get("data_source_status", "Agmarknet 2.0 Official Daily APMC")
-    DEFAULT_CROP_STAGES = {
-        "Wheat": "Heading / Flag Leaf",
-        "Rice (Paddy)": "Tillering / Panicle Initiation",
-        "Sugarcane": "Grand Growth / Formative Phase",
-        "Cotton": "Squaring / Boll Formation",
-        "Soybean": "Flowering / Pod Formation",
-        "Tomato": "Flowering & Fruit Set",
-        "Onion": "Bulb Enlargement",
-        "Maize": "Silking & Tassel Emergence",
-        "Chickpea (Gram / Chana)": "Pod Development",
-        "Tur / Pigeon Pea (Arhar)": "Flower Initiation & Pod Set",
-        "Groundnut (Peanut)": "Pegging & Pod Filling",
-        "Mustard / Rapeseed": "Siliqua Formation & Flowering"
-    }
-    resolved_stage = DEFAULT_CROP_STAGES.get(proxy_crop, DEFAULT_CROP_STAGES.get(crop, crop_stage))
+    resolved_stage = get_default_crop_stage(proxy_crop) if proxy_crop in DEFAULT_CROP_STAGES else get_default_crop_stage(crop)
 
     return FieldContext(
         region=region,

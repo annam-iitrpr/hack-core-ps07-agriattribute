@@ -512,4 +512,14 @@ def _render_detailed_product_card(match_res: ProductMatchResult, lang: str, t: A
             st.markdown(f"**Tank Mix & Compatibility:**  \n{p.tank_mix_information}")
             st.markdown(f"**Official Reference URL:** [{p.source_url}]({p.source_url})")
 
+        is_selected = st.session_state.get("selected_bio_product") == p.product_name
+        btn_label = f"✅ Active Field Biological" if is_selected else f"🎯 Apply {p.product_name} to Field Context"
+        if st.button(btn_label, key=f"btn_pick_bio_{abs(hash(p.product_name))}", type="primary" if is_selected else "secondary", use_container_width=True):
+            st.session_state["selected_bio_product"] = p.product_name
+            st.session_state["s_dosage"] = float(p.application_rate_num)
+            st.session_state["whatif_dosage"] = float(p.application_rate_num)
+            st.session_state["_compute_key"] = None
+            st.toast(f"Synchronized {p.product_name} across Yield, Cost, and ROI!", icon="🧬")
+            st.rerun()
+
 
