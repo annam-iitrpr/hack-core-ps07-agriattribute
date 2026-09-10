@@ -766,6 +766,21 @@ def render_management_tab_ui(
         b_defaults = get_crop_management_defaults(crop_name)
         rec_npk = b_defaults["rec_npk_kg_acre"]
         
+        # Clear widget state keys so Streamlit form widgets immediately reset to new crop defaults
+        for k in [
+            "mgmt_f_irrig_m", "mgmt_f_irrig_s", "mgmt_f_irrig_f", "mgmt_f_irrig_a",
+            "mgmt_f_fert_pct", "mgmt_f_fert_t", "mgmt_f_fym",
+            "mgmt_f_prot_p", "mgmt_f_prot_t", "mgmt_f_prot_tgt",
+            "mgmt_f_seed_v", "mgmt_f_sow_d", "mgmt_f_sp_r", "mgmt_f_sp_p",
+            "mgmt_f_till", "mgmt_f_weed", "mgmt_f_mech",
+            "mgmt_f_bio_prod", "mgmt_f_bio_dos", "mgmt_f_bio_stg", "mgmt_f_bio_cnt"
+        ]:
+            if k in st.session_state:
+                del st.session_state[k]
+        
+        active_bio = st.session_state.get("selected_bio_product", b_defaults.get("recommended_bio_product", "Syngenta Quantis"))
+        active_bio_dose = float(st.session_state.get("whatif_dosage", b_defaults.get("recommended_bio_dose_l_acre", 2.0)))
+        
         st.session_state["mgmt_profile"] = ManagementProfile(
             field_id=f"IND_FIELD_{abs(hash(location_name + crop_name)) % 9000 + 1000:04d}",
             crop=crop_name,
@@ -796,8 +811,8 @@ def render_management_tab_ui(
             tillage_type="Minimum Tillage (1 Plough + 1 Rotavator)",
             weed_management="Integrated (Pre-emergence Herbicide + 1 Hand Weeding)",
             mechanization_level="Tractor-drawn sowing + Manual harvesting",
-            bio_product=b_defaults.get("recommended_bio_product", "Syngenta Quantis"),
-            bio_dosage_l_acre=float(st.session_state.get("whatif_dosage", b_defaults.get("recommended_bio_dose_l_acre", 2.0))),
+            bio_product=active_bio,
+            bio_dosage_l_acre=active_bio_dose,
             bio_crop_stage=getattr(field_ctx, 'crop_stage', b_defaults.get("recommended_bio_stage", "Flowering / Pod Initiation")),
             bio_applications_count=1,
             bio_application_date="2026-07-20",
@@ -863,6 +878,28 @@ def render_management_tab_ui(
         </div>
     </div>
     """, unsafe_allow_html=True)
+
+    # Synchronized Soil & Weather Intelligence
+    soil_n = float(getattr(field_ctx, 'nitrogen', 140.0))
+    soil_p = float(getattr(field_ctx, 'phosphorus', 16.4))
+    soil_k = float(getattr(field_ctx, 'potassium', 300.0))
+    temp_c = float(getattr(field_ctx, 'temp_c', 28.5))
+    heat_days = int(getattr(field_ctx, 'heat_stress_days', 2))
+    
+    sync_banner_html = (
+        f'<div style="background:#f0fdf4; border:1.5px solid #86efac; border-radius:12px; padding:14px 18px; margin-bottom:16px;">'
+        f'<div style="font-weight:800; font-size:0.95rem; color:#065f46; display:flex; align-items:center; gap:8px;">'
+        f'<span>🔗</span><span>Active Field Synchronization: <b>{crop_name}</b> ({location_name} • {region_name})</span>'
+        f'</div>'
+        f'<div style="font-size:0.82rem; color:#1e293b; line-height:1.5; margin-top:6px;">'
+        f'• <b>🧪 Soil Health Synchronization:</b> Measured Soil Test is <b>{soil_n:.0f} kg/ha N</b>, <b>{soil_p:.1f} kg/ha P</b>, <b>{soil_k:.0f} kg/ha K</b>. '
+        f'Official ICAR recommended dose for <b>{crop_name}</b> is <b>{rec_npk["N"]:.0f}:{rec_npk["P"]:.0f}:{rec_npk["K"]:.0f} kg/acre</b>. Adjust the fertilizer slider to match your application.<br>'
+        f'• <b>🌦️ Weather Synchronization:</b> Ambient temperature is <b>{temp_c:.1f}°C</b> ({heat_days} days thermal stress forecast). Critical irrigation timing is vital to prevent yield drag.<br>'
+        f'• <b>🧬 Active Biological Protocol:</b> Baseline recommendation is <b>{profile.bio_product}</b> ({profile.bio_dosage_l_acre} L/acre) at <b>{profile.bio_crop_stage}</b>.'
+        f'</div>'
+        f'</div>'
+    )
+    st.markdown(sync_banner_html, unsafe_allow_html=True)
 
     # ══════════════════════════════════════════════════════════════════════
     # 2. FARMER WORKFLOW FORM (6 Controllable Input Groups)
@@ -1012,17 +1049,27 @@ def render_management_tab_ui(
 
         # Group 6: Biological Application
         with st.expander("🧬 6. Biological Application (What biological did you apply?)", expanded=True):
+            try:
+                from services.biological_catalog_service import get_all_products
+                all_bio_prods = [p.product_name for p in get_all_products()]
+            except Exception:
+                all_bio_prods = ["Megafol®", "YieldON®", "Quantis®", "Isabion®", "CropBio+®", "Epivio® Energy", "Talete®", "Viva®", "Vixeran®", "Taegro® 370g", "KRIBHCO Liquid Consortia (NPK)"]
+            
+            curr_bio = st.session_state.get("selected_bio_product", profile.bio_product)
+            matched_bio = next((p for p in all_bio_prods if p.lower().startswith(curr_bio.split()[0].lower()) or curr_bio.lower() in p.lower()), all_bio_prods[0])
+            def_bio_idx = all_bio_prods.index(matched_bio) if matched_bio in all_bio_prods else 0
+            
             profile.bio_product = st.selectbox(
                 "Biological Product Applied",
-                options=["Syngenta Quantis", "Syngenta Isabion", "Syngenta CropBio+"],
-                index=["Syngenta Quantis", "Syngenta Isabion", "Syngenta CropBio+"].index(profile.bio_product) if profile.bio_product in ["Syngenta Quantis", "Syngenta Isabion", "Syngenta CropBio+"] else 0,
+                options=all_bio_prods,
+                index=def_bio_idx,
                 key="mgmt_f_bio_prod"
             )
             col_b1, col_b2 = st.columns(2)
             with col_b1:
                 profile.bio_dosage_l_acre = st.number_input(
-                    "Dosage Applied (L/acre)",
-                    min_value=0.5, max_value=5.0, value=float(profile.bio_dosage_l_acre), step=0.25,
+                    "Dosage Applied (L/acre or standard dose)",
+                    min_value=0.1, max_value=10.0, value=float(st.session_state.get("whatif_dosage", profile.bio_dosage_l_acre)), step=0.25,
                     key="mgmt_f_bio_dos"
                 )
             with col_b2:
@@ -1036,6 +1083,8 @@ def render_management_tab_ui(
                 options=[1, 2, 3],
                 index=0, key="mgmt_f_bio_cnt"
             )
+            st.session_state["selected_bio_product"] = profile.bio_product
+            st.session_state["whatif_dosage"] = profile.bio_dosage_l_acre
 
     # Synchronize with session state controls
     st.session_state["whatif_mgt"] = quality_eval["overall_grade"]

@@ -96,7 +96,7 @@ _CANONICAL_PRODUCTS: List[BiologicalProduct] = [
         source_page="Pages 1-2",
         source_url="https://www.syngenta.com/en/biologicals",
         image_id="megafol_packshot_01",
-        image_path="assets/biologicals/syngenta/megafol/megafol_packshot_clean.png",
+        image_path="assets/biologicals/syngenta/megafol/megafol_packshot_01.png",
         image_type="PACKSHOT",
         trial_results_summary="Commercial potato field trials demonstrate improved marketable tuber size distribution (+14.2% Grade A tubers) and +2.8 t/ha yield response under thermal stress."
     ),
@@ -137,7 +137,7 @@ _CANONICAL_PRODUCTS: List[BiologicalProduct] = [
         source_page="Pages 1-4",
         source_url="https://www.syngenta.ca/biologicals/yieldon",
         image_id="yieldon_packshot_01",
-        image_path="assets/biologicals/syngenta/yieldon/yieldon_packshot_clean.png",
+        image_path="assets/biologicals/syngenta/yieldon/yieldon_packshot_01.png",
         image_type="PACKSHOT",
         trial_results_summary="Replicated grower & research trials (n=47 Ontario): +3.9 bu/ac overall average yield response vs check; +2.5 bu/ac average yield response over fungicide alone in corn (n=48); +2.0 bu/ac in canola (n=20)."
     ),
@@ -178,7 +178,7 @@ _CANONICAL_PRODUCTS: List[BiologicalProduct] = [
         source_page="Multi-language Insert Leaflet",
         source_url="https://www.syngenta.co.in",
         image_id="epivio_energy_packshot_01",
-        image_path="assets/biologicals/syngenta/epivio_energy/epivio_energy_packshot_clean.png",
+        image_path="assets/biologicals/syngenta/epivio_energy/epivio_energy_packshot_01.png",
         image_type="PACKSHOT",
         trial_results_summary="Multi-locational ICAR & Syngenta field trials demonstrate +18-24% greater root surface area and +8-12% higher seedling emergence under moisture-stressed seedbeds."
     ),
@@ -219,7 +219,7 @@ _CANONICAL_PRODUCTS: List[BiologicalProduct] = [
         source_page="Pages 1-18",
         source_url="https://www.valagro.com/en/talete",
         image_id="talete_packshot_01",
-        image_path="assets/biologicals/syngenta/talete/talete_packshot_clean.png",
+        image_path="assets/biologicals/syngenta/talete/talete_packshot_01.png",
         image_type="PACKSHOT",
         trial_results_summary="Regenerative agriculture field trials show +12.8% yield preservation with a 25% reduction in total seasonal irrigation volume across horticultural and field crops."
     ),
@@ -260,7 +260,7 @@ _CANONICAL_PRODUCTS: List[BiologicalProduct] = [
         source_page="Pages 1-18",
         source_url="https://www.valagro.com/en/viva",
         image_id="viva_packshot_01",
-        image_path="assets/biologicals/syngenta/viva/viva_packshot_clean.png",
+        image_path="assets/biologicals/syngenta/viva/viva_packshot_01.png",
         image_type="PACKSHOT",
         trial_results_summary="Long-term field trials report +28% increase in active microbial biomass in the rhizosphere, +19% root volume expansion, and +11.5% higher marketable harvest in intensive soils."
     ),
@@ -301,7 +301,7 @@ _CANONICAL_PRODUCTS: List[BiologicalProduct] = [
         source_page="Pages 1-18",
         source_url="https://www.syngenta.com/biologicals/vixeran",
         image_id="vixeran_packshot_01",
-        image_path="assets/biologicals/syngenta/vixeran/vixeran_packshot_clean.png",
+        image_path="assets/biologicals/syngenta/vixeran/vixeran_packshot_01.png",
         image_type="PACKSHOT",
         trial_results_summary="Multi-country trial network confirms Vixeran reliably provides nitrogen equivalent to 30-40 kg of mineral N/ha, maintaining crop yield while allowing a 20-30% reduction in synthetic N application."
     ),
@@ -342,7 +342,7 @@ _CANONICAL_PRODUCTS: List[BiologicalProduct] = [
         source_page="Pages 1-18",
         source_url="https://www.valagro.com/en/mc-line",
         image_id="mc_cream_packshot_01",
-        image_path="assets/biologicals/syngenta/mc_line/mc_cream_packshot_clean.png",
+        image_path="assets/biologicals/syngenta/megafol/mc_cream_packshot.png",
         image_type="PACKSHOT",
         trial_results_summary="Field evaluations show +16.5% higher boll retention in cotton and +14% improved fruit set in solanaceous vegetables."
     ),
@@ -890,8 +890,10 @@ def get_verified_image_path(product: BiologicalProduct) -> str:
     
     # Fallback to organization-level verified packshots
     if "syngenta" in product.organization.lower():
-        if os.path.exists("assets/biologicals/syngenta/quantis/quantis_packshot_01.jpg"):
-            return "assets/biologicals/syngenta/quantis/quantis_packshot_01.jpg"
+        if os.path.exists("assets/biologicals/syngenta/quantis/quantis_packshot_clean.png"):
+            return "assets/biologicals/syngenta/quantis/quantis_packshot_clean.png"
+        elif os.path.exists("assets/biologicals/syngenta/megafol/megafol_packshot_01.png"):
+            return "assets/biologicals/syngenta/megafol/megafol_packshot_01.png"
     elif "kribhco" in product.organization.lower():
         if os.path.exists("assets/biologicals/external/kribhco/kribhco_npk_consortia_packshot.png"):
             return "assets/biologicals/external/kribhco/kribhco_npk_consortia_packshot.png"
@@ -899,7 +901,7 @@ def get_verified_image_path(product: BiologicalProduct) -> str:
         if os.path.exists("assets/biologicals/external/agrigem/taegro_370g_packshot.png"):
             return "assets/biologicals/external/agrigem/taegro_370g_packshot.png"
             
-    return "assets/features/feature_2_dosage.jpg"
+    return "assets/biologicals/syngenta/quantis/quantis_packshot_clean.png"
 
 
 def get_base64_image(image_path: str) -> str:
