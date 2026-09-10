@@ -52,6 +52,8 @@ from services import annam_mcii_service
 from services import field_context
 from services import decision_simulator
 from services import cost_of_cultivation_service
+from services import biological_match_engine
+from services import biological_catalog_service
 
 # Centralized Localization Architecture
 from services.localization import (
