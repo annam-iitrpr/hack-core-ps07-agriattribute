@@ -29,23 +29,23 @@ import urllib.parse
 import html as html_mod
 from datetime import datetime
 
-import supabase_client
-import openweather_service
-import gemini_service
-import leafvision_engine
-import tnau_service
-import pricing_and_soil_engine
+from services import supabase_client
+from services import openweather_service
+from services import gemini_service
+from services import leafvision_engine
+from services import tnau_service
+from services import pricing_and_soil_engine
 
-import interactive_map_service
-import agmarknet_engine
-import localization
-import annam_mcii_ui
-import annam_mcii_service
-import field_context
-import decision_simulator
+from services import interactive_map_service
+from services import agmarknet_engine
+from services import localization
+from services import annam_mcii_ui
+from services import annam_mcii_service
+from services import field_context
+from services import decision_simulator
 
 # Centralized Localization Architecture
-from localization import (
+from services.localization import (
     t, t_crop, t_region, t_season, t_crop_desc, t_weather_desc, t_commodity,
     TRANSLATIONS, LANG_MAP, CROP_TRANSLATIONS, REGION_TRANSLATIONS
 )

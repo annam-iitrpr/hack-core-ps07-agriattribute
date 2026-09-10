@@ -21,7 +21,7 @@ Implements:
 from typing import Dict, Any, List, Optional, Tuple
 import numpy as np
 import pandas as pd
-from field_context import FieldContext
+from services.field_context import FieldContext
 
 
 # Biophysical Yield Ceilings (Biological Potential Y_max in q/acre under non-limiting conditions)

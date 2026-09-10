@@ -13,9 +13,9 @@ import json
 import streamlit as st
 import streamlit.components.v1 as components
 import pandas as pd
-import annam_mcii_service
-import annam_intelligence_adapter
-from localization import t
+from services import annam_mcii_service
+from services import annam_intelligence_adapter
+from services.localization import t
 
 
 def _generate_clean_leaflet_map_html(map_stations: list, selected_station_id: str = None) -> str:
