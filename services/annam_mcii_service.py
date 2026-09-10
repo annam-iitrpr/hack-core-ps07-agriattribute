@@ -27,6 +27,7 @@ except ImportError:
     HAS_STREAMLIT = False
 
 # Official MCII Endpoint Discovered from frontend analysis
+MCII_PRIMARY_ENDPOINT = "https://d1b09mxwt0ho4j.cloudfront.net/default/WS_Device_Activity"
 _PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 _ANNAM_CACHE = os.path.join(_PROJECT_ROOT, "data", "annam", "mcii_cache.json")
 _DEFAULT_CACHE = os.path.join(_PROJECT_ROOT, "data", "mcii_cache.json")

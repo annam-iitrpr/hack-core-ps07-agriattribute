@@ -14,7 +14,6 @@ deeply synchronized with all platform modules:
 
 import os
 import requests
-import json
 import base64
 import html as html_mod
 try:

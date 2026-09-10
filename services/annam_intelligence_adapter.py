@@ -26,7 +26,6 @@ Core Directives:
 """
 
 from typing import Dict, List, Optional, Any, Tuple
-import math
 
 # Multi-Source Registry Definition
 DATA_SOURCES_REGISTRY = {

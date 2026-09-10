@@ -17,7 +17,6 @@ Provides a single source of truth for the entire platform, guaranteeing that:
 from dataclasses import dataclass, field
 from typing import Dict, Any, Optional, Tuple, List
 import pandas as pd
-import numpy as np
 
 
 # Canonical 12 Crop Taxonomy mapping

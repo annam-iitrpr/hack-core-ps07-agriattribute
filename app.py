@@ -27,8 +27,10 @@ import json
 import joblib
 import numpy as np
 import pandas as pd
+import requests
 import plotly.graph_objects as go
 import plotly.express as px
+from PIL import Image
 import streamlit as st
 import streamlit.components.v1 as components
 import urllib.parse
