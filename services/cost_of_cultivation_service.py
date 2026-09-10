@@ -353,7 +353,6 @@ def render_cost_of_cultivation_tab(field_ctx: Any, model: Any, artifacts: Any, l
     bio_delta_val = float(getattr(field_ctx, 'biological_yield_lift', 3.8))
 
     from services.localization import t
-    st.markdown(f'<div style="background:#ecfdf5; border:1.5px solid #a7f3d0; border-radius:12px; padding:12px 18px; margin-bottom:14px; color:#064e3b; font-size:1.15rem; font-weight:800; display:flex; align-items:center; gap:8px;"><span>❓ {t("q_cost", lang)}</span></div>', unsafe_allow_html=True)
 
     st.markdown("""
     <div style="background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 16px; padding: 18px 24px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.04);">

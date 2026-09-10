@@ -1013,35 +1013,6 @@ def render_soil_health_card_tab(region: str = None, crop: str = None, farm_lat: 
     heading_lbl = t('soil_gauges_heading', lang)
     caption_lbl = t('soil_gauges_caption', lang)
 
-    st.markdown(f'<div style="background:#ecfdf5; border:1.5px solid #a7f3d0; border-radius:12px; padding:12px 18px; margin-bottom:14px; color:#064e3b; font-size:1.15rem; font-weight:800; display:flex; align-items:center; gap:8px;"><span>❓ {t("q_soil", lang)}</span></div>', unsafe_allow_html=True)
-
-    st.markdown(f"""
-    <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); border: 1.5px solid #a7f3d0; border-radius: 16px; padding: 18px 22px; margin-bottom: 16px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-            <div>
-                <div style="font-size: 1.25rem; font-weight: 900; color: #064e3b; display: flex; align-items: center; gap: 8px;">
-                    {title_lbl}
-                </div>
-                <div style="font-size: 0.85rem; color: #166534; font-weight: 600; margin-top: 3px;">
-                    Sample ID: <code>{shc.get('sample_id', 'SHC/2026/REG')}</code> • {shc.get('testing_lab', 'Soil Testing Lab')}
-                </div>
-            </div>
-            <span style="background: #ecfdf5; border: 1px solid #86efac; color: #047857; font-size: 0.75rem; font-weight: 800; padding: 4px 12px; border-radius: 20px;">
-                {badge_lbl}
-            </span>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # Extract nutrient values safely
-    n_val = params.get("Nitrogen (N)", {}).get("val", 240.0) if isinstance(params.get("Nitrogen (N)"), dict) else 240.0
-    p_val = params.get("Phosphorus (P)", {}).get("val", 22.0) if isinstance(params.get("Phosphorus (P)"), dict) else 22.0
-    k_val = params.get("Potassium (K)", {}).get("val", 185.0) if isinstance(params.get("Potassium (K)"), dict) else 185.0
-    zn_val = params.get("Zinc (Zn)", {}).get("val", 0.45) if isinstance(params.get("Zinc (Zn)"), dict) else 0.45
-    b_val = params.get("Boron (B)", {}).get("val", 0.40) if isinstance(params.get("Boron (B)"), dict) else 0.40
-    ph_val = params.get("Soil pH", {}).get("val", 7.6) if isinstance(params.get("Soil pH"), dict) else 7.6
-    oc_val = params.get("Organic Carbon (OC)", {}).get("val", 4.8) if isinstance(params.get("Organic Carbon (OC)"), dict) else 4.8
-
     # Integrate Crop-Aware Soil Reference Resolver
     from services import soil_reference_resolver
     crop_prof = soil_reference_resolver.get_crop_profile(crop_name, reg_name)
@@ -1051,46 +1022,46 @@ def render_soil_health_card_tab(region: str = None, crop: str = None, farm_lat: 
     eval_zn = soil_reference_resolver.evaluate_soil_status("Zinc (Zn)", zn_val, crop=crop_name, state=reg_name)
     fert_rec = soil_reference_resolver.get_fertilizer_recommendation(crop_name, {"N": n_val, "P": p_val, "K": k_val}, reg_name)
 
-    # Render Crop-Aware Resolver Header Card
-    st.markdown(f"""
-    <div style="background: #ffffff; border: 2px solid #10b981; border-radius: 16px; padding: 18px 22px; margin-bottom: 16px; box-shadow: 0 4px 14px rgba(16,185,129,0.08);">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
-            <div>
-                <div style="font-size: 1.18rem; font-weight: 900; color: #064e3b; display: flex; align-items: center; gap: 8px;">
-                    🎯 Crop-Aware Soil Resolver • Active Crop: <span style="color: #047857; text-decoration: underline;">{crop_prof['crop']}</span>
-                </div>
-                <div style="font-size: 0.82rem; color: #475569; font-weight: 600; margin-top: 2px;">
-                    Source: {crop_prof['source']} (Confidence: {crop_prof['confidence']})
-                </div>
-            </div>
-            <span style="background: #ecfdf5; border: 1px solid #86efac; color: #047857; font-size: 0.76rem; font-weight: 800; padding: 4px 12px; border-radius: 20px;">
-                ⚙️ Dynamic Crop Resolution
-            </span>
-        </div>
-
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; margin-top: 10px;">
-            <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px;">
-                <div style="font-size: 0.72rem; font-weight: 800; color: #475569; text-transform: uppercase;">Nitrogen (N) Status</div>
-                <div style="font-size: 1.15rem; font-weight: 900; color: #0f172a; margin: 2px 0;">{n_val:.0f} kg/ha <span style="font-size: 0.75rem; color: #64748b;">({eval_n['status']})</span></div>
-                <div style="font-size: 0.76rem; color: #047857; font-weight: 700;">Rec: {fert_rec['urea_recommendation_kg_acre']} kg Urea / acre</div>
-            </div>
-            <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px;">
-                <div style="font-size: 0.72rem; font-weight: 800; color: #475569; text-transform: uppercase;">Phosphorus (P) Status</div>
-                <div style="font-size: 1.15rem; font-weight: 900; color: #0f172a; margin: 2px 0;">{p_val:.1f} kg/ha <span style="font-size: 0.75rem; color: #64748b;">({eval_p['status']})</span></div>
-                <div style="font-size: 0.76rem; color: #047857; font-weight: 700;">Rec: {fert_rec['ssp_recommendation_kg_acre']} kg SSP / acre</div>
-            </div>
-            <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px;">
-                <div style="font-size: 0.72rem; font-weight: 800; color: #475569; text-transform: uppercase;">Potassium (K) Status</div>
-                <div style="font-size: 1.15rem; font-weight: 900; color: #0f172a; margin: 2px 0;">{k_val:.0f} kg/ha <span style="font-size: 0.75rem; color: #64748b;">({eval_k['status']})</span></div>
-                <div style="font-size: 0.76rem; color: #047857; font-weight: 700;">Rec: {fert_rec['mop_recommendation_kg_acre']} kg MOP / acre</div>
-            </div>
-            <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px;">
-                <div style="font-size: 0.72rem; font-weight: 800; color: #475569; text-transform: uppercase;">Biological Protocol</div>
-                <div style="font-size: 0.82rem; font-weight: 800; color: #065f46; margin-top: 4px; line-height: 1.35;">{crop_prof['biostimulant_protocol']}</div>
-            </div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    # Render Crop-Aware Resolver Header Card (Clean HTML Concatenation)
+    resolver_card_html = (
+        f'<div style="background: #ffffff; border: 2px solid #10b981; border-radius: 16px; padding: 18px 22px; margin-bottom: 16px; box-shadow: 0 4px 14px rgba(16,185,129,0.08);">'
+        f'<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">'
+        f'<div>'
+        f'<div style="font-size: 1.18rem; font-weight: 900; color: #064e3b; display: flex; align-items: center; gap: 8px;">'
+        f'🎯 Crop-Aware Soil Resolver • Active Crop: <span style="color: #047857; text-decoration: underline;">{crop_prof["crop"]}</span>'
+        f'</div>'
+        f'<div style="font-size: 0.82rem; color: #475569; font-weight: 600; margin-top: 2px;">'
+        f'Source: {crop_prof["source"]} (Confidence: {crop_prof["confidence"]})'
+        f'</div>'
+        f'</div>'
+        f'<span style="background: #ecfdf5; border: 1px solid #86efac; color: #047857; font-size: 0.76rem; font-weight: 800; padding: 4px 12px; border-radius: 20px;">'
+        f'⚙️ Dynamic Crop Resolution'
+        f'</span>'
+        f'</div>'
+        f'<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; margin-top: 10px;">'
+        f'<div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px;">'
+        f'<div style="font-size: 0.72rem; font-weight: 800; color: #475569; text-transform: uppercase;">Nitrogen (N) Status</div>'
+        f'<div style="font-size: 1.15rem; font-weight: 900; color: #0f172a; margin: 2px 0;">{n_val:.0f} kg/ha <span style="font-size: 0.75rem; color: #64748b;">({eval_n["status"]})</span></div>'
+        f'<div style="font-size: 0.76rem; color: #047857; font-weight: 700;">Rec: {fert_rec["urea_recommendation_kg_acre"]} kg Urea / acre</div>'
+        f'</div>'
+        f'<div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px;">'
+        f'<div style="font-size: 0.72rem; font-weight: 800; color: #475569; text-transform: uppercase;">Phosphorus (P) Status</div>'
+        f'<div style="font-size: 1.15rem; font-weight: 900; color: #0f172a; margin: 2px 0;">{p_val:.1f} kg/ha <span style="font-size: 0.75rem; color: #64748b;">({eval_p["status"]})</span></div>'
+        f'<div style="font-size: 0.76rem; color: #047857; font-weight: 700;">Rec: {fert_rec["ssp_recommendation_kg_acre"]} kg SSP / acre</div>'
+        f'</div>'
+        f'<div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px;">'
+        f'<div style="font-size: 0.72rem; font-weight: 800; color: #475569; text-transform: uppercase;">Potassium (K) Status</div>'
+        f'<div style="font-size: 1.15rem; font-weight: 900; color: #0f172a; margin: 2px 0;">{k_val:.0f} kg/ha <span style="font-size: 0.75rem; color: #64748b;">({eval_k["status"]})</span></div>'
+        f'<div style="font-size: 0.76rem; color: #047857; font-weight: 700;">Rec: {fert_rec["mop_recommendation_kg_acre"]} kg MOP / acre</div>'
+        f'</div>'
+        f'<div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px;">'
+        f'<div style="font-size: 0.72rem; font-weight: 800; color: #475569; text-transform: uppercase;">Biological Protocol</div>'
+        f'<div style="font-size: 0.82rem; font-weight: 800; color: #065f46; margin-top: 4px; line-height: 1.35;">{crop_prof["biostimulant_protocol"]}</div>'
+        f'</div>'
+        f'</div>'
+        f'</div>'
+    )
+    st.markdown(resolver_card_html, unsafe_allow_html=True)
 
     with st.expander(f"📚 View Crop-Aware Soil Resolver Technical Provenance & References for {crop_prof['crop']}", expanded=False):
         st.markdown(f"""

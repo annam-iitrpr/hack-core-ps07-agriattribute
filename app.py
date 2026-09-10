@@ -1250,7 +1250,6 @@ def main():
     # SECTION 3: 🌦️ WEATHER & CLIMATE (OpenWeather, Satellite Radar & KALP)
     # ═════════════════════════════════════════════════════════════════════════
     with tab_weather:
-        st.markdown(f'<div style="background:#ecfdf5; border:1.5px solid #a7f3d0; border-radius:12px; padding:12px 18px; margin-bottom:14px; color:#064e3b; font-size:1.15rem; font-weight:800; display:flex; align-items:center; gap:8px;"><span>❓ {t("q_weather", lang)}</span></div>', unsafe_allow_html=True)
         st.subheader(t("tab1_heading", lang))
         st.markdown(f"""
         <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 12px; padding: 12px 16px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
@@ -1422,7 +1421,6 @@ def main():
     # SECTION 4: 🚜 MANAGEMENT (LeafVision Scanner & Farm Ledger)
     # ═════════════════════════════════════════════════════════════════════════
     with tab_management:
-        st.markdown(f'<div style="background:#ecfdf5; border:1.5px solid #a7f3d0; border-radius:12px; padding:12px 18px; margin-bottom:14px; color:#064e3b; font-size:1.15rem; font-weight:800; display:flex; align-items:center; gap:8px;"><span>❓ {t("q_management", lang)}</span></div>', unsafe_allow_html=True)
         st.markdown("### 🚜 Agronomic Management Cockpit & Foliar Pathology")
         
         # Management Practice Controls
@@ -1656,7 +1654,6 @@ def main():
     # SECTION 5: 🧬 BIOLOGICALS (Syngenta Quantis Protocol & Stress Priming)
     # ═════════════════════════════════════════════════════════════════════════
     with tab_biologicals:
-        st.markdown(f'<div style="background:#ecfdf5; border:1.5px solid #a7f3d0; border-radius:12px; padding:12px 18px; margin-bottom:14px; color:#064e3b; font-size:1.15rem; font-weight:800; display:flex; align-items:center; gap:8px;"><span>❓ {t("q_biologicals", lang)}</span></div>', unsafe_allow_html=True)
         st.markdown(f"### 🧬 Syngenta Biologicals & Abiotic Stress Priming")
         
         col_b1, col_b2 = st.columns(2)
@@ -1693,7 +1690,6 @@ def main():
     # SECTION 6: 🌾 YIELD & ATTRIBUTES (ML Predictor & SHAP Attribution)
     # ═════════════════════════════════════════════════════════════════════════
     with tab_yield:
-        st.markdown(f'<div style="background:#ecfdf5; border:1.5px solid #a7f3d0; border-radius:12px; padding:12px 18px; margin-bottom:14px; color:#064e3b; font-size:1.15rem; font-weight:800; display:flex; align-items:center; gap:8px;"><span>❓ {t("q_yield", lang)}</span></div>', unsafe_allow_html=True)
         st.subheader(t("tab2_heading", lang))
         st.caption(t("tab2_caption", lang))
 
@@ -1807,7 +1803,6 @@ def main():
     # SECTION 8: 📊 IMPACT & ROI (Central PS-07 Decision Card & 5 Scenarios)
     # ═════════════════════════════════════════════════════════════════════════
     with tab_impact:
-        st.markdown(f'<div style="background:#ecfdf5; border:1.5px solid #a7f3d0; border-radius:12px; padding:12px 18px; margin-bottom:14px; color:#064e3b; font-size:1.15rem; font-weight:800; display:flex; align-items:center; gap:8px;"><span>❓ {t("q_impact", lang)}</span></div>', unsafe_allow_html=True)
         col_hero1, col_hero2 = st.columns([1.6, 1.4])
         with col_hero1:
             st.markdown(f'<div class="decision-title">{t("decision_field_title", lang, region=localized_reg, crop=localized_active_crop)}</div>', unsafe_allow_html=True)
@@ -1943,7 +1938,6 @@ def main():
     # SECTION 9: 🤖 AI CHAT (Gemini 2.5 Flash Multilingual Agronomist)
     # ═════════════════════════════════════════════════════════════════════════
     with tab_ai:
-        st.markdown(f'<div style="background:#ecfdf5; border:1.5px solid #a7f3d0; border-radius:12px; padding:12px 18px; margin-bottom:14px; color:#064e3b; font-size:1.15rem; font-weight:800; display:flex; align-items:center; gap:8px;"><span>❓ {t("q_ai", lang)}</span></div>', unsafe_allow_html=True)
         gemini_service.render_gemini_chat_interface(
             lang=lang, crop=crop, region=region, ow_live=ow_live,
             mandi_info=mandi_info, pred_actual=pred_actual, yield_delta=yield_delta,
