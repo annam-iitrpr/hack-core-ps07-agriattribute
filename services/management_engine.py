@@ -764,7 +764,7 @@ def render_management_tab_ui(
     # Initialize / retrieve profile from session state
     if "mgmt_profile" not in st.session_state or st.session_state.get("_last_mgmt_crop") != crop_name:
         b_defaults = get_crop_management_defaults(crop_name)
-        rec_npk = b_defaults["rec_npk_kg_acre"]
+        rec_npk = b_defaults.get("rec_npk_kg_acre", {"N": 48.0, "P": 24.0, "K": 16.0})
         
         # Clear widget state keys so Streamlit form widgets immediately reset to new crop defaults
         for k in [
@@ -781,6 +781,17 @@ def render_management_tab_ui(
         active_bio = st.session_state.get("selected_bio_product", b_defaults.get("recommended_bio_product", "Syngenta Quantis"))
         active_bio_dose = float(st.session_state.get("whatif_dosage", b_defaults.get("recommended_bio_dose_l_acre", 2.0)))
         
+        # Robust regex extraction of row and plant spacing from agronomic descriptions (e.g., '120 x 30 cm (Wide-Row)', '90 x 60 cm (or 120 x 45 cm for Bt Hybrid)')
+        import re
+        raw_sp = str(b_defaults.get("ideal_spacing_cm", "45 x 5 cm"))
+        m_sp = re.search(r'(\d+(?:\.\d+)?)\s*x\s*(\d+(?:\.\d+)?)', raw_sp)
+        if m_sp:
+            def_row_sp = float(m_sp.group(1))
+            def_plant_sp = float(m_sp.group(2))
+        else:
+            def_row_sp = 45.0
+            def_plant_sp = 10.0
+
         st.session_state["mgmt_profile"] = ManagementProfile(
             field_id=f"IND_FIELD_{abs(hash(location_name + crop_name)) % 9000 + 1000:04d}",
             crop=crop_name,
@@ -791,9 +802,9 @@ def render_management_tab_ui(
             last_irrigation_days_ago=2,
             irrigation_adequacy="Optimal (Adequate Moisture)",
             fertilizer_npk_ratio_pct=int(st.session_state.get("whatif_fert_ratio", 100)),
-            n_applied_kg_acre=float(rec_npk["N"]),
-            p_applied_kg_acre=float(rec_npk["P"]),
-            k_applied_kg_acre=float(rec_npk["K"]),
+            n_applied_kg_acre=float(rec_npk.get("N", 40.0)),
+            p_applied_kg_acre=float(rec_npk.get("P", 20.0)),
+            k_applied_kg_acre=float(rec_npk.get("K", 20.0)),
             fertilizer_timing="Split (50% Basal + 50% Topdressing at Vegetative/Flowering)",
             organic_manure_t_acre=float(b_defaults.get("rec_fym_t_acre", 2.5)),
             organic_manure_type="Farmyard Manure (FYM)",
@@ -801,12 +812,12 @@ def render_management_tab_ui(
             pesticide_applied=True,
             pesticide_product="Broad-Spectrum Systemic Fungicide",
             protection_timing="Prophylactic / Early Threshold",
-            target_pest_disease=b_defaults.get("target_diseases", ["Foliar Leaf Blight"])[0],
+            target_pest_disease=b_defaults.get("target_diseases", ["Foliar Leaf Blight"])[0] if b_defaults.get("target_diseases") else "Foliar Leaf Blight",
             sowing_date_str="2026-06-25" if season_name == "Kharif" else "2025-11-10",
             seed_variety_type="High-Yielding Certified Hybrid",
             seed_rate_kg_acre=float(b_defaults.get("seed_rate_kg_acre", 25.0)),
-            row_spacing_cm=float(b_defaults.get("ideal_spacing_cm", "45 x 5 cm").split("x")[0].strip()),
-            plant_spacing_cm=float(b_defaults.get("ideal_spacing_cm", "45 x 5 cm").split("x")[1].replace("cm","").strip()) if "x" in b_defaults.get("ideal_spacing_cm", "") else 10.0,
+            row_spacing_cm=def_row_sp,
+            plant_spacing_cm=def_plant_sp,
             establishment_method="Direct Sowing (Ridge & Furrow)",
             tillage_type="Minimum Tillage (1 Plough + 1 Rotavator)",
             weed_management="Integrated (Pre-emergence Herbicide + 1 Hand Weeding)",
@@ -952,9 +963,10 @@ def render_management_tab_ui(
                 key="mgmt_f_fert_pct"
             )
             b_bench = get_crop_management_defaults(crop_name)
-            rec_n = b_bench["rec_npk_kg_acre"]["N"] * (profile.fertilizer_npk_ratio_pct / 100.0)
-            rec_p = b_bench["rec_npk_kg_acre"]["P"] * (profile.fertilizer_npk_ratio_pct / 100.0)
-            rec_k = b_bench["rec_npk_kg_acre"]["K"] * (profile.fertilizer_npk_ratio_pct / 100.0)
+            npk_ref = b_bench.get("rec_npk_kg_acre", {"N": 40.0, "P": 20.0, "K": 20.0})
+            rec_n = float(npk_ref.get("N", 40.0)) * (profile.fertilizer_npk_ratio_pct / 100.0)
+            rec_p = float(npk_ref.get("P", 20.0)) * (profile.fertilizer_npk_ratio_pct / 100.0)
+            rec_k = float(npk_ref.get("K", 20.0)) * (profile.fertilizer_npk_ratio_pct / 100.0)
             profile.n_applied_kg_acre = rec_n
             profile.p_applied_kg_acre = rec_p
             profile.k_applied_kg_acre = rec_k
@@ -1016,13 +1028,13 @@ def render_management_tab_ui(
             with col_sp1:
                 profile.row_spacing_cm = st.number_input(
                     "Row Spacing (cm)",
-                    min_value=10.0, max_value=200.0, value=float(profile.row_spacing_cm), step=5.0,
+                    min_value=5.0, max_value=300.0, value=float(np.clip(profile.row_spacing_cm, 5.0, 300.0)), step=5.0,
                     key="mgmt_f_sp_r"
                 )
             with col_sp2:
                 profile.plant_spacing_cm = st.number_input(
                     "Plant Spacing (cm)",
-                    min_value=2.0, max_value=100.0, value=float(profile.plant_spacing_cm), step=1.0,
+                    min_value=1.0, max_value=150.0, value=float(np.clip(profile.plant_spacing_cm, 1.0, 150.0)), step=1.0,
                     key="mgmt_f_sp_p"
                 )
 
