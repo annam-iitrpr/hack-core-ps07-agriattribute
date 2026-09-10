@@ -398,9 +398,13 @@ def generate_interactive_weather_map_html(
 
     <script>
         var apiKey = "{api_key}";
+        var emptyTile = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+
         var map = L.map('map', {{
             center: [{lat}, {lon}],
             zoom: {zoom},
+            minZoom: 3,
+            maxZoom: 19,
             zoomControl: true
         }});
 
@@ -413,31 +417,43 @@ def generate_interactive_weather_map_html(
 
         // 1. OpenStreetMap Base Layer
         var osmLayer = L.tileLayer('https://tile.openstreetmap.org/{{z}}/{{x}}/{{y}}.png', {{
+            minZoom: 3,
             maxZoom: 19,
+            maxNativeZoom: 18,
             pane: 'baseMapPane',
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         }}).addTo(map);
 
         // 2. High-Resolution Farm Satellite View (Esri World Imagery)
         var satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{{z}}/{{y}}/{{x}}', {{
+            minZoom: 3,
             maxZoom: 19,
+            maxNativeZoom: 18,
             pane: 'baseMapPane',
             attribution: 'Tiles &copy; Esri High-Res Satellite'
         }});
 
         // 3. OpenWeatherMap Live Satellite Clouds (Visible by default)
         var cloudsLayer = L.tileLayer('https://tile.openweathermap.org/map/clouds_new/{{z}}/{{x}}/{{y}}.png?appid=' + apiKey, {{
-            maxZoom: 18,
+            minZoom: 3,
+            maxZoom: 19,
+            minNativeZoom: 0,
+            maxNativeZoom: 18,
             opacity: 0.85,
             pane: 'weatherOverlayPane',
+            errorTileUrl: emptyTile,
             attribution: 'Clouds &copy; OpenWeatherMap'
         }}).addTo(map);
 
         // 4. OpenWeatherMap Wind Streamlines Layer (Visible by default)
         var windLayer = L.tileLayer('https://tile.openweathermap.org/map/wind_new/{{z}}/{{x}}/{{y}}.png?appid=' + apiKey, {{
-            maxZoom: 18,
+            minZoom: 3,
+            maxZoom: 19,
+            minNativeZoom: 0,
+            maxNativeZoom: 18,
             opacity: 0.80,
             pane: 'weatherOverlayPane',
+            errorTileUrl: emptyTile,
             attribution: 'Wind &copy; OpenWeatherMap'
         }}).addTo(map);
 
@@ -450,20 +466,38 @@ def generate_interactive_weather_map_html(
                     var latestPath = data.radar.past[data.radar.past.length - 1].path;
                     var radarTileUrl = data.host + latestPath + '/256/{{z}}/{{x}}/{{y}}/2/1_1.png';
                     radarLayer = L.tileLayer(radarTileUrl, {{
-                        maxZoom: 18,
+                        minZoom: 3,
+                        maxZoom: 19,
+                        minNativeZoom: 1,
+                        maxNativeZoom: 12,
                         opacity: 0.85,
                         pane: 'weatherOverlayPane',
+                        errorTileUrl: emptyTile,
                         attribution: 'Live Doppler Radar &copy; RainViewer'
                     }}).addTo(map);
                 }} else {{
                     radarLayer = L.tileLayer('https://tile.openweathermap.org/map/precipitation_new/{{z}}/{{x}}/{{y}}.png?appid=' + apiKey, {{
-                        maxZoom: 18, opacity: 0.85, pane: 'weatherOverlayPane'
+                        minZoom: 3,
+                        maxZoom: 19,
+                        minNativeZoom: 0,
+                        maxNativeZoom: 18,
+                        opacity: 0.85,
+                        pane: 'weatherOverlayPane',
+                        errorTileUrl: emptyTile,
+                        attribution: 'Precipitation Radar &copy; OpenWeatherMap'
                     }}).addTo(map);
                 }}
             }})
             .catch(function(err) {{
                 radarLayer = L.tileLayer('https://tile.openweathermap.org/map/precipitation_new/{{z}}/{{x}}/{{y}}.png?appid=' + apiKey, {{
-                    maxZoom: 18, opacity: 0.85, pane: 'weatherOverlayPane'
+                    minZoom: 3,
+                    maxZoom: 19,
+                    minNativeZoom: 0,
+                    maxNativeZoom: 18,
+                    opacity: 0.85,
+                    pane: 'weatherOverlayPane',
+                    errorTileUrl: emptyTile,
+                    attribution: 'Precipitation Radar &copy; OpenWeatherMap'
                 }}).addTo(map);
             }});
 
