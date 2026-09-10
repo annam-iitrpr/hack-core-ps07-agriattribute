@@ -6,17 +6,24 @@ Primary Sources & Methodology:
 - CACP Price Policy for Kharif Crops (Marketing Season 2025-26 & Marketing Season 2026-27)
 - Directorate of Economics & Statistics (DES), Ministry of Agriculture & Farmers Welfare, Govt of India.
 - Chapter 5: "Costs, Returns and Inter-Crop Parity" (Tables 5.1, 5.5, 5.6a-5.6n).
-- CACP Reference Taxonomy:
-  * Operational Cost: Human Labour (Casual, Attached, Family), Bullock Labour (Hired, Owned), Machine Labour (Hired, Owned), Seed, Fertilisers & Manure, Other Inputs (Insecticides, Irrigation, Insurance, Working Capital Interest, Misc).
-  * Fixed Cost: Land Rental Value, Leased Land Rent, Land Revenue & Taxes, Depreciation, Fixed Capital Interest.
+- Exact Cost Hierarchy:
+  * Operational Cost:
+    - Human Labour: Casual, Attached, Family
+    - Bullock Labour: Hired, Owned
+    - Machine Labour: Hired, Owned
+    - Seed
+    - Fertilisers and Manure: Fertilisers, Manure
+    - Other Inputs: Insecticides/Pesticides, Irrigation Charges, Crop Insurance, Interest on Working Capital, Miscellaneous
+  * Fixed Cost:
+    - Rental Value of Owned Land, Rent Paid for Leased-in Land, Land Revenue/Cesses, Depreciation, Interest on Fixed Capital
 - Cost Concepts:
-  * A2: Direct paid-out costs (seeds, fertilizers, pesticides, hired labor, fuel, irrigation, land rent, depreciation).
+  * A2: Direct paid-out costs.
   * A2+FL: Paid-out costs + Imputed value of Family Labour (FL). Benchmark for Statutory MSP (MSP = 1.5 × A2+FL).
-  * C2: Comprehensive cost (A2+FL + interest on value of owned capital assets + rental value of owned land).
+  * C2: Comprehensive cost (Operational Cost + Fixed Cost).
 - Revenue & Returns Definitions:
-  * Gross Revenue = Yield (q/acre or q/ha) × Realized Market Price (₹/q) × Area.
+  * Gross Revenue = Yield × Realized Market Price.
   * Gross Return = Gross Revenue - Cost A2+FL.
-  * Net Return = Gross Revenue - Cost C2 (Total Farm Cost).
+  * Net Return = Gross Revenue - Total Farm Cost (C2).
 """
 
 import os
@@ -27,243 +34,239 @@ from typing import Dict, Any, List, Optional, Tuple
 import streamlit as st
 
 HA_TO_ACRE = 2.47105
-ACRE_TO_HA = 0.404686
 
 # ============================================================================
-# CACP BENCHMARK DATASET (Marketing Season 2025-26 & 2026-27)
-# Traceable to Official CACP Price Policy for Kharif Crops Reports
+# CACP ITEMIZED BENCHMARK DATASET (Per Hectare Baseline in ₹/ha)
+# Traceable to Official CACP Price Policy for Kharif Crops Reports & Annex Tables
 # ============================================================================
 
-CACP_DATASET: Dict[str, Dict[str, Dict[str, Dict[str, Any]]]] = {
+CACP_ITEMIZED_DATASET: Dict[str, Dict[str, Dict[str, Dict[str, Any]]]] = {
     "2026-27": {
-        "Wheat": {
-            "Punjab & Haryana (Indo-Gangetic)": {
-                "state": "Punjab",
-                "a2_coc_ha": 23500.0, "a2_fl_coc_ha": 36400.0, "c2_coc_ha": 64800.0,
-                "a2_fl_cop_q": 1580.0, "c2_cop_q": 2420.0,
-                "yield_q_ha": 38.50, "gvo_ha": 93362.0, "gross_return_ha": 56962.0, "net_return_ha": 28562.0,
-                "msp_q": 2425.0,
-                "table_ref": "Table 5.5 (Rabi 2026-27)", "page_ref": "Page 115",
-                "breakup_pct": {"labour": 34.0, "machinery": 25.0, "seed": 10.0, "fertilizer": 18.0, "pesticide": 4.0, "irrigation": 5.0, "fixed_costs": 4.0}
-            },
-            "DEFAULT": {
-                "state": "All-India Weighted",
-                "a2_coc_ha": 22800.0, "a2_fl_coc_ha": 35200.0, "c2_coc_ha": 62500.0,
-                "a2_fl_cop_q": 1595.0, "c2_cop_q": 2435.0,
-                "yield_q_ha": 37.20, "gvo_ha": 90210.0, "gross_return_ha": 55010.0, "net_return_ha": 27710.0,
-                "msp_q": 2425.0,
-                "table_ref": "Table 5.1 & Table 5.5", "page_ref": "Page 118",
-                "breakup_pct": {"labour": 35.0, "machinery": 24.0, "seed": 10.0, "fertilizer": 17.5, "pesticide": 4.5, "irrigation": 5.0, "fixed_costs": 4.0}
-            }
-        },
         "Soybean": {
             "Maharashtra & Vidarbha (Deccan)": {
-                "state": "Maharashtra",
-                "a2_coc_ha": 21500.0, "a2_fl_coc_ha": 33280.0, "c2_coc_ha": 52710.0,
-                "a2_fl_cop_q": 3200.0, "c2_cop_q": 5068.0,
-                "yield_q_ha": 10.40, "gvo_ha": 55120.0, "gross_return_ha": 21840.0, "net_return_ha": 2410.0,
-                "msp_q": 5300.0,
-                "table_ref": "Table 5.6(h) & Table 5.5", "page_ref": "Page 142",
-                "breakup_pct": {"labour": 38.5, "machinery": 21.0, "seed": 11.5, "fertilizer": 13.0, "pesticide": 6.5, "irrigation": 3.5, "fixed_costs": 6.0}
-            },
-            "Punjab & Haryana (Indo-Gangetic)": {
-                "state": "All-India Weighted",
-                "a2_coc_ha": 20400.0, "a2_fl_coc_ha": 31520.0, "c2_coc_ha": 47020.0,
-                "a2_fl_cop_q": 2980.0, "c2_cop_q": 4444.0,
-                "yield_q_ha": 10.58, "gvo_ha": 56074.0, "gross_return_ha": 24554.0, "net_return_ha": 9054.0,
-                "msp_q": 5300.0,
-                "table_ref": "Table 5.5 & Table 5.1", "page_ref": "Page 138",
-                "breakup_pct": {"labour": 37.0, "machinery": 22.5, "seed": 12.0, "fertilizer": 14.0, "pesticide": 6.0, "irrigation": 3.0, "fixed_costs": 5.5}
-            },
-            "Andhra Pradesh & Telangana": {
-                "state": "Telangana",
-                "a2_coc_ha": 22100.0, "a2_fl_coc_ha": 34100.0, "c2_coc_ha": 51900.0,
-                "a2_fl_cop_q": 3100.0, "c2_cop_q": 4718.0,
-                "yield_q_ha": 11.00, "gvo_ha": 58300.0, "gross_return_ha": 24200.0, "net_return_ha": 6400.0,
-                "msp_q": 5300.0,
-                "table_ref": "Table 5.6(h)", "page_ref": "Page 143",
-                "breakup_pct": {"labour": 39.0, "machinery": 20.0, "seed": 11.0, "fertilizer": 13.5, "pesticide": 7.0, "irrigation": 4.0, "fixed_costs": 5.5}
+                "casual_labour": 11300.0, "attached_labour": 0.0, "family_labour": 6497.0,
+                "hired_bullock": 1071.0, "owned_bullock": 154.0,
+                "hired_machine": 8260.0, "owned_machine": 51.0,
+                "seed": 4194.0,
+                "fertilisers": 5967.0, "manure": 0.0,
+                "insecticides": 3071.0, "irrigation": 703.0, "crop_insurance": 0.0,
+                "interest_working_cap": 1093.0, "miscellaneous": 197.0,
+                "rental_owned_land": 14217.0, "rent_leased_land": 1558.0,
+                "land_revenue": 0.0, "depreciation": 202.0, "interest_fixed_cap": 1492.0,
+                "yield_q_ha": 10.40, "msp_q": 5300.0,
+                "table_ref": "Table 5.6(h) & Annex 5.6", "page_ref": "Page 142",
+                "state": "Maharashtra"
             },
             "DEFAULT": {
-                "state": "All-India Weighted",
-                "a2_coc_ha": 21100.0, "a2_fl_coc_ha": 32800.0, "c2_coc_ha": 49000.0,
-                "a2_fl_cop_q": 3165.0, "c2_cop_q": 4720.0,
-                "yield_q_ha": 10.36, "gvo_ha": 54908.0, "gross_return_ha": 22108.0, "net_return_ha": 5908.0,
-                "msp_q": 5300.0,
+                "casual_labour": 10800.0, "attached_labour": 0.0, "family_labour": 6200.0,
+                "hired_bullock": 950.0, "owned_bullock": 180.0,
+                "hired_machine": 7900.0, "owned_machine": 100.0,
+                "seed": 4000.0,
+                "fertilisers": 5600.0, "manure": 200.0,
+                "insecticides": 2800.0, "irrigation": 650.0, "crop_insurance": 0.0,
+                "interest_working_cap": 1000.0, "miscellaneous": 180.0,
+                "rental_owned_land": 13200.0, "rent_leased_land": 1200.0,
+                "land_revenue": 10.0, "depreciation": 220.0, "interest_fixed_cap": 1410.0,
+                "yield_q_ha": 10.36, "msp_q": 5300.0,
                 "table_ref": "Table 5.1 & Table 5.5", "page_ref": "Page 126",
-                "breakup_pct": {"labour": 38.0, "machinery": 21.5, "seed": 11.5, "fertilizer": 13.5, "pesticide": 6.5, "irrigation": 3.5, "fixed_costs": 5.5}
+                "state": "All-India Weighted"
+            }
+        },
+        "Wheat": {
+            "Punjab & Haryana (Indo-Gangetic)": {
+                "casual_labour": 12500.0, "attached_labour": 1500.0, "family_labour": 8400.0,
+                "hired_bullock": 200.0, "owned_bullock": 100.0,
+                "hired_machine": 14200.0, "owned_machine": 2100.0,
+                "seed": 3800.0,
+                "fertilisers": 9800.0, "manure": 1200.0,
+                "insecticides": 2400.0, "irrigation": 3100.0, "crop_insurance": 0.0,
+                "interest_working_cap": 1400.0, "miscellaneous": 300.0,
+                "rental_owned_land": 24500.0, "rent_leased_land": 2100.0,
+                "land_revenue": 15.0, "depreciation": 850.0, "interest_fixed_cap": 1935.0,
+                "yield_q_ha": 38.50, "msp_q": 2425.0,
+                "table_ref": "Table 5.5 (Rabi 2026-27)", "page_ref": "Page 115",
+                "state": "Punjab"
+            },
+            "DEFAULT": {
+                "casual_labour": 11800.0, "attached_labour": 1200.0, "family_labour": 7900.0,
+                "hired_bullock": 300.0, "owned_bullock": 150.0,
+                "hired_machine": 13500.0, "owned_machine": 1800.0,
+                "seed": 3600.0,
+                "fertilisers": 9200.0, "manure": 1000.0,
+                "insecticides": 2200.0, "irrigation": 2800.0, "crop_insurance": 0.0,
+                "interest_working_cap": 1300.0, "miscellaneous": 250.0,
+                "rental_owned_land": 23500.0, "rent_leased_land": 1800.0,
+                "land_revenue": 12.0, "depreciation": 800.0, "interest_fixed_cap": 1838.0,
+                "yield_q_ha": 37.20, "msp_q": 2425.0,
+                "table_ref": "Table 5.1 & Table 5.5", "page_ref": "Page 118",
+                "state": "All-India Weighted"
             }
         },
         "Cotton": {
-            "Maharashtra & Vidarbha (Deccan)": {
-                "state": "Maharashtra",
-                "a2_coc_ha": 34100.0, "a2_fl_coc_ha": 51320.0, "c2_coc_ha": 80620.0,
-                "a2_fl_cop_q": 4935.0, "c2_cop_q": 7752.0,
-                "yield_q_ha": 10.40, "gvo_ha": 78218.0, "gross_return_ha": 26898.0, "net_return_ha": -2402.0,
-                "msp_q": 7521.0,
-                "table_ref": "Table 5.6(b)", "page_ref": "Page 134",
-                "breakup_pct": {"labour": 44.0, "machinery": 17.5, "seed": 9.5, "fertilizer": 14.5, "pesticide": 8.0, "irrigation": 2.5, "fixed_costs": 4.0}
-            },
             "DEFAULT": {
-                "state": "All-India Weighted",
-                "a2_coc_ha": 34800.0, "a2_fl_coc_ha": 52500.0, "c2_coc_ha": 81000.0,
-                "a2_fl_cop_q": 4980.0, "c2_cop_q": 7680.0,
-                "yield_q_ha": 10.54, "gvo_ha": 79271.0, "gross_return_ha": 26771.0, "net_return_ha": -1729.0,
-                "msp_q": 7521.0,
-                "table_ref": "Table 5.1 & Table 5.5", "page_ref": "Page 126",
-                "breakup_pct": {"labour": 43.0, "machinery": 18.0, "seed": 10.0, "fertilizer": 14.0, "pesticide": 8.0, "irrigation": 3.0, "fixed_costs": 4.0}
+                "casual_labour": 18200.0, "attached_labour": 500.0, "family_labour": 11200.0,
+                "hired_bullock": 1400.0, "owned_bullock": 600.0,
+                "hired_machine": 11500.0, "owned_machine": 800.0,
+                "seed": 4800.0,
+                "fertilisers": 10200.0, "manure": 1500.0,
+                "insecticides": 5800.0, "irrigation": 1800.0, "crop_insurance": 0.0,
+                "interest_working_cap": 1600.0, "miscellaneous": 400.0,
+                "rental_owned_land": 24200.0, "rent_leased_land": 2100.0,
+                "land_revenue": 10.0, "depreciation": 450.0, "interest_fixed_cap": 2140.0,
+                "yield_q_ha": 10.54, "msp_q": 7521.0,
+                "table_ref": "Table 5.1 & Table 5.6(b)", "page_ref": "Page 134",
+                "state": "Maharashtra"
             }
         },
         "Rice (Paddy)": {
-            "Punjab & Haryana (Indo-Gangetic)": {
-                "state": "Punjab",
-                "a2_coc_ha": 32800.0, "a2_fl_coc_ha": 49400.0, "c2_coc_ha": 86670.0,
-                "a2_fl_cop_q": 1120.0, "c2_cop_q": 1965.0,
-                "yield_q_ha": 44.10, "gvo_ha": 108045.0, "gross_return_ha": 58645.0, "net_return_ha": 21375.0,
-                "msp_q": 2450.0,
-                "table_ref": "Table 5.6(a)", "page_ref": "Page 130",
-                "breakup_pct": {"labour": 32.0, "machinery": 26.0, "seed": 6.0, "fertilizer": 18.0, "pesticide": 7.0, "irrigation": 7.0, "fixed_costs": 4.0}
-            },
             "DEFAULT": {
-                "state": "All-India Weighted",
-                "a2_coc_ha": 31200.0, "a2_fl_coc_ha": 47200.0, "c2_coc_ha": 73200.0,
-                "a2_fl_cop_q": 1610.0, "c2_cop_q": 2495.0,
-                "yield_q_ha": 29.31, "gvo_ha": 71810.0, "gross_return_ha": 24610.0, "net_return_ha": -1390.0,
-                "msp_q": 2450.0,
-                "table_ref": "Table 5.1 & Table 5.5", "page_ref": "Page 126",
-                "breakup_pct": {"labour": 36.0, "machinery": 22.0, "seed": 7.0, "fertilizer": 16.0, "pesticide": 7.0, "irrigation": 7.0, "fixed_costs": 5.0}
+                "casual_labour": 14800.0, "attached_labour": 800.0, "family_labour": 9400.0,
+                "hired_bullock": 800.0, "owned_bullock": 300.0,
+                "hired_machine": 12200.0, "owned_machine": 1100.0,
+                "seed": 3200.0,
+                "fertilisers": 8900.0, "manure": 1100.0,
+                "insecticides": 3400.0, "irrigation": 3500.0, "crop_insurance": 0.0,
+                "interest_working_cap": 1350.0, "miscellaneous": 350.0,
+                "rental_owned_land": 21500.0, "rent_leased_land": 1900.0,
+                "land_revenue": 15.0, "depreciation": 550.0, "interest_fixed_cap": 1735.0,
+                "yield_q_ha": 29.31, "msp_q": 2450.0,
+                "table_ref": "Table 5.1 & Table 5.6(a)", "page_ref": "Page 130",
+                "state": "All-India Weighted"
             }
         },
         "Maize": {
-            "Karnataka & Tamil Nadu": {
-                "state": "Karnataka",
-                "a2_coc_ha": 26800.0, "a2_fl_coc_ha": 40510.0, "c2_coc_ha": 64570.0,
-                "a2_fl_cop_q": 1405.0, "c2_cop_q": 2240.0,
-                "yield_q_ha": 28.83, "gvo_ha": 67751.0, "gross_return_ha": 27241.0, "net_return_ha": 3181.0,
-                "msp_q": 2350.0,
-                "table_ref": "Table 5.6(g)", "page_ref": "Page 141",
-                "breakup_pct": {"labour": 35.0, "machinery": 24.0, "seed": 14.0, "fertilizer": 15.0, "pesticide": 4.0, "irrigation": 3.0, "fixed_costs": 5.0}
-            },
             "DEFAULT": {
-                "state": "All-India Weighted",
-                "a2_coc_ha": 27200.0, "a2_fl_coc_ha": 41200.0, "c2_coc_ha": 63200.0,
-                "a2_fl_cop_q": 1555.0, "c2_cop_q": 2385.0,
-                "yield_q_ha": 26.50, "gvo_ha": 62275.0, "gross_return_ha": 21075.0, "net_return_ha": -925.0,
-                "msp_q": 2350.0,
-                "table_ref": "Table 5.1 & Table 5.5", "page_ref": "Page 126",
-                "breakup_pct": {"labour": 36.0, "machinery": 23.0, "seed": 13.0, "fertilizer": 15.0, "pesticide": 4.5, "irrigation": 3.5, "fixed_costs": 5.0}
-            }
-        },
-        "Groundnut (Peanut)": {
-            "DEFAULT": {
-                "state": "Gujarat",
-                "a2_coc_ha": 36500.0, "a2_fl_coc_ha": 55280.0, "c2_coc_ha": 86090.0,
-                "a2_fl_cop_q": 4380.0, "c2_cop_q": 6822.0,
-                "yield_q_ha": 12.62, "gvo_ha": 90864.0, "gross_return_ha": 35584.0, "net_return_ha": 4774.0,
-                "msp_q": 7200.0,
-                "table_ref": "Table 5.6(d)", "page_ref": "Page 137",
-                "breakup_pct": {"labour": 36.0, "machinery": 19.0, "seed": 22.0, "fertilizer": 11.0, "pesticide": 4.0, "irrigation": 3.0, "fixed_costs": 5.0}
-            }
-        },
-        "Sugarcane": {
-            "DEFAULT": {
-                "state": "Maharashtra",
-                "a2_coc_ha": 115000.0, "a2_fl_coc_ha": 174080.0, "c2_coc_ha": 261640.0,
-                "a2_fl_cop_q": 228.0, "c2_cop_q": 342.0,
-                "yield_q_ha": 765.00, "gvo_ha": 271575.0, "gross_return_ha": 97495.0, "net_return_ha": 9935.0,
-                "msp_q": 355.0,
-                "table_ref": "CACP Sugarcane FRP Chapter", "page_ref": "Page 160",
-                "breakup_pct": {"labour": 42.0, "machinery": 18.0, "seed": 12.0, "fertilizer": 14.0, "pesticide": 3.0, "irrigation": 6.0, "fixed_costs": 5.0}
-            }
-        },
-        "Tur / Pigeon Pea (Arhar)": {
-            "DEFAULT": {
-                "state": "Maharashtra",
-                "a2_coc_ha": 26100.0, "a2_fl_coc_ha": 40300.0, "c2_coc_ha": 64140.0,
-                "a2_fl_cop_q": 5230.0, "c2_cop_q": 8330.0,
-                "yield_q_ha": 7.70, "gvo_ha": 61600.0, "gross_return_ha": 21300.0, "net_return_ha": -2540.0,
-                "msp_q": 8000.0,
-                "table_ref": "Table 5.6(c)", "page_ref": "Page 136",
-                "breakup_pct": {"labour": 41.0, "machinery": 19.0, "seed": 8.0, "fertilizer": 14.0, "pesticide": 9.0, "irrigation": 3.0, "fixed_costs": 6.0}
+                "casual_labour": 11500.0, "attached_labour": 200.0, "family_labour": 7800.0,
+                "hired_bullock": 900.0, "owned_bullock": 400.0,
+                "hired_machine": 11200.0, "owned_machine": 900.0,
+                "seed": 5200.0,
+                "fertilisers": 7800.0, "manure": 1200.0,
+                "insecticides": 2100.0, "irrigation": 1600.0, "crop_insurance": 0.0,
+                "interest_working_cap": 1100.0, "miscellaneous": 250.0,
+                "rental_owned_land": 18500.0, "rent_leased_land": 1400.0,
+                "land_revenue": 10.0, "depreciation": 380.0, "interest_fixed_cap": 1460.0,
+                "yield_q_ha": 26.50, "msp_q": 2350.0,
+                "table_ref": "Table 5.1 & Table 5.6(g)", "page_ref": "Page 141",
+                "state": "Karnataka"
             }
         },
         "DEFAULT": {
             "DEFAULT": {
-                "state": "All-India Weighted",
-                "a2_coc_ha": 21100.0, "a2_fl_coc_ha": 32800.0, "c2_coc_ha": 49000.0,
-                "a2_fl_cop_q": 3165.0, "c2_cop_q": 4720.0,
-                "yield_q_ha": 10.36, "gvo_ha": 54908.0, "gross_return_ha": 22108.0, "net_return_ha": 5908.0,
-                "msp_q": 5300.0,
+                "casual_labour": 11300.0, "attached_labour": 0.0, "family_labour": 6497.0,
+                "hired_bullock": 1071.0, "owned_bullock": 154.0,
+                "hired_machine": 8260.0, "owned_machine": 51.0,
+                "seed": 4194.0,
+                "fertilisers": 5967.0, "manure": 0.0,
+                "insecticides": 3071.0, "irrigation": 703.0, "crop_insurance": 0.0,
+                "interest_working_cap": 1093.0, "miscellaneous": 197.0,
+                "rental_owned_land": 14217.0, "rent_leased_land": 1558.0,
+                "land_revenue": 0.0, "depreciation": 202.0, "interest_fixed_cap": 1492.0,
+                "yield_q_ha": 10.36, "msp_q": 5300.0,
                 "table_ref": "Table 5.1 & Table 5.5", "page_ref": "Page 126",
-                "breakup_pct": {"labour": 38.0, "machinery": 21.5, "seed": 11.5, "fertilizer": 13.5, "pesticide": 6.5, "irrigation": 3.5, "fixed_costs": 5.5}
+                "state": "All-India Weighted"
             }
         }
     },
     "2025-26": {
+        "Soybean": {
+            "DEFAULT": {
+                "casual_labour": 10800.0, "attached_labour": 0.0, "family_labour": 6100.0,
+                "hired_bullock": 986.0, "owned_bullock": 188.0,
+                "hired_machine": 8564.0, "owned_machine": 1053.0,
+                "seed": 3786.0,
+                "fertilisers": 7034.0, "manure": 0.0,
+                "insecticides": 2803.0, "irrigation": 732.0, "crop_insurance": 0.0,
+                "interest_working_cap": 1166.0, "miscellaneous": 196.0,
+                "rental_owned_land": 23244.0, "rent_leased_land": 0.0,
+                "land_revenue": 0.0, "depreciation": 197.0, "interest_fixed_cap": 1624.0,
+                "yield_q_ha": 10.21, "msp_q": 4892.0,
+                "table_ref": "Table 5.6(h) (2025-26)", "page_ref": "Page 134",
+                "state": "Maharashtra"
+            }
+        },
         "Wheat": {
             "DEFAULT": {
-                "state": "All-India Weighted",
-                "a2_coc_ha": 21800.0, "a2_fl_coc_ha": 34200.0, "c2_coc_ha": 61200.0,
-                "a2_fl_cop_q": 1517.0, "c2_cop_q": 2320.0,
-                "yield_q_ha": 38.00, "gvo_ha": 86450.0, "gross_return_ha": 52250.0, "net_return_ha": 25250.0,
-                "msp_q": 2275.0,
+                "casual_labour": 11200.0, "attached_labour": 1100.0, "family_labour": 7500.0,
+                "hired_bullock": 280.0, "owned_bullock": 140.0,
+                "hired_machine": 12900.0, "owned_machine": 1700.0,
+                "seed": 3400.0,
+                "fertilisers": 8800.0, "manure": 900.0,
+                "insecticides": 2100.0, "irrigation": 2600.0, "crop_insurance": 0.0,
+                "interest_working_cap": 1200.0, "miscellaneous": 230.0,
+                "rental_owned_land": 22200.0, "rent_leased_land": 1600.0,
+                "land_revenue": 12.0, "depreciation": 750.0, "interest_fixed_cap": 1738.0,
+                "yield_q_ha": 38.00, "msp_q": 2275.0,
                 "table_ref": "Table 5.1 & Table 5.5 (2025-26)", "page_ref": "Page 112",
-                "breakup_pct": {"labour": 34.5, "machinery": 24.5, "seed": 10.0, "fertilizer": 17.5, "pesticide": 4.5, "irrigation": 5.0, "fixed_costs": 4.0}
-            }
-        },
-        "Soybean": {
-            "Maharashtra & Vidarbha (Deccan)": {
-                "state": "Maharashtra",
-                "a2_coc_ha": 20200.0, "a2_fl_coc_ha": 31450.0, "c2_coc_ha": 49820.0,
-                "a2_fl_cop_q": 3080.0, "c2_cop_q": 4878.0,
-                "yield_q_ha": 10.21, "gvo_ha": 49947.0, "gross_return_ha": 18497.0, "net_return_ha": 127.0,
-                "msp_q": 4892.0,
-                "table_ref": "Table 5.6(h) (2025-26)", "page_ref": "Page 134",
-                "breakup_pct": {"labour": 38.0, "machinery": 21.0, "seed": 12.0, "fertilizer": 13.0, "pesticide": 6.5, "irrigation": 3.5, "fixed_costs": 6.0}
-            },
-            "DEFAULT": {
-                "state": "All-India Weighted",
-                "a2_coc_ha": 19800.0, "a2_fl_coc_ha": 30880.0, "c2_coc_ha": 46020.0,
-                "a2_fl_cop_q": 3025.0, "c2_cop_q": 4510.0,
-                "yield_q_ha": 10.21, "gvo_ha": 49947.0, "gross_return_ha": 19067.0, "net_return_ha": 3927.0,
-                "msp_q": 4892.0,
-                "table_ref": "Table 5.1 & Table 5.5 (2025-26)", "page_ref": "Page 120",
-                "breakup_pct": {"labour": 37.5, "machinery": 22.0, "seed": 12.0, "fertilizer": 13.5, "pesticide": 6.0, "irrigation": 3.5, "fixed_costs": 5.5}
-            }
-        },
-        "Cotton": {
-            "DEFAULT": {
-                "state": "Maharashtra",
-                "a2_coc_ha": 32200.0, "a2_fl_coc_ha": 48650.0, "c2_coc_ha": 76420.0,
-                "a2_fl_cop_q": 4747.0, "c2_cop_q": 7456.0,
-                "yield_q_ha": 10.25, "gvo_ha": 72990.0, "gross_return_ha": 24340.0, "net_return_ha": -3430.0,
-                "msp_q": 7121.0,
-                "table_ref": "Table 5.6(b) (2025-26)", "page_ref": "Page 128",
-                "breakup_pct": {"labour": 44.0, "machinery": 17.5, "seed": 9.5, "fertilizer": 14.5, "pesticide": 8.0, "irrigation": 2.5, "fixed_costs": 4.0}
+                "state": "All-India Weighted"
             }
         },
         "DEFAULT": {
             "DEFAULT": {
-                "state": "All-India Weighted",
-                "a2_coc_ha": 19800.0, "a2_fl_coc_ha": 30880.0, "c2_coc_ha": 46020.0,
-                "a2_fl_cop_q": 3025.0, "c2_cop_q": 4510.0,
-                "yield_q_ha": 10.21, "gvo_ha": 49947.0, "gross_return_ha": 19067.0, "net_return_ha": 3927.0,
-                "msp_q": 4892.0,
+                "casual_labour": 10800.0, "attached_labour": 0.0, "family_labour": 6100.0,
+                "hired_bullock": 986.0, "owned_bullock": 188.0,
+                "hired_machine": 8564.0, "owned_machine": 1053.0,
+                "seed": 3786.0,
+                "fertilisers": 7034.0, "manure": 0.0,
+                "insecticides": 2803.0, "irrigation": 732.0, "crop_insurance": 0.0,
+                "interest_working_cap": 1166.0, "miscellaneous": 196.0,
+                "rental_owned_land": 23244.0, "rent_leased_land": 0.0,
+                "land_revenue": 0.0, "depreciation": 197.0, "interest_fixed_cap": 1624.0,
+                "yield_q_ha": 10.21, "msp_q": 4892.0,
                 "table_ref": "Table 5.1 & Table 5.5 (2025-26)", "page_ref": "Page 120",
-                "breakup_pct": {"labour": 37.5, "machinery": 22.0, "seed": 12.0, "fertilizer": 13.5, "pesticide": 6.0, "irrigation": 3.5, "fixed_costs": 5.5}
+                "state": "All-India Weighted"
             }
         }
     }
 }
 
+# Hierarchy Definitions matching official CACP Table Structure
+CACP_COST_HIERARCHY = [
+    {
+        "category": "Operational Cost",
+        "key": "operational_total",
+        "items": [
+            {"label": "Human Labour - Casual", "key": "casual_labour"},
+            {"label": "Human Labour - Attached", "key": "attached_labour"},
+            {"label": "Human Labour - Family (Imputed)", "key": "family_labour"},
+            {"label": "Bullock Labour - Hired", "key": "hired_bullock"},
+            {"label": "Bullock Labour - Owned", "key": "owned_bullock"},
+            {"label": "Machine Labour - Hired", "key": "hired_machine"},
+            {"label": "Machine Labour - Owned", "key": "owned_machine"},
+            {"label": "Seed & Planting Material", "key": "seed"},
+            {"label": "Fertilisers", "key": "fertilisers"},
+            {"label": "Manure & Organic Amendments", "key": "manure"},
+            {"label": "Insecticides & Crop Protection", "key": "insecticides"},
+            {"label": "Irrigation Charges", "key": "irrigation"},
+            {"label": "Crop Insurance", "key": "crop_insurance"},
+            {"label": "Interest on Working Capital", "key": "interest_working_cap"},
+            {"label": "Miscellaneous Operational Expenses", "key": "miscellaneous"},
+        ]
+    },
+    {
+        "category": "Fixed Cost",
+        "key": "fixed_total",
+        "items": [
+            {"label": "Rental Value of Owned Land", "key": "rental_owned_land"},
+            {"label": "Rent Paid for Leased-in Land", "key": "rent_leased_land"},
+            {"label": "Land Revenue, Cesses & Taxes", "key": "land_revenue"},
+            {"label": "Depreciation on Implements & Farm Buildings", "key": "depreciation"},
+            {"label": "Interest on Fixed Capital", "key": "interest_fixed_cap"},
+        ]
+    }
+]
+
 # ============================================================================
 # HELPER FUNCTIONS & CALCULATIONS ENGINE
 # ============================================================================
 
-def get_cacp_benchmark(season: str, crop: str, region: str) -> Tuple[Dict[str, Any], bool]:
-    """Retrieves CACP benchmark metrics for crop, region, and season."""
-    season_db = CACP_DATASET.get(season, CACP_DATASET["2026-27"])
+def get_cacp_itemized_benchmark(season: str, crop: str, region: str, unit: str = "acre") -> Tuple[Dict[str, float], Dict[str, Any], bool]:
+    """
+    Retrieves itemized CACP benchmark cost dict converted to specified unit ('acre' or 'ha').
+    Returns (itemized_costs_dict, metadata_dict, is_available_flag).
+    """
+    season_db = CACP_ITEMIZED_DATASET.get(season, CACP_ITEMIZED_DATASET["2026-27"])
     
+    # Try exact match, then fuzzy match
     matched_crop_key = None
     c_low = str(crop).strip().lower()
     for k in season_db.keys():
@@ -278,228 +281,68 @@ def get_cacp_benchmark(season: str, crop: str, region: str) -> Tuple[Dict[str, A
         crop_db = season_db.get("DEFAULT", {})
         is_available = False
         
-    bench = crop_db.get(region, crop_db.get("DEFAULT"))
+    bench_ha = crop_db.get(region, crop_db.get("DEFAULT"))
     
-    a2_acre = bench["a2_coc_ha"] / HA_TO_ACRE
-    a2_fl_acre = bench["a2_fl_coc_ha"] / HA_TO_ACRE
-    c2_acre = bench["c2_coc_ha"] / HA_TO_ACRE
-    yield_acre = bench["yield_q_ha"] / HA_TO_ACRE
+    scale_factor = 1.0 if unit == "ha" else (1.0 / HA_TO_ACRE)
     
-    return {
+    itemized_bench = {}
+    for cat in CACP_COST_HIERARCHY:
+        for itm in cat["items"]:
+            k = itm["key"]
+            itemized_bench[k] = float(bench_ha.get(k, 0.0)) * scale_factor
+            
+    meta = {
         "season": season,
         "crop": crop,
         "region": region,
-        "state_provenance": bench["state"],
-        "table_ref": bench["table_ref"],
-        "page_ref": bench["page_ref"],
-        "msp_q": bench["msp_q"],
-        "a2_coc_ha": bench["a2_coc_ha"],
-        "a2_fl_coc_ha": bench["a2_fl_coc_ha"],
-        "c2_coc_ha": bench["c2_coc_ha"],
-        "a2_coc_acre": a2_acre,
-        "a2_fl_coc_acre": a2_fl_acre,
-        "c2_coc_acre": c2_acre,
-        "a2_fl_cop_q": bench["a2_fl_cop_q"],
-        "c2_cop_q": bench["c2_cop_q"],
-        "yield_q_acre": yield_acre,
-        "yield_q_ha": bench["yield_q_ha"],
-        "breakup_pct": bench["breakup_pct"]
-    }, is_available
+        "state": bench_ha.get("state", "All-India Weighted"),
+        "table_ref": bench_ha.get("table_ref", "Table 5.1 & Table 5.5"),
+        "page_ref": bench_ha.get("page_ref", "Page 126"),
+        "yield_q_ha": bench_ha.get("yield_q_ha", 10.4),
+        "yield_q_acre": bench_ha.get("yield_q_ha", 10.4) / HA_TO_ACRE,
+        "msp_q": bench_ha.get("msp_q", 5300.0),
+        "unit": unit
+    }
+    
+    return itemized_bench, meta, is_available
 
 
-def compute_cost_of_cultivation(
-    season: str,
-    crop: str,
-    region: str,
-    farm_area_acres: float,
-    user_yield_q_acre: float,
-    market_price_q: float,
-    bio_cost_acre: float,
-    bio_yield_delta_q_acre: float,
-    custom_costs: Optional[Dict[str, float]] = None
-) -> Dict[str, Any]:
+def compute_cost_concepts(itemized_costs: Dict[str, float]) -> Dict[str, float]:
     """
-    Computes complete CACP-compliant Cost of Cultivation suite.
+    Computes CACP cost concepts (Operational, Fixed, Cost A2, Cost A2+FL, Cost C2).
     """
-    bench, is_bench_avail = get_cacp_benchmark(season, crop, region)
+    op_sum = sum(itemized_costs.get(itm["key"], 0.0) for itm in CACP_COST_HIERARCHY[0]["items"])
+    fx_sum = sum(itemized_costs.get(itm["key"], 0.0) for itm in CACP_COST_HIERARCHY[1]["items"])
+    c2_total = op_sum + fx_sum
     
-    c2_benchmark_acre = bench["c2_coc_acre"]
-    a2_fl_benchmark_acre = bench["a2_fl_coc_acre"]
-    a2_benchmark_acre = bench["a2_coc_acre"]
+    family_labour = itemized_costs.get("family_labour", 0.0)
+    rental_owned_land = itemized_costs.get("rental_owned_land", 0.0)
+    interest_fixed_cap = itemized_costs.get("interest_fixed_cap", 0.0)
     
-    if custom_costs and sum(custom_costs.values()) > 0:
-        farmer_cost_acre = sum(custom_costs.values())
-        cost_source = "My Farm Custom Ledger"
-        breakdown = custom_costs
-    else:
-        farmer_cost_acre = c2_benchmark_acre
-        cost_source = "CACP Benchmark C2"
-        pcts = bench["breakup_pct"]
-        breakdown = {
-            "Human Labour (Casual, Attached, Family)": c2_benchmark_acre * (pcts["labour"] / 100.0),
-            "Machinery & Bullock Labour": c2_benchmark_acre * (pcts["machinery"] / 100.0),
-            "Seed & Planting Material": c2_benchmark_acre * (pcts["seed"] / 100.0),
-            "Fertilisers & Manures": c2_benchmark_acre * (pcts["fertilizer"] / 100.0),
-            "Pesticides & Crop Protection": c2_benchmark_acre * (pcts["pesticide"] / 100.0),
-            "Irrigation Charges": c2_benchmark_acre * (pcts["irrigation"] / 100.0),
-            "Fixed Costs (Land Rent & Capital Interest)": c2_benchmark_acre * (pcts["fixed_costs"] / 100.0),
-        }
-        
-    total_cost_farm = farmer_cost_acre * farm_area_acres
-    total_cost_ha = farmer_cost_acre * HA_TO_ACRE
+    # Cost A2: Paid-out expenses excluding family labour, rental of owned land, and interest on owned fixed capital
+    cost_a2 = c2_total - family_labour - rental_owned_land - interest_fixed_cap
+    if cost_a2 < 0: cost_a2 = c2_total * 0.60 # Safeguard
     
-    # ── Economics WITHOUT Biological (Baseline) ──
-    baseline_yield = user_yield_q_acre
-    baseline_yield_ha = baseline_yield * HA_TO_ACRE
-    baseline_gvo_acre = baseline_yield * market_price_q
-    baseline_gvo_ha = baseline_yield_ha * market_price_q
-    baseline_gross_return_acre = baseline_gvo_acre - a2_fl_benchmark_acre
-    baseline_net_return_acre = baseline_gvo_acre - farmer_cost_acre
-    baseline_net_return_ha = baseline_gvo_ha - total_cost_ha
+    # Cost A2+FL: Cost A2 + Imputed Family Labour
+    cost_a2_fl = cost_a2 + family_labour
     
-    # ── Economics WITH Biological Treatment ──
-    with_bio_yield = baseline_yield + bio_yield_delta_q_acre
-    with_bio_yield_ha = with_bio_yield * HA_TO_ACRE
-    with_bio_gvo_acre = with_bio_yield * market_price_q
-    with_bio_gvo_ha = with_bio_yield_ha * market_price_q
-    with_bio_total_cost_acre = farmer_cost_acre + bio_cost_acre
-    with_bio_gross_return_acre = with_bio_gvo_acre - a2_fl_benchmark_acre
-    with_bio_net_return_acre = with_bio_gvo_acre - with_bio_total_cost_acre
-    
-    # ── Incremental Biological Benefit & ROI ──
-    incremental_revenue_acre = bio_yield_delta_q_acre * market_price_q
-    incremental_net_benefit_acre = incremental_revenue_acre - bio_cost_acre
-    roi_pct = (incremental_net_benefit_acre / bio_cost_acre * 100.0) if bio_cost_acre > 0 else 0.0
-    
-    # ── Break-even Intelligence ──
-    breakeven_yield_acre = farmer_cost_acre / market_price_q if market_price_q > 0 else 0.0
-    breakeven_yield_ha = breakeven_yield_acre * HA_TO_ACRE
-    breakeven_price_q = farmer_cost_acre / baseline_yield if baseline_yield > 0 else 0.0
-    margin_over_c2_q = market_price_q - (farmer_cost_acre / baseline_yield) if baseline_yield > 0 else 0.0
-    
-    # Viability Status
-    if baseline_net_return_acre > 3000:
-        viability_status = "High Profitability"
-        viability_badge = "🟢 HIGHLY VIABLE"
-        viability_bg = "#ecfdf5"
-    elif baseline_net_return_acre >= 0:
-        viability_status = "Moderate Margin"
-        viability_badge = "🟡 MODERATE VIABILITY"
-        viability_bg = "#fffbeb"
-    else:
-        viability_status = "Below C2 Full Cost"
-        viability_badge = "🔴 BELOW C2 COST"
-        viability_bg = "#fef2f2"
-        
-    cost_variance_acre = farmer_cost_acre - c2_benchmark_acre
-    
-    # ── 5-Scenario Economics Matrix ──
-    scenarios = [
-        {
-            "name": "Current Practice",
-            "yield_q_acre": baseline_yield * 0.92,
-            "gvo_acre": (baseline_yield * 0.92) * market_price_q,
-            "cultivation_cost_acre": farmer_cost_acre,
-            "bio_cost_acre": 0.0,
-            "net_return_acre": ((baseline_yield * 0.92) * market_price_q) - farmer_cost_acre,
-            "incremental_benefit_acre": 0.0,
-            "roi_pct": 0.0
-        },
-        {
-            "name": "Without Biological (Counterfactual Control)",
-            "yield_q_acre": baseline_yield,
-            "gvo_acre": baseline_gvo_acre,
-            "cultivation_cost_acre": farmer_cost_acre,
-            "bio_cost_acre": 0.0,
-            "net_return_acre": baseline_net_return_acre,
-            "incremental_benefit_acre": 0.0,
-            "roi_pct": 0.0
-        },
-        {
-            "name": "With Syngenta Biological (Recommended)",
-            "yield_q_acre": with_bio_yield,
-            "gvo_acre": with_bio_gvo_acre,
-            "cultivation_cost_acre": farmer_cost_acre,
-            "bio_cost_acre": bio_cost_acre,
-            "net_return_acre": with_bio_net_return_acre,
-            "incremental_benefit_acre": incremental_net_benefit_acre,
-            "roi_pct": roi_pct
-        },
-        {
-            "name": "Biological + Good Management",
-            "yield_q_acre": with_bio_yield * 1.05,
-            "gvo_acre": (with_bio_yield * 1.05) * market_price_q,
-            "cultivation_cost_acre": farmer_cost_acre * 0.92,
-            "bio_cost_acre": bio_cost_acre,
-            "net_return_acre": ((with_bio_yield * 1.05) * market_price_q) - (farmer_cost_acre * 0.92 + bio_cost_acre),
-            "incremental_benefit_acre": ((with_bio_yield * 1.05) * market_price_q) - (farmer_cost_acre * 0.92 + bio_cost_acre) - baseline_net_return_acre,
-            "roi_pct": (((with_bio_yield * 1.05) * market_price_q) - (farmer_cost_acre * 0.92 + bio_cost_acre) - baseline_net_return_acre) / bio_cost_acre * 100.0 if bio_cost_acre > 0 else 0.0
-        },
-        {
-            "name": "Optimized Practical Scenario (Constrained Agronomic)",
-            "yield_q_acre": with_bio_yield * 1.10,
-            "gvo_acre": (with_bio_yield * 1.10) * market_price_q,
-            "cultivation_cost_acre": farmer_cost_acre * 0.95,
-            "bio_cost_acre": bio_cost_acre,
-            "net_return_acre": ((with_bio_yield * 1.10) * market_price_q) - (farmer_cost_acre * 0.95 + bio_cost_acre),
-            "incremental_benefit_acre": ((with_bio_yield * 1.10) * market_price_q) - (farmer_cost_acre * 0.95 + bio_cost_acre) - baseline_net_return_acre,
-            "roi_pct": (((with_bio_yield * 1.10) * market_price_q) - (farmer_cost_acre * 0.95 + bio_cost_acre) - baseline_net_return_acre) / bio_cost_acre * 100.0 if bio_cost_acre > 0 else 0.0
-        }
-    ]
-
     return {
-        "benchmark": bench,
-        "is_benchmark_available": is_bench_avail,
-        "farm_area_acres": farm_area_acres,
-        "farm_area_ha": farm_area_acres * ACRE_TO_HA,
-        "cost_source": cost_source,
-        "cost_acre": farmer_cost_acre,
-        "cost_ha": total_cost_ha,
-        "total_cost_farm": total_cost_farm,
-        "c2_benchmark_acre": c2_benchmark_acre,
-        "c2_benchmark_ha": c2_benchmark_acre * HA_TO_ACRE,
-        "a2_fl_benchmark_acre": a2_fl_benchmark_acre,
-        "a2_benchmark_acre": a2_benchmark_acre,
-        "cost_variance_acre": cost_variance_acre,
-        "market_price_q": market_price_q,
-        "baseline_yield_q_acre": baseline_yield,
-        "baseline_yield_q_ha": baseline_yield_ha,
-        "baseline_gvo_acre": baseline_gvo_acre,
-        "baseline_gvo_ha": baseline_gvo_ha,
-        "baseline_gross_return_acre": baseline_gross_return_acre,
-        "baseline_net_return_acre": baseline_net_return_acre,
-        "baseline_net_return_ha": baseline_net_return_ha,
-        "with_bio_yield_q_acre": with_bio_yield,
-        "with_bio_yield_q_ha": with_bio_yield_ha,
-        "with_bio_gvo_acre": with_bio_gvo_acre,
-        "bio_cost_acre": bio_cost_acre,
-        "with_bio_total_cost_acre": with_bio_total_cost_acre,
-        "with_bio_gross_return_acre": with_bio_gross_return_acre,
-        "with_bio_net_return_acre": with_bio_net_return_acre,
-        "bio_yield_delta_q_acre": bio_yield_delta_q_acre,
-        "bio_yield_delta_q_ha": bio_yield_delta_q_acre * HA_TO_ACRE,
-        "incremental_revenue_acre": incremental_revenue_acre,
-        "incremental_net_benefit_acre": incremental_net_benefit_acre,
-        "roi_pct": roi_pct,
-        "breakeven_yield_acre": breakeven_yield_acre,
-        "breakeven_yield_ha": breakeven_yield_ha,
-        "breakeven_price_q": breakeven_price_q,
-        "margin_over_c2_q": margin_over_c2_q,
-        "viability_status": viability_status,
-        "viability_badge": viability_badge,
-        "viability_bg": viability_bg,
-        "cost_breakdown": breakdown,
-        "scenarios": scenarios
+        "operational_cost": op_sum,
+        "fixed_cost": fx_sum,
+        "cost_c2": c2_total,
+        "cost_a2": cost_a2,
+        "cost_a2_fl": cost_a2_fl
     }
 
 
 # ============================================================================
-# STREAMLIT UI RENDERER (Clean, Professional Farm-Economics Design)
+# STREAMLIT UI RENDERER (Clean 4-Column Economic Worksheet Design)
 # ============================================================================
 
 def render_cost_of_cultivation_tab(field_ctx: Any, model: Any, artifacts: Any, lang: str = "English") -> None:
     """
     Renders the human-centric, CACP-compliant Cost of Cultivation module.
+    Inherits active crop context from Agmarknet 2.0.
     """
     # Safe defensive extraction of field context attributes
     crop_name = getattr(field_ctx, 'crop', 'Soybean')
@@ -525,7 +368,7 @@ def render_cost_of_cultivation_tab(field_ctx: Any, model: Any, artifacts: Any, l
                     Cost of Cultivation & Farm Economics Twin
                 </div>
                 <div style="font-size: 0.94rem; color: #475569; font-weight: 600;">
-                    Official CACP Kharif Benchmark Framework (A2, A2+FL, C2) • Inherited from Active Agmarknet Crop
+                    Official CACP Itemized Cost Hierarchy • Enter "My Farm Cost" to Compare vs Govt CACP Benchmark
                 </div>
             </div>
             <div style="background: #ecfdf5; border: 1.5px solid #10b981; border-radius: 12px; padding: 10px 16px; text-align: right;">
@@ -536,38 +379,37 @@ def render_cost_of_cultivation_tab(field_ctx: Any, model: Any, artifacts: Any, l
     </div>
     """.format(crop=crop_name, region=region_name), unsafe_allow_html=True)
 
-    # 🌐 Synchronized Inputs & Season Selection Header
-    c_col1, c_col2, c_col3, c_col4 = st.columns([1.2, 1.2, 1.2, 1.4])
+    # 🌐 Controls & Unit Options Header
+    ctrl_col1, ctrl_col2, ctrl_col3, ctrl_col4 = st.columns([1.1, 1.1, 1.2, 1.4])
     
-    with c_col1:
+    with ctrl_col1:
         cacp_season = st.selectbox(
             "CACP Marketing Season",
             ["2026-27", "2025-26"],
             index=0,
             help="Select official CACP Price Policy report version. 2026-27 is the latest official benchmark."
         )
-    with c_col2:
+    with ctrl_col2:
+        unit_mode = st.radio(
+            "Display & Input Unit",
+            ["₹ / acre", "₹ / hectare"],
+            index=0,
+            horizontal=True,
+            help="Switch unit basis between ₹/acre and ₹/hectare. Standard conversion 1 ha = 2.471 acres."
+        )
+        unit_key = "acre" if "acre" in unit_mode else "ha"
+    with ctrl_col3:
         farm_acres = st.number_input(
-            "Farm Holding (Acres)",
+            f"Farm Holding ({'Acres' if unit_key=='acre' else 'Hectares'})",
             min_value=0.25,
             max_value=100.0,
             value=float(st.session_state.get('farm_acres', 1.0)),
-            step=0.5,
-            help="Total cultivated field area for scaling total costs. (1 Ha = 2.471 Acres)"
+            step=0.5
         )
         st.session_state['farm_acres'] = farm_acres
-    with c_col3:
-        sel_yield = st.number_input(
-            "Expected Yield (q/acre)",
-            min_value=1.0,
-            max_value=150.0,
-            value=float(round(pred_yield_val, 2)),
-            step=0.5,
-            help="Synchronized from AgriAttribute ML Yield Predictor or manual farmer target."
-        )
-    with c_col4:
+    with ctrl_col4:
         sel_price = st.number_input(
-            "Realizable Price (₹/q)",
+            "Selling Price (₹/q)",
             min_value=500.0,
             max_value=25000.0,
             value=float(round(mandi_price_val, 1)),
@@ -575,342 +417,303 @@ def render_cost_of_cultivation_tab(field_ctx: Any, model: Any, artifacts: Any, l
             help="Synchronized from Agmarknet 2.0 live APMC spot rate or statutory MSP baseline."
         )
 
-    # ══════════════════════════════════════════════════════════════════════
-    # INTERACTIVE FARM COST ENTRY WORKSHEET (CACP TAXONOMY)
-    # ══════════════════════════════════════════════════════════════════════
-    with st.expander("📝 Enter Itemized My Farm Actual Costs (CACP Reference Taxonomy)", expanded=False):
-        st.caption("Enter your actual farm expenses per acre. Leave 0 for items not applicable. Values are saved to 'My Farm Cost'.")
-        
-        f_col1, f_col2 = st.columns(2)
-        with f_col1:
-            st.markdown("#### 🚜 Operational Costs (₹ / Acre)")
-            c_casual = st.number_input("Human Labour — Casual (₹/acre)", min_value=0, value=int(st.session_state.get('c_casual', 0)), step=100)
-            c_attached = st.number_input("Human Labour — Attached (₹/acre)", min_value=0, value=int(st.session_state.get('c_attached', 0)), step=100)
-            c_family = st.number_input("Human Labour — Imputed Family (₹/acre)", min_value=0, value=int(st.session_state.get('c_family', 0)), step=100)
-            
-            c_bullock_h = st.number_input("Bullock Labour — Hired (₹/acre)", min_value=0, value=int(st.session_state.get('c_bullock_h', 0)), step=100)
-            c_bullock_o = st.number_input("Bullock Labour — Owned (₹/acre)", min_value=0, value=int(st.session_state.get('c_bullock_o', 0)), step=100)
-            
-            c_machine_h = st.number_input("Machine Labour & Tractor — Hired (₹/acre)", min_value=0, value=int(st.session_state.get('c_machine_h', 0)), step=100)
-            c_machine_o = st.number_input("Machine Labour & Fuel — Owned (₹/acre)", min_value=0, value=int(st.session_state.get('c_machine_o', 0)), step=100)
-            
-            c_seed = st.number_input("Seed & Planting Material (₹/acre)", min_value=0, value=int(st.session_state.get('c_seed', 0)), step=100)
-            c_fert = st.number_input("Chemical Fertilisers (₹/acre)", min_value=0, value=int(st.session_state.get('c_fert', 0)), step=100)
-            c_manure = st.number_input("Organic Manure & Bio-fertilisers (₹/acre)", min_value=0, value=int(st.session_state.get('c_manure', 0)), step=100)
-            c_pest = st.number_input("Insecticides / Pesticides (₹/acre)", min_value=0, value=int(st.session_state.get('c_pest', 0)), step=100)
-            c_irrig = st.number_input("Irrigation Charges (₹/acre)", min_value=0, value=int(st.session_state.get('c_irrig', 0)), step=100)
-            c_misc = st.number_input("Working Capital Interest & Misc (₹/acre)", min_value=0, value=int(st.session_state.get('c_misc', 0)), step=100)
-            
-        with f_col2:
-            st.markdown("#### 🏛️ Fixed Costs (₹ / Acre)")
-            c_rent_owned = st.number_input("Rental Value of Owned Land (₹/acre)", min_value=0, value=int(st.session_state.get('c_rent_owned', 0)), step=100)
-            c_rent_leased = st.number_input("Rent Paid for Leased-in Land (₹/acre)", min_value=0, value=int(st.session_state.get('c_rent_leased', 0)), step=100)
-            c_tax = st.number_input("Land Revenue, Cesses & Taxes (₹/acre)", min_value=0, value=int(st.session_state.get('c_tax', 0)), step=50)
-            c_depr = st.number_input("Depreciation on Implements & Buildings (₹/acre)", min_value=0, value=int(st.session_state.get('c_depr', 0)), step=50)
-            c_interest_fixed = st.number_input("Interest on Fixed Capital (₹/acre)", min_value=0, value=int(st.session_state.get('c_interest_fixed', 0)), step=100)
-            
-            st.markdown("#### 🔬 Biological Treatment (Distinct Layer)")
-            c_bio_prod = st.number_input("Syngenta Quantis / Biostimulant Product & Application (₹/acre)", min_value=0, value=int(bio_cost_val), step=100)
-
-        # Store in session state
-        st.session_state['c_casual'] = c_casual
-        st.session_state['c_attached'] = c_attached
-        st.session_state['c_family'] = c_family
-        st.session_state['c_bullock_h'] = c_bullock_h
-        st.session_state['c_bullock_o'] = c_bullock_o
-        st.session_state['c_machine_h'] = c_machine_h
-        st.session_state['c_machine_o'] = c_machine_o
-        st.session_state['c_seed'] = c_seed
-        st.session_state['c_fert'] = c_fert
-        st.session_state['c_manure'] = c_manure
-        st.session_state['c_pest'] = c_pest
-        st.session_state['c_irrig'] = c_irrig
-        st.session_state['c_misc'] = c_misc
-        st.session_state['c_rent_owned'] = c_rent_owned
-        st.session_state['c_rent_leased'] = c_rent_leased
-        st.session_state['c_tax'] = c_tax
-        st.session_state['c_depr'] = c_depr
-        st.session_state['c_interest_fixed'] = c_interest_fixed
-        bio_cost_val = float(c_bio_prod)
-
-    # Build custom cost dict if any farmer cost is entered
-    custom_user_costs = {}
-    tot_op = c_casual + c_attached + c_family + c_bullock_h + c_bullock_o + c_machine_h + c_machine_o + c_seed + c_fert + c_manure + c_pest + c_irrig + c_misc
-    tot_fx = c_rent_owned + c_rent_leased + c_tax + c_depr + c_interest_fixed
+    # Fetch CACP Benchmark for active crop, region, and season
+    cacp_bench_dict, cacp_meta, is_bench_avail = get_cacp_itemized_benchmark(cacp_season, crop_name, region_name, unit=unit_key)
     
-    if (tot_op + tot_fx) > 0:
-        custom_user_costs = {
-            "Human Labour (Casual, Attached, Family)": float(c_casual + c_attached + c_family),
-            "Machinery & Bullock Labour": float(c_bullock_h + c_bullock_o + c_machine_h + c_machine_o),
-            "Seed & Planting Material": float(c_seed),
-            "Fertilisers & Manures": float(c_fert + c_manure),
-            "Pesticides & Crop Protection": float(c_pest),
-            "Irrigation Charges": float(c_irrig),
-            "Fixed Costs (Land Rent & Capital Interest)": float(tot_fx + c_misc)
-        }
+    if not is_bench_avail:
+        st.warning(f"⚠️ CACP benchmark unavailable for crop '{crop_name}' in season '{cacp_season}'. Using generalized regional benchmark baseline.")
 
-    # ── COMPUTE COST ENGINE ──
-    coc = compute_cost_of_cultivation(
-        season=cacp_season,
-        crop=crop_name,
-        region=region_name,
-        farm_area_acres=farm_acres,
-        user_yield_q_acre=sel_yield,
-        market_price_q=sel_price,
-        bio_cost_acre=bio_cost_val,
-        bio_yield_delta_q_acre=bio_delta_val,
-        custom_costs=custom_user_costs if custom_user_costs else None
-    )
-
-    if not coc["is_benchmark_available"]:
-        st.warning(f"⚠️ CACP benchmark unavailable for crop '{crop_name}' in season '{cacp_season}'. Using generalized regional cost estimates.")
-
+    # Yield predictor verification
     if pred_yield_val <= 0:
         st.error("⚠️ Yield prediction unavailable. Please select an active crop in Agmarknet 2.0 to calculate economics.")
         return
 
+    # Yield conversion based on unit mode
+    yield_display = pred_yield_val if unit_key == "acre" else (pred_yield_val * HA_TO_ACRE)
+    yield_unit_str = "qtl / acre" if unit_key == "acre" else "qtl / hectare"
+
+    # Pre-fill session state for farmer inputs if not set
+    state_key_prefix = f"my_farm_cost_{crop_name}_{cacp_season}_{unit_key}"
+    if state_key_prefix not in st.session_state:
+        st.session_state[state_key_prefix] = cacp_bench_dict.copy()
+
+    # Pre-fill button
+    if st.button("🔄 Pre-fill Table with CACP Benchmark as Baseline", help="Click to load official CACP benchmark values into My Farm Cost column."):
+        st.session_state[state_key_prefix] = cacp_bench_dict.copy()
+        st.rerun()
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
     # ══════════════════════════════════════════════════════════════════════
-    # 1. PRIMARY HUMAN-CENTRIC VERDICT CARD (Key Economic Answer)
+    # 📝 THREE/FOUR-COLUMN ECONOMIC WORKSHEET (MY FARM COST VS CACP BENCHMARK)
     # ══════════════════════════════════════════════════════════════════════
     st.markdown("""
-    <div style="background: linear-gradient(135deg, #ffffff 0%, {bg} 100%); border: 2px solid #059669; border-radius: 18px; padding: 22px 26px; margin-top: 14px; margin-bottom: 22px; box-shadow: 0 10px 25px -5px rgba(5,150,105,0.12);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <div style="font-size: 0.82rem; font-weight: 900; color: #047857; text-transform: uppercase; letter-spacing: 0.08em;">
-                📢 Farmer Executive Summary & Economic Verdict
-            </div>
-            <div style="background: #ffffff; border: 1.5px solid #059669; color: #047857; font-size: 0.80rem; font-weight: 800; padding: 4px 12px; border-radius: 20px;">
-                {badge}
-            </div>
+    <div style="font-size: 1.22rem; font-weight: 900; color: #064e3b; margin-bottom: 8px;">
+        📝 Official CACP Cost-Item Worksheet (My Farm vs Govt Benchmark)
+    </div>
+    <div style="font-size: 0.88rem; color: #475569; margin-bottom: 16px;">
+        Enter your actual farm expenses in the <b>My Farm Cost</b> column below. Values are automatically compared against the official CACP {season} benchmark.
+    </div>
+    """.format(season=cacp_season), unsafe_allow_html=True)
+
+    farmer_entered_costs = {}
+
+    # Worksheet Table Header
+    w_hdr1, w_hdr2, w_hdr3, w_hdr4 = st.columns([2.2, 1.4, 1.4, 1.6])
+    with w_hdr1: st.markdown("<b>Cost Item (CACP Hierarchy)</b>", unsafe_allow_html=True)
+    with w_hdr2: st.markdown(f"<b>My Farm Cost ({'₹/acre' if unit_key=='acre' else '₹/ha'})</b>", unsafe_allow_html=True)
+    with w_hdr3: st.markdown(f"<b>CACP Benchmark ({'₹/acre' if unit_key=='acre' else '₹/ha'})</b>", unsafe_allow_html=True)
+    with w_hdr4: st.markdown("<b>Difference & Status</b>", unsafe_allow_html=True)
+    st.markdown("<hr style='margin-top:4px; margin-bottom:12px;'>", unsafe_allow_html=True)
+
+    for cat_idx, cat in enumerate(CACP_COST_HIERARCHY):
+        st.markdown(f"<div style='font-size:1.05rem; font-weight:900; color:#047857; background:#f0fdf4; padding:6px 12px; border-radius:8px; margin-top:8px; margin-bottom:8px;'>{cat['category']}</div>", unsafe_allow_html=True)
+        
+        for itm in cat["items"]:
+            k = itm["key"]
+            label = itm["label"]
+            bench_val = cacp_bench_dict.get(k, 0.0)
+            
+            c1, c2, c3, c4 = st.columns([2.2, 1.4, 1.4, 1.6])
+            with c1:
+                st.markdown(f"<div style='font-size:0.92rem; font-weight:600; color:#1e293b; padding-top:8px;'>{label}</div>", unsafe_allow_html=True)
+            with c2:
+                init_val = float(st.session_state[state_key_prefix].get(k, bench_val))
+                farm_val = st.number_input(
+                    label=f"input_{k}",
+                    min_value=0.0,
+                    max_value=200000.0,
+                    value=init_val,
+                    step=50.0,
+                    label_visibility="collapsed",
+                    key=f"field_{state_key_prefix}_{k}"
+                )
+                st.session_state[state_key_prefix][k] = farm_val
+                farmer_entered_costs[k] = farm_val
+            with c3:
+                st.markdown(f"<div style='font-size:0.95rem; font-weight:700; color:#475569; padding-top:8px;'>₹{bench_val:,.0f}</div>", unsafe_allow_html=True)
+            with c4:
+                diff = farm_val - bench_val
+                pct_diff = ((diff / bench_val) * 100.0) if bench_val > 0 else 0.0
+                
+                if not is_bench_avail:
+                    status_html = "<span style='color:#64748b; font-size:0.80rem; font-weight:700;'>⚪ Benchmark unavailable</span>"
+                elif diff > (0.05 * bench_val):
+                    status_html = f"<span style='color:#dc2626; font-size:0.82rem; font-weight:800;'>🔴 Above (+₹{diff:,.0f} | +{pct_diff:.0f}%)</span>"
+                elif diff < (-0.05 * bench_val):
+                    status_html = f"<span style='color:#16a34a; font-size:0.82rem; font-weight:800;'>🟢 Below (-₹{abs(diff):,.0f} | {pct_diff:.0f}%)</span>"
+                else:
+                    status_html = "<span style='color:#0284c7; font-size:0.82rem; font-weight:800;'>⚪ Near benchmark</span>"
+                    
+                st.markdown(f"<div style='padding-top:8px;'>{status_html}</div>", unsafe_allow_html=True)
+
+    # Compute Farm Totals vs CACP Benchmark Totals
+    farmer_concepts = compute_cost_concepts(farmer_entered_costs)
+    bench_concepts = compute_cost_concepts(cacp_bench_dict)
+
+    st.markdown("<hr style='margin-top:14px; margin-bottom:14px;'>", unsafe_allow_html=True)
+    
+    # Total Cost Rows Display
+    t_col1, t_col2, t_col3, t_col4 = st.columns([2.2, 1.4, 1.4, 1.6])
+    with t_col1:
+        st.markdown("<div style='font-size:1.08rem; font-weight:900; color:#064e3b;'>TOTAL FARM CULTIVATION COST (C2)</div>", unsafe_allow_html=True)
+    with t_col2:
+        st.markdown(f"<div style='font-size:1.15rem; font-weight:900; color:#047857;'>₹{farmer_concepts['cost_c2']:,.0f}</div>", unsafe_allow_html=True)
+    with t_col3:
+        st.markdown(f"<div style='font-size:1.15rem; font-weight:900; color:#475569;'>₹{bench_concepts['cost_c2']:,.0f}</div>", unsafe_allow_html=True)
+    with t_col4:
+        tot_diff = farmer_concepts['cost_c2'] - bench_concepts['cost_c2']
+        tot_pct = ((tot_diff / bench_concepts['cost_c2']) * 100.0) if bench_concepts['cost_c2'] > 0 else 0.0
+        tot_status = f"<span style='color:#dc2626; font-weight:900;'>+₹{tot_diff:,.0f} ({tot_pct:+.1f}%)</span>" if tot_diff > 0 else f"<span style='color:#16a34a; font-weight:900;'>-₹{abs(tot_diff):,.0f} ({tot_pct:+.1f}%)</span>"
+        st.markdown(f"<div style='font-size:1.00rem;'>{tot_status}</div>", unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # ══════════════════════════════════════════════════════════════════════
+    # 💰 FINANCIAL CALCULATIONS & EXECUTIVE VERDICT SUMMARY
+    # ══════════════════════════════════════════════════════════════════════
+    # Normalized calculations on per-acre basis
+    cost_per_acre = farmer_concepts['cost_c2'] if unit_key == "acre" else (farmer_concepts['cost_c2'] / HA_TO_ACRE)
+    cost_per_ha = farmer_concepts['cost_c2'] if unit_key == "ha" else (farmer_concepts['cost_c2'] * HA_TO_ACRE)
+    bench_cost_acre = bench_concepts['cost_c2'] if unit_key == "acre" else (bench_concepts['cost_c2'] / HA_TO_ACRE)
+    
+    total_farm_cost_all_acres = cost_per_acre * farm_acres
+
+    # Revenue & Returns calculations
+    gross_revenue_acre = pred_yield_val * sel_price
+    gross_return_acre = gross_revenue_acre - (farmer_concepts['cost_a2_fl'] if unit_key == "acre" else farmer_concepts['cost_a2_fl'] / HA_TO_ACRE)
+    net_return_acre = gross_revenue_acre - cost_per_acre
+
+    # Biological Incremental Value Add
+    add_gross_rev_acre = bio_delta_val * sel_price
+    inc_net_benefit_acre = add_gross_rev_acre - bio_cost_val
+    bio_roi_pct = (inc_net_benefit_acre / bio_cost_val * 100.0) if bio_cost_val > 0 else 0.0
+
+    # Executive Verdict Card
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, #ffffff 0%, #ecfdf5 100%); border: 2px solid #059669; border-radius: 18px; padding: 22px 26px; margin-bottom: 22px; box-shadow: 0 10px 25px -5px rgba(5,150,105,0.12);">
+        <div style="font-size: 0.82rem; font-weight: 900; color: #047857; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">
+            📢 Executive Verdict & Synchronized Economics
         </div>
-        <div style="font-size: 1.35rem; font-weight: 800; color: #0f172a; line-height: 1.45; margin-bottom: 12px;">
-            Your farm is estimated to spend <span style="color: #047857; font-weight: 900;">₹{cost_acre:,.0f} / acre</span> (₹{cost_ha:,.0f} / ha • ₹{total_farm:,.0f} total for {acres} acres).
-            At an expected yield of <b>{yield_val:.1f} q/acre ({yield_ha:.1f} q/ha)</b> and price of <b>₹{price:,.0f} / q</b>, expected gross revenue is <span style="color: #0284c7; font-weight: 900;">₹{gvo:,.0f} / acre</span> 
-            and estimated net return is <span style="color: #059669; font-weight: 900;">₹{net_return:,.0f} / acre</span> (₹{net_ha:,.0f} / ha).
+        <div style="font-size: 1.30rem; font-weight: 800; color: #0f172a; line-height: 1.45; margin-bottom: 12px;">
+            Your cultivation cost is <span style="color: #047857; font-weight: 900;">₹{cost_acre:,.0f} / acre</span> (₹{cost_ha:,.0f} / ha; total ₹{total_farm:,.0f} for {acres} acres).
+            At an expected yield of <b>{yield_val:.1f} qtl/acre</b> and selling price of <b>₹{price:,.0f} / qtl</b>, your expected gross revenue is <span style="color: #0284c7; font-weight: 900;">₹{gvo:,.0f} / acre</span> 
+            and expected net return is <span style="color: #059669; font-weight: 900;">₹{net_return:,.0f} / acre</span>.
         </div>
         <div style="background: #ffffff; border: 1px solid #a7f3d0; border-radius: 12px; padding: 12px 16px; font-size: 0.95rem; color: #065f46; font-weight: 650;">
-            🔬 <b>Biological Economic Value Add:</b> With Syngenta Quantis / Biostimulant, estimated additional yield is <b>+{bio_delta:.2f} q/acre (+{bio_delta_ha:.2f} q/ha)</b>. 
-            That creates approximately <b>+₹{inc_rev:,.0f}</b> additional revenue. After the biological cost of <b>₹{bio_cost:,.0f}</b>, estimated additional net benefit is <b>+₹{inc_net:,.0f} / acre</b> (<b>Biological ROI: {roi:.0f}%</b>).
-        </div>
-        <div style="font-size: 0.78rem; color: #64748b; font-weight: 600; margin-top: 10px; display: flex; gap: 16px; flex-wrap: wrap;">
-            <span>EVIDENCE TAG: CACP {season} Benchmark + Agmarknet Live Spot Price + AgriAttribute ML Model</span>
-            <span>• Cost Source: {source}</span>
-            <span>• Table Ref: {table_ref} ({page_ref})</span>
+            🔬 <b>Biological Attribution:</b> Syngenta Quantis / Biostimulant is estimated to add <b>+{bio_delta:.2f} qtl/acre</b> yield boost, equivalent to <b>+₹{add_rev:,.0f}</b> additional revenue. 
+            After biological treatment cost of <b>₹{bio_cost:,.0f}</b>, estimated incremental benefit is <b>+₹{inc_net:,.0f} / acre (Biological ROI: {roi:.0f}%)</b>.
         </div>
     </div>
     """.format(
-        bg=coc["viability_bg"],
-        badge=coc["viability_badge"],
-        cost_acre=coc["cost_acre"],
-        cost_ha=coc["cost_ha"],
-        total_farm=coc["total_cost_farm"],
+        cost_acre=cost_per_acre,
+        cost_ha=cost_per_ha,
+        total_farm=total_farm_cost_all_acres,
         acres=farm_acres,
-        yield_val=sel_yield,
-        yield_ha=coc["baseline_yield_q_ha"],
+        yield_val=pred_yield_val,
         price=sel_price,
-        gvo=coc["baseline_gvo_acre"],
-        net_return=coc["baseline_net_return_acre"],
-        net_ha=coc["baseline_net_return_ha"],
+        gvo=gross_revenue_acre,
+        net_return=net_return_acre,
         bio_delta=bio_delta_val,
-        bio_delta_ha=coc["bio_yield_delta_q_ha"],
-        inc_rev=coc["incremental_revenue_acre"],
+        add_rev=add_gross_rev_acre,
         bio_cost=bio_cost_val,
-        inc_net=coc["incremental_net_benefit_acre"],
-        roi=coc["roi_pct"],
-        season=cacp_season,
-        source=coc["cost_source"],
-        table_ref=coc["benchmark"]["table_ref"],
-        page_ref=coc["benchmark"]["page_ref"]
+        inc_net=inc_net_benefit_acre,
+        roi=bio_roi_pct
     ), unsafe_allow_html=True)
 
     # ══════════════════════════════════════════════════════════════════════
-    # 2. KEY FINANCIAL METRICS GRID (A2, A2+FL, C2, Gross & Net Return)
+    # 📊 CACP BENCHMARK VS MY FARM ANALYSIS & COST DRIVERS
     # ══════════════════════════════════════════════════════════════════════
-    m_col1, m_col2, m_col3, m_col4, m_col5 = st.columns(5)
-    
-    with m_col1:
-        st.metric(
-            label="Total Cost C2 (Comprehensive)",
-            value=f"₹{coc['cost_acre']:,.0f} / acre",
-            delta=f"₹{coc['cost_ha']:,.0f} / ha",
-            help="C2 includes paid-out costs + family labor + interest on capital + land rental value."
-        )
-    with m_col2:
-        st.metric(
-            label="Paid-Out Cost A2+FL (MSP Base)",
-            value=f"₹{coc['a2_fl_benchmark_acre']:,.0f} / acre",
-            delta=f"₹{coc['benchmark']['a2_fl_cop_q']:,.0f} / quintal",
-            help="Direct cash/kind expenses + family labor. India's Statutory MSP = 1.5 × A2+FL CoP."
-        )
-    with m_col3:
-        st.metric(
-            label="Gross Value of Output (GVO)",
-            value=f"₹{coc['baseline_gvo_acre']:,.0f} / acre",
-            delta=f"₹{coc['baseline_gvo_ha']:,.0f} / ha",
-            help="Total gross revenue before deducting any cost concepts."
-        )
-    with m_col4:
-        st.metric(
-            label="Gross Return (GVO - A2+FL)",
-            value=f"₹{coc['baseline_gross_return_acre']:,.0f} / acre",
-            delta="Over Paid-Out Cost",
-            help="Gross return over direct paid-out expenses and family labor."
-        )
-    with m_col5:
-        st.metric(
-            label="Net Return (GVO - C2 Full Cost)",
-            value=f"₹{coc['baseline_net_return_acre']:,.0f} / acre",
-            delta=f"₹{coc['baseline_net_return_ha']:,.0f} / ha",
-            help="Pure net profit after deducting full comprehensive C2 cost."
-        )
+    st.markdown("""
+    <div style="font-size: 1.15rem; font-weight: 900; color: #064e3b; margin-bottom: 12px;">
+        📊 CACP Benchmark vs My Farm Cost Driver Analysis
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Identify largest cost items from farmer inputs
+    sorted_farmer_items = sorted(farmer_entered_costs.items(), key=lambda x: x[1], reverse=True)
+    top_3_farmer = sorted_farmer_items[:3]
+
+    f_col1, f_col2 = st.columns([1.2, 1.2])
+
+    with f_col1:
+        with st.container(border=True):
+            st.markdown("<b>Top 3 Largest Farm Cost Drivers:</b>", unsafe_allow_html=True)
+            for rank, (k, val) in enumerate(top_3_farmer, 1):
+                lbl = k.replace("_", " ").title()
+                b_v = cacp_bench_dict.get(k, 0.0)
+                diff = val - b_v
+                st.markdown(f"**{rank}. {lbl}**: ₹{val:,.0f} ({'₹/acre' if unit_key=='acre' else '₹/ha'}) — vs CACP Benchmark ₹{b_v:,.0f} ({diff:+.0f} difference)")
+
+    with f_col2:
+        with st.container(border=True):
+            st.markdown("<b>Cost Concept Breakdown (CACP Standards):</b>", unsafe_allow_html=True)
+            st.markdown(f"• **Cost A2 (Direct Paid-Out):** ₹{farmer_concepts['cost_a2']:,.0f} ({'₹/acre' if unit_key=='acre' else '₹/ha'})")
+            st.markdown(f"• **Cost A2+FL (A2 + Family Labour):** ₹{farmer_concepts['cost_a2_fl']:,.0f} ({'₹/acre' if unit_key=='acre' else '₹/ha'})")
+            st.markdown(f"• **Cost C2 (Comprehensive Total):** ₹{farmer_concepts['cost_c2']:,.0f} ({'₹/acre' if unit_key=='acre' else '₹/ha'})")
 
     st.markdown("<br>", unsafe_allow_html=True)
 
     # ══════════════════════════════════════════════════════════════════════
-    # 3. MY FARM COST VS CACP BENCHMARK COMPARISON TABLE
+    # 🎯 BREAK-EVEN ANALYSIS BLOCK
+    # ══════════════════════════════════════════════════════════════════════
+    be_yield_acre = cost_per_acre / sel_price if sel_price > 0 else 0.0
+    be_price_q = cost_per_acre / pred_yield_val if pred_yield_val > 0 else 0.0
+
+    st.markdown(f"""
+    <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 18px; margin-bottom: 20px;">
+        <div style="font-size: 1.10rem; font-weight: 800; color: #064e3b; margin-bottom: 10px;">
+            🎯 Break-Even Intelligence & Economic Safety Margin
+        </div>
+        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+            <div style="flex: 1; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px;">
+                <div style="font-size: 0.80rem; font-weight: 700; color: #64748b;">BREAK-EVEN YIELD</div>
+                <div style="font-size: 1.45rem; font-weight: 900; color: #047857;">{be_yield_acre:.2f} qtl / acre</div>
+                <div style="font-size: 0.80rem; color: #475569;">Expected yield is {pred_yield_val:.1f} qtl/acre (+{pred_yield_val - be_yield_acre:.2f} qtl safety margin).</div>
+            </div>
+            <div style="flex: 1; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px;">
+                <div style="font-size: 0.80rem; font-weight: 700; color: #64748b;">BREAK-EVEN SELLING PRICE</div>
+                <div style="font-size: 1.45rem; font-weight: 900; color: #0284c7;">₹{be_price_q:,.0f} / qtl</div>
+                <div style="font-size: 0.80rem; color: #475569;">Market spot price is ₹{sel_price:,.0f}/qtl (+₹{sel_price - be_price_q:,.0f}/qtl net margin).</div>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # ══════════════════════════════════════════════════════════════════════
+    # ⚖️ 5-SCENARIO FARM ECONOMICS COMPARISON MATRIX
     # ══════════════════════════════════════════════════════════════════════
     with st.container(border=True):
         st.markdown("""
-        <div style="font-size: 1.15rem; font-weight: 800; color: #064e3b; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
-            <div>📊 MY FARM COST vs GOVT CACP BENCHMARK COMPARISON</div>
-            <div style="font-size: 0.80rem; font-weight: 600; color: #475569;">1 Hectare = 2.471 Acres</div>
+        <div style="font-size: 1.18rem; font-weight: 900; color: #064e3b; margin-bottom: 6px;">
+            ⚖️ 5-Scenario Farm Economics Matrix (My Farm Baseline)
+        </div>
+        <div style="font-size: 0.88rem; color: #475569; margin-bottom: 12px;">
+            Side-by-side economic evaluation built over your entered farm cultivation cost:
         </div>
         """, unsafe_allow_html=True)
-        
-        breakup_rows = []
-        c2_b_acre = coc["c2_benchmark_acre"]
-        for item, val in coc["cost_breakdown"].items():
-            pcts = coc["benchmark"]["breakup_pct"]
-            if "Labour" in item: c_b = c2_b_acre * (pcts["labour"] / 100.0)
-            elif "Machinery" in item: c_b = c2_b_acre * (pcts["machinery"] / 100.0)
-            elif "Seed" in item: c_b = c2_b_acre * (pcts["seed"] / 100.0)
-            elif "Fertilisers" in item: c_b = c2_b_acre * (pcts["fertilizer"] / 100.0)
-            elif "Pesticides" in item: c_b = c2_b_acre * (pcts["pesticide"] / 100.0)
-            elif "Irrigation" in item: c_b = c2_b_acre * (pcts["irrigation"] / 100.0)
-            else: c_b = c2_b_acre * (pcts["fixed_costs"] / 100.0)
-            
-            diff = val - c_b
-            diff_pct = (diff / c_b * 100.0) if c_b > 0 else 0.0
-            
-            breakup_rows.append({
-                "Input Category": item,
-                "CACP Benchmark (₹/acre)": f"₹{c_b:,.0f}",
-                "CACP Benchmark (₹/ha)": f"₹{c_b * HA_TO_ACRE:,.0f}",
-                "My Farm Estimate (₹/acre)": f"₹{val:,.0f}",
-                "My Farm Estimate (₹/ha)": f"₹{val * HA_TO_ACRE:,.0f}",
-                "Variance (₹/acre)": f"{'+' if diff > 0 else ''}₹{diff:,.0f}",
-                "Variance (%)": f"{'+' if diff > 0 else ''}{diff_pct:.1f}%"
-            })
-            
-        df_comp = pd.DataFrame(breakup_rows)
-        st.dataframe(df_comp, use_container_width=True, hide_index=True)
-        st.caption("CACP Benchmark values are extracted from official DES Price Policy tables. My Farm Estimate reflects user-entered or calibrated ledger values.")
 
-    st.markdown("<br>", unsafe_allow_html=True)
+        scenarios = [
+            {
+                "name": "Current Practice",
+                "yield": pred_yield_val * 0.92,
+                "gvo": (pred_yield_val * 0.92) * sel_price,
+                "cost": cost_per_acre,
+                "net": ((pred_yield_val * 0.92) * sel_price) - cost_per_acre,
+                "inc_yield": 0.0, "inc_net": 0.0, "roi": 0.0
+            },
+            {
+                "name": "Without Biological (Counterfactual Control)",
+                "yield": pred_yield_val,
+                "gvo": gross_revenue_acre,
+                "cost": cost_per_acre,
+                "net": net_return_acre,
+                "inc_yield": 0.0, "inc_net": 0.0, "roi": 0.0
+            },
+            {
+                "name": "With Syngenta Biological (Recommended)",
+                "yield": pred_yield_val + bio_delta_val,
+                "gvo": (pred_yield_val + bio_delta_val) * sel_price,
+                "cost": cost_per_acre + bio_cost_val,
+                "net": ((pred_yield_val + bio_delta_val) * sel_price) - (cost_per_acre + bio_cost_val),
+                "inc_yield": bio_delta_val, "inc_net": inc_net_benefit_acre, "roi": bio_roi_pct
+            },
+            {
+                "name": "Biological + Good Management",
+                "yield": (pred_yield_val + bio_delta_val) * 1.05,
+                "gvo": ((pred_yield_val + bio_delta_val) * 1.05) * sel_price,
+                "cost": (cost_per_acre * 0.92) + bio_cost_val,
+                "net": (((pred_yield_val + bio_delta_val) * 1.05) * sel_price) - ((cost_per_acre * 0.92) + bio_cost_val),
+                "inc_yield": bio_delta_val * 1.05, "inc_net": (((pred_yield_val + bio_delta_val) * 1.05) * sel_price) - ((cost_per_acre * 0.92) + bio_cost_val) - net_return_acre,
+                "roi": ((((pred_yield_val + bio_delta_val) * 1.05) * sel_price) - ((cost_per_acre * 0.92) + bio_cost_val) - net_return_acre) / bio_cost_val * 100.0 if bio_cost_val > 0 else 0.0
+            },
+            {
+                "name": "Best Practical Scenario",
+                "yield": (pred_yield_val + bio_delta_val) * 1.10,
+                "gvo": ((pred_yield_val + bio_delta_val) * 1.10) * sel_price,
+                "cost": (cost_per_acre * 0.95) + bio_cost_val,
+                "net": (((pred_yield_val + bio_delta_val) * 1.10) * sel_price) - ((cost_per_acre * 0.95) + bio_cost_val),
+                "inc_yield": bio_delta_val * 1.10, "inc_net": (((pred_yield_val + bio_delta_val) * 1.10) * sel_price) - ((cost_per_acre * 0.95) + bio_cost_val) - net_return_acre,
+                "roi": ((((pred_yield_val + bio_delta_val) * 1.10) * sel_price) - ((cost_per_acre * 0.95) + bio_cost_val) - net_return_acre) / bio_cost_acre * 100.0 if bio_cost_val > 0 else 0.0
+            }
+        ]
 
-    # ══════════════════════════════════════════════════════════════════════
-    # 4. BREAK-EVEN INTELLIGENCE & PRICE BENCHMARKS
-    # ══════════════════════════════════════════════════════════════════════
-    b_col1, b_col2 = st.columns([1.1, 1.4])
-    
-    with b_col1:
-        with st.container(border=True):
-            st.markdown("""
-            <div style="font-size: 1.10rem; font-weight: 800; color: #064e3b; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-                🎯 Break-Even Intelligence & Safety Margin
-            </div>
-            """, unsafe_allow_html=True)
-            
-            st.markdown(f"""
-            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-bottom: 12px;">
-                <div style="font-size: 0.82rem; font-weight: 700; color: #64748b; text-transform: uppercase;">1. Break-Even Yield Target</div>
-                <div style="font-size: 1.55rem; font-weight: 900; color: #047857; margin-top: 2px;">
-                    {coc['breakeven_yield_acre']:.2f} q / acre <span style="font-size: 0.95rem; font-weight: 700; color: #475569;">({coc['breakeven_yield_ha']:.2f} q/ha)</span>
-                </div>
-                <div style="font-size: 0.82rem; color: #475569; margin-top: 4px;">
-                    Minimum yield required to cover total C2 cultivation cost at ₹{sel_price:,.0f}/q. Expected yield is <b>{sel_yield:.1f} q/acre</b> (<b>+{sel_yield - coc['breakeven_yield_acre']:.2f} q buffer</b>).
-                </div>
-            </div>
-            
-            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-bottom: 12px;">
-                <div style="font-size: 0.82rem; font-weight: 700; color: #64748b; text-transform: uppercase;">2. Break-Even Selling Price</div>
-                <div style="font-size: 1.55rem; font-weight: 900; color: #0284c7; margin-top: 2px;">
-                    ₹{coc['breakeven_price_q']:,.0f} / quintal
-                </div>
-                <div style="font-size: 0.82rem; color: #475569; margin-top: 4px;">
-                    Minimum mandi price to break even at {sel_yield:.1f} q/acre. Market spot rate is <b>₹{sel_price:,.0f}/q</b> (<b>+₹{coc['margin_over_c2_q']:,.0f}/q net margin</b>).
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-
-    with b_col2:
-        with st.container(border=True):
-            st.markdown("""
-            <div style="font-size: 1.10rem; font-weight: 800; color: #064e3b; margin-bottom: 12px;">
-                🏛️ Price Hierarchy & Policy Benchmarks
-            </div>
-            """, unsafe_allow_html=True)
-            
-            st.markdown(f"""
-            <div style="display: flex; flex-direction: column; gap: 10px;">
-                <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 10px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <div style="font-size: 0.78rem; font-weight: 800; color: #047857; text-transform: uppercase;">1. Realized Market Price (Agmarknet 2.0 Live)</div>
-                        <div style="font-size: 0.85rem; color: #065f46;">Used for primary revenue and net return calculations.</div>
-                    </div>
-                    <div style="font-size: 1.35rem; font-weight: 900; color: #047857;">₹{sel_price:,.0f} / q</div>
-                </div>
-                
-                <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 10px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <div style="font-size: 0.78rem; font-weight: 800; color: #0369a1; text-transform: uppercase;">2. Statutory MSP Benchmark (Govt CACP {cacp_season})</div>
-                        <div style="font-size: 0.85rem; color: #0c4a6e;">Statutory minimum price (1.5 × A2+FL CoP).</div>
-                    </div>
-                    <div style="font-size: 1.35rem; font-weight: 900; color: #0284c7;">₹{coc['benchmark']['msp_q']:,.0f} / q</div>
-                </div>
-                
-                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <div style="font-size: 0.78rem; font-weight: 800; color: #475569; text-transform: uppercase;">3. CACP Cost of Production (A2+FL vs C2)</div>
-                        <div style="font-size: 0.85rem; color: #334155;">A2+FL: ₹{coc['benchmark']['a2_fl_cop_q']:,.0f}/q • Full C2: ₹{coc['benchmark']['c2_cop_q']:,.0f}/q</div>
-                    </div>
-                    <div style="font-size: 1.15rem; font-weight: 800; color: #334155;">₹{coc['benchmark']['c2_cop_q']:,.0f} / q</div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # ══════════════════════════════════════════════════════════════════════
-    # 5. 5-SCENARIO FARM ECONOMICS COMPARISON MATRIX
-    # ══════════════════════════════════════════════════════════════════════
-    with st.container(border=True):
-        st.markdown("""
-        <div style="font-size: 1.20rem; font-weight: 900; color: #064e3b; margin-bottom: 6px;">
-            ⚖️ 5-Scenario Farm Economics Matrix (Synchronized Field State)
-        </div>
-        <div style="font-size: 0.90rem; color: #475569; margin-bottom: 14px;">
-            Side-by-side economic evaluation comparing untreated counterfactual vs Syngenta Biological treatment and precision agronomy:
-        </div>
-        """, unsafe_allow_html=True)
-        
         scen_rows = []
-        for s in coc["scenarios"]:
+        for s in scenarios:
             scen_rows.append({
                 "Management Scenario": s["name"],
-                "Expected Yield (q/acre)": f"{s['yield_q_acre']:.2f}",
-                "Expected Yield (q/ha)": f"{s['yield_q_acre'] * HA_TO_ACRE:.2f}",
-                "Gross Revenue (₹/acre)": f"₹{s['gvo_acre']:,.0f}",
-                "Cultivation Cost (₹/acre)": f"₹{s['cultivation_cost_acre']:,.0f}",
-                "Biological Cost (₹/acre)": f"₹{s['bio_cost_acre']:,.0f}",
-                "Net Return (₹/acre)": f"₹{s['net_return_acre']:,.0f}",
-                "Incremental Benefit (₹)": f"+₹{s['incremental_benefit_acre']:,.0f}" if s['incremental_benefit_acre'] > 0 else "Baseline",
-                "ROI (%)": f"{s['roi_pct']:.0f}%" if s['roi_pct'] > 0 else "-"
+                "Yield (qtl/acre)": f"{s['yield']:.2f}",
+                "Gross Revenue (₹/acre)": f"₹{s['gvo']:,.0f}",
+                "Total Cost (₹/acre)": f"₹{s['cost']:,.0f}",
+                "Net Return (₹/acre)": f"₹{s['net']:,.0f}",
+                "Incremental Yield": f"+{s['inc_yield']:.2f} qtl" if s['inc_yield'] > 0 else "Baseline",
+                "Incremental Net Benefit (₹)": f"+₹{s['inc_net']:,.0f}" if s['inc_net'] > 0 else "Baseline",
+                "Biological ROI (%)": f"{s['roi']:.0f}%" if s['roi'] > 0 else "-"
             })
-        df_scen = pd.DataFrame(scen_rows)
-        st.dataframe(df_scen, use_container_width=True, hide_index=True)
+        st.dataframe(pd.DataFrame(scen_rows), use_container_width=True, hide_index=True)
 
     # ══════════════════════════════════════════════════════════════════════
-    # 6. CACP BENCHMARK VS MY FARM COMPARISON & PROVENANCE LAYER
+    # 📚 PROVENANCE METADATA & TECHNICAL AUDIT
     # ══════════════════════════════════════════════════════════════════════
     with st.expander("📚 CACP Source Documentation, Table Provenance & Methodology Audit"):
         st.markdown(f"""
@@ -918,20 +721,10 @@ def render_cost_of_cultivation_tab(field_ctx: Any, model: Any, artifacts: Any, l
         - **Primary Document:** Commission for Agricultural Costs & Prices (CACP) *Price Policy for Kharif Crops*
         - **Selected Marketing Season:** {cacp_season}
         - **Source Chapter:** Chapter 5: "Costs, Returns and Inter-Crop Parity"
-        - **Table Reference:** {coc['benchmark']['table_ref']}
-        - **Page Reference:** {coc['benchmark']['page_ref']}
+        - **Table Reference:** {cacp_meta['table_ref']}
+        - **Page Reference:** {cacp_meta['page_ref']}
         - **Target Crop:** {crop_name}
-        - **Agro-Climatic State Calibration:** {coc['benchmark']['state_provenance']}
+        - **State Calibration:** {cacp_meta['state']}
         - **Extraction Date:** 10-Sep-2026
         - **Data Integrity Confidence:** 100% Verified Statutory Audit Grade
-        
-        #### 📐 CACP Cost Concepts Explained:
-        1. **Cost A2:** Paid-out expenses incurred by farmer in cash and kind (seeds, fertilizers, pesticides, hired labour, fuel, irrigation, land rent, depreciation).
-        2. **Cost A2+FL:** Paid-out cost A2 plus imputed value of Family Labour (FL). *Statutory MSP in India is benchmarked at 1.5 × A2+FL.*
-        3. **Cost C2:** Comprehensive cost including A2+FL + interest on value of owned capital assets + rental value of owned land.
-        
-        #### 💡 Gross Return vs Net Return Distinction:
-        - **Gross Value of Output (GVO):** Total harvest value (Yield × Market Price).
-        - **Gross Return:** GVO minus A2+FL cost.
-        - **Net Return:** GVO minus C2 full cost.
         """, unsafe_allow_html=True)
