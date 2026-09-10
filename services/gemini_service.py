@@ -439,3 +439,154 @@ def get_offline_expert_response(query: str, language: str = "English", context_i
     """Direct wrapper for offline expert knowledge fallback."""
     return generate_domain_expert_fallback(query, language, context_info)
 
+
+def render_gemini_chat_interface(
+    lang: str = "English",
+    crop: str = "Soybean",
+    region: str = "Maharashtra & Vidarbha (Deccan)",
+    ow_live: dict = None,
+    mandi_info: dict = None,
+    pred_actual: float = 24.0,
+    yield_delta: float = 3.5,
+    net_profit: float = 12500.0,
+    roi_pct: float = 180.0,
+    bio_product: str = "Syngenta Quantis",
+    heat_stress: int = 2,
+    rainfall: float = 450.0,
+    n_val: float = 240.0,
+    p_val: float = 22.0,
+    k_val: float = 185.0,
+    ph: float = 7.6,
+    soc: float = 4.8,
+    t = None,
+    t_crop = None
+):
+    """
+    Renders the complete Multilingual Gemini 2.5 Flash Field Agronomist interface for tab_ai.
+    Integrates Text, Audio Voice Notes, Leaf/Crop Photos, and Browser Web Speech Synthesis.
+    """
+    import streamlit as st
+    ow = ow_live or {}
+    mandi = mandi_info or {}
+    
+    st.markdown(f"""
+    <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); border: 1.5px solid #a7f3d0; border-radius: 16px; padding: 20px 24px; margin-bottom: 20px; box-shadow: 0 4px 16px rgba(16,185,129,0.08);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="background: #ecfdf5; border: 1.5px solid #86efac; width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.6rem;">
+                    🤖
+                </div>
+                <div>
+                    <div style="font-size: 1.25rem; font-weight: 900; color: #064e3b;">
+                        Gemini 2.5 Flash Multilingual Field Agronomist & Voice Co-Pilot
+                    </div>
+                    <div style="font-size: 0.82rem; color: #166534; font-weight: 600;">
+                        AI4Bharat IndicTrans2 Multilingual Translation • Multimodal Image & Voice Reasoning
+                    </div>
+                </div>
+            </div>
+            <span style="background: #ecfdf5; border: 1.5px solid #86efac; color: #047857; font-size: 0.78rem; font-weight: 800; padding: 4px 14px; border-radius: 20px;">
+                ⚡ Synchronized Live Farm Telemetry
+            </span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Telemetry Context Dictionary
+    context_pkg = {
+        "region": region,
+        "crop": crop,
+        "product": bio_product,
+        "temp_max": float(ow.get("temp_c", 28.5)),
+        "temp_min": float(ow.get("feels_like_c", 25.0)),
+        "humidity": float(ow.get("humidity_pct", 65)),
+        "wind_speed": float(ow.get("wind_speed_kmh", 10.0)),
+        "rainfall": float(rainfall),
+        "heat_stress": int(heat_stress),
+        "nitrogen": float(n_val),
+        "phosphorus": float(p_val),
+        "potassium": float(k_val),
+        "ph": float(ph),
+        "soc": float(soc),
+        "mandi_spot": float(mandi.get("realizable_price", 5200.0)),
+        "mandi_msp": float(mandi.get("msp", 4892.0)),
+        "predicted_yield": float(pred_actual),
+        "yield_delta": float(yield_delta),
+        "net_profit": float(net_profit),
+        "roi_pct": float(roi_pct)
+    }
+
+    # Preset Quick Prompts
+    st.markdown("##### 💡 Quick Farmer Questions")
+    q_cols = st.columns(3)
+    p1 = f"What is the best spray time for {crop} under current weather?"
+    p2 = f"How does {bio_product} buffer my field against {heat_stress} heat stress days?"
+    p3 = f"Explain my net profit lift of ₹{net_profit:,.0f}/acre and ROI calculation."
+
+    if "gemini_user_query" not in st.session_state:
+        st.session_state.gemini_user_query = ""
+
+    with q_cols[0]:
+        if st.button("🌡️ Spray Timing & Safety Window", use_container_width=True, key="qp1"):
+            st.session_state.gemini_user_query = p1
+    with q_cols[1]:
+        if st.button("🧬 Biostimulant Stress Priming", use_container_width=True, key="qp2"):
+            st.session_state.gemini_user_query = p2
+    with q_cols[2]:
+        if st.button("💰 Net Profit & ROI Breakdown", use_container_width=True, key="qp3"):
+            st.session_state.gemini_user_query = p3
+
+    col_in1, col_in2 = st.columns([2, 1])
+    with col_in1:
+        user_text = st.text_input(
+            "Ask your Agronomist Question (Supports English, Hindi, Marathi, Punjabi, Telugu, etc.):",
+            value=st.session_state.gemini_user_query,
+            key="ai_chat_text_input",
+            placeholder="e.g. My leaves have yellow spots. When should I apply biostimulant?"
+        )
+    with col_in2:
+        image_file = st.file_uploader(
+            "📷 Upload Leaf / Crop Photo (Optional):",
+            type=["jpg", "jpeg", "png", "webp"],
+            key="ai_chat_img_uploader"
+        )
+
+    img_bytes = None
+    if image_file is not None:
+        try:
+            img_bytes = image_file.read()
+            st.image(image_file, caption="Uploaded Specimen", width=200)
+        except Exception:
+            img_bytes = None
+
+    if st.button("🚀 Ask Gemini Agronomist", type="primary", use_container_width=True, key="btn_ask_gemini"):
+        query = user_text.strip() if user_text else "Provide an executive agronomy advisory for my field."
+        with st.spinner("Gemini 2.5 Flash analyzing farm telemetry and formulating response..."):
+            res = ask_gemini_multimodal(
+                query_text=query,
+                image_bytes=img_bytes,
+                language=lang,
+                context_info=context_pkg
+            )
+
+        resp_text = res.get("response", "")
+        status_src = res.get("source", "Google Gemini 2.5 Flash")
+
+        st.markdown(f"""
+        <div style="background: #ffffff; border: 2px solid #10b981; border-radius: 14px; padding: 18px 22px; margin-top: 16px; box-shadow: 0 4px 16px rgba(16,185,129,0.08);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                <span style="font-size: 1.05rem; font-weight: 800; color: #065f46;">🌱 Field Agronomist Advisory Response</span>
+                <span style="background: #ecfdf5; border: 1px solid #86efac; color: #047857; font-size: 0.72rem; font-weight: 800; padding: 3px 10px; border-radius: 12px;">
+                    {status_src}
+                </span>
+            </div>
+            <div style="font-size: 0.95rem; color: #0f172a; line-height: 1.6; white-space: pre-wrap;">
+{resp_text}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Render Web Speech Audio Button
+        st.markdown(generate_voice_speech_html(resp_text, lang_code=lang), unsafe_allow_html=True)
+
+
