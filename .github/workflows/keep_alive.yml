@@ -1,0 +1,22 @@
+name: AgriAttribute 24/7 Keep-Alive Monitor
+
+on:
+  schedule:
+    # Run every 15 minutes to keep Streamlit Cloud container hot and prevent sleep
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Streamlit Cloud Deployment
+        run: |
+          echo "Sending keep-alive ping to Streamlit Cloud..."
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -L https://hack-core-ps07-agriattribute-owurehhkah57avqs7qrjfm.streamlit.app/)
+          echo "HTTP Response Status: $STATUS"
+          if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 400 ]; then
+            echo "Deployment is online, warm, and responsive!"
+          else
+            echo "Ping delivered (HTTP $STATUS). Container kept active."
+          fi
