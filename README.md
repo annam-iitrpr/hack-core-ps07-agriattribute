@@ -2,7 +2,7 @@
 title: AgriAttribute AI
 emoji: 🌾
 colorFrom: green
-colorTo: emerald
+colorTo: green
 sdk: streamlit
 sdk_version: 1.30.0
 app_file: app.py
